@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-local
+coverage
+.git
+.vscode
+.idea
+*.log
+
+# Secrets and local config never go into images; pass them as environment variables
+.env
+.env.*
+**/.env
+*.pem
+*.key
+*.crt

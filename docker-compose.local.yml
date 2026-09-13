@@ -1,0 +1,104 @@
+# Local stack: all services + Redis + MongoDB.
+#
+#   cp .env.example .env               # fill in JWT_SECRET etc.
+#   docker compose -f docker-compose.local.yml up --build
+#
+# Gateway: http://localhost:8000 (Swagger at /api)
+# To use a MongoDB running on your machine instead of the mongo container, set
+#   DOCKER_MONGO_HOST=host.docker.internal:27017
+# and start only the services you need, e.g.
+#   docker compose -f docker-compose.local.yml up --build redis auth gateway
+
+x-service: &service
+  env_file: .env
+  restart: unless-stopped
+  environment: &env
+    APP_ENV: dev
+    NODE_OPTIONS: --max-old-space-size=512
+    AUTH_GRPC_URL: auth:50051
+    NOTIFY_GRPC_URL: notify:50052
+    ADMINISTRATION_GRPC_URL: administration:50053
+    ASSESSMENT_GRPC_URL: assessment:50054
+    CLASSROOM_GRPC_URL: classroom:50055
+    COURSE_GRPC_URL: course:50056
+    QUESTION_BANK_GRPC_URL: question-bank:50057
+    ECOMMERCE_GRPC_URL: ecommerce:50058
+    ATTEMPT_GRPC_URL: attempt:50059
+    MONGO_URI_STAGING: mongodb://${DOCKER_MONGO_HOST:-mongo:27017}/stagingdb
+    MONGO_URI_PROCTORING: mongodb://${DOCKER_MONGO_HOST:-mongo:27017}/newstagingdb
+    ADMIN_MONGO_URI: mongodb://${DOCKER_MONGO_HOST:-mongo:27017}/admin
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    REDIS_URI: redis://redis:6379
+  depends_on:
+    - redis
+
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  gateway:
+    <<: *service
+    build: { context: ., dockerfile: apps/gateway/Dockerfile, target: production }
+    image: assessment-platform/gateway:local
+    ports:
+      - "8000:8000"
+    environment:
+      <<: *env
+      APIGATEWAY_PORT: "8000"
+
+  auth:
+    <<: *service
+    build: { context: ., dockerfile: apps/auth/Dockerfile, target: production }
+    image: assessment-platform/auth:local
+
+  notify:
+    <<: *service
+    build: { context: ., dockerfile: apps/notify/Dockerfile, target: production }
+    image: assessment-platform/notify:local
+
+  administration:
+    <<: *service
+    build: { context: ., dockerfile: apps/administration/Dockerfile, target: production }
+    image: assessment-platform/administration:local
+
+  assessment:
+    <<: *service
+    build: { context: ., dockerfile: apps/assessment/Dockerfile, target: production }
+    image: assessment-platform/assessment:local
+
+  classroom:
+    <<: *service
+    build: { context: ., dockerfile: apps/classroom/Dockerfile, target: production }
+    image: assessment-platform/classroom:local
+
+  course:
+    <<: *service
+    build: { context: ., dockerfile: apps/course/Dockerfile, target: production }
+    image: assessment-platform/course:local
+
+  ecommerce:
+    <<: *service
+    build: { context: ., dockerfile: apps/ecommerce/Dockerfile, target: production }
+    image: assessment-platform/ecommerce:local
+
+  question-bank:
+    <<: *service
+    build: { context: ., dockerfile: apps/question-bank/Dockerfile, target: production }
+    image: assessment-platform/question-bank:local
+
+  attempt:
+    <<: *service
+    build: { context: ., dockerfile: apps/attempt/Dockerfile, target: production }
+    image: assessment-platform/attempt:local
+
+volumes:
+  mongo-data:
