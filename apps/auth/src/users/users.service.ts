@@ -2576,7 +2576,7 @@ export class UsersService {
         console.log("not cached")
         config = await this.settingRepository.findOne({ slug: 'videoStreaming' })
         if (!config || !config.turns || !config.turns.length) {
-          return;
+          return { response: [] };
         }
         this.redisCaching.set(request, 'videoStreaming', config, 60 * 120);
       }
@@ -3887,7 +3887,7 @@ export class UsersService {
       updated.interestedSubject = []
       updated.interestedSubject = data.interestedSubject;
     }
-    if (!request.user.roles && request.roles) {
+    if (!request.user.roles?.length && request.roles) {
       request.user.roles = request.roles;
     }
 
@@ -4480,6 +4480,11 @@ export class UsersService {
   }
 
   async getEvents(req: GetEventsRequest) {
+    const startDate = new Date(req.query?.startDate);
+    const endDate = new Date(req.query?.endDate);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new GrpcInvalidArgumentException('startDate and endDate query parameters are required');
+    }
     try {
       let start = timeHelper.getStartOfDate(new Date(req.query.startDate), req.headers.timezoneoffset)
       let end = timeHelper.getEndOfDate(new Date(req.query.endDate), req.headers.timezoneoffset)
@@ -5152,7 +5157,7 @@ export class UsersService {
     if (!req.body.userRoles) {
       throw new BadRequestException();
     }
-    if (req.user.roles) {
+    if (req.user.roles?.length) {
       return { status: 'ok' }
     }
 

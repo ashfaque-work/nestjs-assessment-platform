@@ -1137,11 +1137,7 @@ export class ClassroomService {
       this.classroomRepository.setInstanceKey(instancekey);
       const classrooms = await this.classroomRepository.find(filter, projection, { sort: { 'createdAt': -1 } });
 
-      if (!classrooms || classrooms.length === 0) {
-        throw new InternalServerErrorException ('No classroom found');
-      }
-
-      return { response: classrooms };
+      return { response: classrooms || [] };
     } catch (error) {
       throw new GrpcInternalException(error.message);
     }
@@ -1906,7 +1902,7 @@ export class ClassroomService {
           { $and: filter }, null, { skip, limit, sort: { 'statusChangedAt': -1 } }
         );
         if (!practiceSets || practiceSets.length === 0) {
-          throw new InternalServerErrorException ('Not found.');
+          return { result: [], count: 0 };
         }
 
         const result = practiceSets.map(oPractice => {
@@ -2148,9 +2144,9 @@ export class ClassroomService {
       const result = await this.redisCache.getSetting(request, async (settings: any) => {
         const listUser = await this.studentBus.getUserIdList(request);
 
-        let result: any = {};
+        let result: any = [];
         if (!listUser || listUser.length === 0) {
-          result = {};
+          result = []; // `results` is a list in the proto
           return result;
         }
 
@@ -2192,9 +2188,9 @@ export class ClassroomService {
       const result = await this.redisCache.getSetting(request, async (settings: any) => {
         const listUser = await this.studentBus.getUserIdList(request);
 
-        let result: any = {};
+        let result: any = [];
         if (!listUser || listUser.length === 0) {
-          result = {};
+          result = []; // `results` is a list in the proto
           return result;
         }
 

@@ -1,5 +1,5 @@
 # Stage 1: Base Dependencies
-FROM node:18-alpine AS base
+FROM node:22-alpine AS base
 
 # Create and set the working directory
 WORKDIR /usr/src/app
@@ -20,7 +20,7 @@ COPY libs ./libs
 COPY proto ./proto
 
 # Stage 2: Build the application (for production)
-FROM node:18-alpine AS build
+FROM node:22-alpine AS build
 
 # Create and set the working directory
 WORKDIR /usr/src/app
@@ -42,7 +42,7 @@ WORKDIR /usr/src/app
 RUN npm run build classroom
 
 # Stage 3: Development Image
-FROM node:18-alpine AS development
+FROM node:22-alpine AS development
 
 # Create and set the working directory
 WORKDIR /usr/src/app
@@ -62,7 +62,7 @@ COPY apps/classroom/tsconfig.app.json ./tsconfig.app.json
 CMD ["npm", "run", "start:dev", "classroom"]
 
 # Stage 4: Production Image
-FROM node:18-alpine AS production
+FROM node:22-alpine AS production
 
 # Create and set the working directory
 WORKDIR /usr/src/app

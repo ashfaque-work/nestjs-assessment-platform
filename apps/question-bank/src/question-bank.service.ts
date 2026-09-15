@@ -2489,7 +2489,7 @@ export class QuestionBankService {
             role: { $ne: 'student' }
           };
 
-          if (request.user && request.user.locations) {
+          if (request.user && request.user.locations?.length) {
             const locationIds = request.user.locations.map(id => new Types.ObjectId(id));
             cond.locations = { $in: locationIds };
           }
@@ -2727,7 +2727,7 @@ export class QuestionBankService {
           filter.user = new ObjectId(request.user._id)
         } else {
           let teacherIds = [];
-          if (request.user && request.user.locations) {
+          if (request.user && request.user.locations?.length) {
             const locationIds = request.user.locations.map(id => new Types.ObjectId(id));
 
             condition = {
@@ -3247,7 +3247,7 @@ export class QuestionBankService {
         var filter: any = {}
         let teacherIds = [];
         let condition: any = {}
-        if (request.user && request.user.locations) {
+        if (request.user && request.user.locations?.length) {
           const locationIds = request.user.locations.map(id => new Types.ObjectId(id));
 
           condition = {

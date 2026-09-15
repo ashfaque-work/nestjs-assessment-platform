@@ -2511,7 +2511,7 @@ export class AttemptService {
         )
         var Objectsubjects = sub[0].subjects.map((id) => new Types.ObjectId(id))
       } else {
-        Objectsubjects = request.userSubjects.map(id => new Types.ObjectId(id))
+        Objectsubjects = (request.userSubjects || []).map(id => new Types.ObjectId(id))
       }
       condition["subjects._id"] = { $in: Objectsubjects };
       var subtract = 0;
@@ -4521,7 +4521,7 @@ export class AttemptService {
         }
       )
       if (attempts.length === 0) {
-        throw "Not Found"
+        return { attempts: [] }
       }
 
       async.map(
@@ -4554,7 +4554,7 @@ export class AttemptService {
         )
         Objectsubjects = sub[0].subjects.map((id) => new Types.ObjectId(id))
       } else {
-        Objectsubjects = request.userSubjects.map((id) => new Types.ObjectId(id))
+        Objectsubjects = (request.userSubjects || []).map((id) => new Types.ObjectId(id))
       }
 
       if (request.user) {
@@ -5319,7 +5319,8 @@ export class AttemptService {
     try {
       let listUser = await this.studentBus.getUserIdList(request)
       if (!listUser || listUser.length == 0) {
-        return null
+        // No students: send an empty list (gRPC cannot serialize null)
+        return { results: [] };
       } else {
         var condition = this.conditionSummary(request, true);
         condition["user"] = {
@@ -5343,7 +5344,8 @@ export class AttemptService {
     try {
       let listUser = await this.studentBus.getUserIdList(request)
       if (!listUser || listUser.length == 0) {
-        return null
+        // No students: send an empty list (gRPC cannot serialize null)
+        return { results: [] };
       } else {
         let condition = this.conditionSummary(request, true);
         condition["user"] = {
@@ -5383,7 +5385,8 @@ export class AttemptService {
     try {
       let listUser = await this.studentBus.getUserIdList(request)
       if (!listUser || listUser.length == 0) {
-        return null
+        // No students: send an empty list (gRPC cannot serialize null)
+        return { results: [] };
       } else {
         let condition = this.conditionSummary(request, true);
         condition["user"] = { $in: listUser }
@@ -5502,7 +5505,8 @@ export class AttemptService {
     try {
       let listUser = await this.studentBus.getUserIdList(request)
       if (!listUser || listUser.length == 0) {
-        return null
+        // No students: send an empty list (gRPC cannot serialize null)
+        return { results: [] };
       }
 
       let condition = this.conditionSummary(request, true);
@@ -5535,7 +5539,8 @@ export class AttemptService {
     try {
       let listUser = await this.studentBus.getUserIdList(request)
       if (!listUser || listUser.length == 0) {
-        return null
+        // No students: send an empty list (gRPC cannot serialize null)
+        return { results: [] };
       }
 
       let condition = this.conditionSummary(request, true);
@@ -5557,7 +5562,8 @@ export class AttemptService {
     try {
       let listUser = await this.studentBus.getUserIdList(request)
       if (!listUser || listUser.length == 0) {
-        return null
+        // No students: send an empty list (gRPC cannot serialize null)
+        return { results: [] };
       } else {
         let condition = this.conditionSummary(request, true);
         condition["user"] = {
@@ -5673,7 +5679,8 @@ export class AttemptService {
     try {
       let listUser = await this.studentBus.getUserIdList(request)
       if (!listUser || listUser.length == 0) {
-        return null
+        // No students: send an empty list (gRPC cannot serialize null)
+        return { results: [] };
       } else {
         let condition = this.conditionSummary(request, true);
         condition["user"] = {
@@ -7932,7 +7939,8 @@ export class AttemptService {
       let listUser = await this.studentBus.getUserIdList(request)
 
       if (!listUser || listUser.length == 0) {
-        return null
+        // No students: send an empty list (gRPC cannot serialize null)
+        return { results: [] };
       } else {
         var condition = this.conditionSummary(request, true);
         condition["user"] = {
@@ -7956,7 +7964,8 @@ export class AttemptService {
     try {
       let listUser = await this.studentBus.getUserIdList(request);
       if (!listUser || listUser.length == 0) {
-        return null;
+        // No students: send an empty list (gRPC cannot serialize null)
+        return { results: [] };
       } else {
         var condition = this.conditionSummary(request, true);
         condition["user"] = {

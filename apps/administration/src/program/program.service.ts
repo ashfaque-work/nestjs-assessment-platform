@@ -84,21 +84,19 @@ export class ProgramService {
       }
 
       if (!request.user.roles.includes('publisher')) {
-        let locId = new Types.ObjectId(request.user.activeLocation);
-
-        if (locId) {
+        // Users who haven't joined an institute (or whose institute no longer exists) see global programs
+        let inst = null;
+        if (request.user.activeLocation) {
           this.locationRepository.setInstanceKey(instancekey);
-          let inst = await this.locationRepository.findOne({ _id: locId }, { subjects: 1, programs: 1, isDefault: 1 });
-          if (inst.isDefault) {
-            matchQuery.isAllowReuse = 'global';
-            subjectFilter.isAllowReuse = 'global';
-          } else {
-            // get only subjects selected by institute
-            matchQuery.subjects = {
-              $in: inst.subjects
-            };
-            subjectFilter._id = { $in: inst.subjects };
-          }
+          inst = await this.locationRepository.findOne({ _id: new Types.ObjectId(request.user.activeLocation) }, { subjects: 1, programs: 1, isDefault: 1 });
+        }
+
+        if (inst && !inst.isDefault) {
+          // get only subjects selected by institute
+          matchQuery.subjects = {
+            $in: inst.subjects
+          };
+          subjectFilter._id = { $in: inst.subjects };
         } else {
           matchQuery.isAllowReuse = 'global';
           subjectFilter.isAllowReuse = 'global';
@@ -337,6 +335,10 @@ export class ProgramService {
       this.locationRepository.setInstanceKey(instancekey);
       this.programRepository.setInstanceKey(instancekey);
       const inst = await this.locationRepository.findOne({ _id: request.user.activeLocation });
+      if (!inst) {
+        // Not a member of any institute yet
+        return { response: [] };
+      }
 
       let query: any = {
         $or: [

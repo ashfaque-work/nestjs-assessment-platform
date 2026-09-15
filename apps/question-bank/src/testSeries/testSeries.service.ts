@@ -797,7 +797,7 @@ export class TestSeriesService {
                 var subjects = req.query.subject.split(',');
                 subjectsFilter = subjectsFilter.concat(subjects);
             } else {
-                if (req.user && req.user.subjects) {
+                if (req.user && req.user.subjects?.length) {
                     subjectsFilter = subjectsFilter.concat(req.user.subjects.map(s => new ObjectId(s)));
                 }
             }
@@ -1496,7 +1496,7 @@ export class TestSeriesService {
             var grades = req.query.grades.split(',');
             gradesFilter = gradesFilter.concat(grades);
         } else {
-            if (req.user && req.user.grade) {
+            if (req.user && req.user.grade?.length) {
                 gradesFilter = gradesFilter.concat(req.user.grade);
             }
         }
@@ -1582,7 +1582,7 @@ export class TestSeriesService {
             var grades = req.query.grades.split(',');
             gradesFilter = gradesFilter.concat(grades);
         } else {
-            if (req.user && req.user.grade) {
+            if (req.user && req.user.grade?.length) {
                 gradesFilter = gradesFilter.concat(req.user.grade.map(g => new ObjectId(g)));
             }
         }

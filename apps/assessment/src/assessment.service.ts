@@ -3550,7 +3550,7 @@ export class AssessmentService {
 
         return { response: unitResults };
       } else {
-        return [];
+        return { response: [] };
       }
     } catch (error) {
       Logger.error(error);
@@ -4023,7 +4023,7 @@ export class AssessmentService {
       filter.push({ status: 'published' });
 
       if (req.user && req.user.roles.includes('student')) {
-        if (!req.user.subjects) {
+        if (!req.user.subjects?.length) {
           throw new NotFoundException("params: 'grade-profile' message: 'This practice test belongs to an examination type that is not set in your profile'")
         }
 
@@ -6139,22 +6139,15 @@ export class AssessmentService {
   }
 
   async getSupportedProfile() {
+    // SupportedProfilesResponse has no fields yet, so there is nothing to return beyond an empty response.
+    // The extractor service is optional; skip the call when it isn't configured.
+    if (!process.env.EXTRACTOR_API_URL) {
+      return {};
+    }
     try {
-      var profiles: any = await this.redisCache.globalGet('supportedProfiles', function (profiles: any) {
-        return profiles;
-      })
       let url = `${process.env.EXTRACTOR_API_URL}/ExtractService/api/content/profiles`
-
-      const response: any = await axios.get(url);
-
-      // if (response.statusCode == 200 && body) {
-      //   profiles = JSON.parse(body)
-      //   await this.redisCache.globalSet('supportedProfiles', profiles)
-
-      //   res.status(200).send(profiles)
-      // } else {
-      //   res.sendStatus(404)
-      // }
+      await axios.get(url);
+      return {};
     } catch (error) {
       Logger.error(error);
       throw new GrpcInternalException("Internal Server Error");
@@ -7657,7 +7650,7 @@ export class AssessmentService {
           }
         }
 
-        if (req.user.roles.includes('student') && !req.user.subjects) {
+        if (req.user.roles.includes('student') && !req.user.subjects?.length) {
           return {
             params: 'grade-profile',
             message: 'This practice test belongs to an examination type that is not set in your profile.',
@@ -7758,7 +7751,7 @@ export class AssessmentService {
       }
 
       if (practiceSet.level && settings.features.studentLevel) {
-        if (!req.user.levelHistory) {
+        if (!req.user.levelHistory?.length) {
           return {
             status: 403,
             params: 'subject-level',

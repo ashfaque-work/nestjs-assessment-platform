@@ -98,11 +98,8 @@ export class UnitService {
 
       this.unitRepository.setInstanceKey(instancekey);
       const units = await this.unitRepository.find(filter, {}, { sort: { name: 1 } });
-      if (!units || units.length === 0) {
-        throw ('No Units found!');
-      }
 
-      return { response: units };
+      return { response: units || [] };
     } catch (error) {
       throw new GrpcInternalException(error);
     }

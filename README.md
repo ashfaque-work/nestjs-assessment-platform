@@ -32,7 +32,7 @@ Every request carries an `instancekey` header that selects the MongoDB database 
 Repositories read the key from a per-request `AsyncLocalStorage` context (`libs/common/src/database/tenant-context.ts`), so concurrent requests for different instances stay isolated.
 
 ## Requirements
-- Node.js 18+
+- Node.js 22+
 - MongoDB 6+
 - Redis 6+
 

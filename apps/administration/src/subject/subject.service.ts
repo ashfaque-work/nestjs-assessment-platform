@@ -745,6 +745,10 @@ export class SubjectService {
       this.locationRepository.setInstanceKey(instancekey);
       this.subjectRepository.setInstanceKey(instancekey);
       const inst = await this.locationRepository.findOne({ _id: user.activeLocation });
+      if (!inst) {
+        // Not a member of any institute yet
+        return { response: [] };
+      }
 
       if (typeof activeOnly === 'string' && activeOnly === 'true') {
         const subjects = await this.subjectRepository.find({ _id: { $in: inst.subjects }, active: true }, { name: 1 });

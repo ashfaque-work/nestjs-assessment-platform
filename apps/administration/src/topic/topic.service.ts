@@ -77,11 +77,8 @@ export class TopicService {
 
       this.topicRepository.setInstanceKey(instancekey);
       const topics = await this.topicRepository.find(filter, {}, { sort: { name: 1 } });
-      if (!topics || topics.length === 0) {
-        throw ('No Topics found!');
-      }
 
-      return { response: topics };
+      return { response: topics || [] };
     } catch (error) {
       throw new GrpcInternalException(error);
     }

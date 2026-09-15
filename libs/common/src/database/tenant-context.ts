@@ -14,12 +14,50 @@ function instancekeyFrom(data: any): string | undefined {
   return data.instancekey || data.instanceKey || data.headers?.instancekey || undefined;
 }
 
-// gRPC server that runs every handler inside its own tenant context.
-// Done at the transport level so it applies to all handlers without changing
-// which global pipes/filters the hybrid apps use.
+// Names of the list (repeated) fields of the message type used by the request's `user` field.
+// gRPC servers decode empty lists as undefined, but services expect the logged-in user's
+// lists (roles, subjects, locations, ...) to always be arrays, as they are in the database.
+function userListFields(protoNativeHandler: any, packageDefinition: Record<string, any>): string[] {
+  const requestFields: any[] = protoNativeHandler?.requestType?.type?.field || [];
+  const userField = requestFields.find((f) => f.name === 'user' && f.type === 'TYPE_MESSAGE');
+  if (!userField) return [];
+
+  const typeName = String(userField.typeName).replace(/^\./, '');
+  const pkg = String(protoNativeHandler.path || '').replace(/^\//, '').split('/')[0].split('.').slice(0, -1).join('.');
+  const key = [pkg && `${pkg}.${typeName}`, typeName].find((k) => k && packageDefinition[k])
+    || Object.keys(packageDefinition).find((k) => k.endsWith(`.${typeName}`));
+  const userType = key && packageDefinition[key]?.type;
+  return (userType?.field || []).filter((f: any) => f.label === 'LABEL_REPEATED').map((f: any) => f.name);
+}
+
+// gRPC server that runs every handler inside its own tenant context and fills in
+// missing list fields on `request.user`. Done at the transport level so it applies to
+// all handlers without changing which global pipes/filters the hybrid apps use.
 export class TenantAwareServerGrpc extends ServerGrpc {
+  private readonly definitions: { packageDefinition: Record<string, any> };
+
+  constructor(options: GrpcOptions['options']) {
+    const definitions = { packageDefinition: {} as Record<string, any> };
+    super({
+      ...options,
+      onLoadPackageDefinition: (packageDefinition, server) => {
+        definitions.packageDefinition = packageDefinition as Record<string, any>;
+        options.onLoadPackageDefinition?.(packageDefinition, server);
+      },
+    });
+    this.definitions = definitions;
+  }
+
   createServiceMethod(methodHandler: Function, protoNativeHandler: any, streamType: any): Function {
+    const listFields = userListFields(protoNativeHandler, this.definitions.packageDefinition);
+
     const wrapped = (data: any, metadata: any, call: any) => {
+      if (listFields.length && data?.user && typeof data.user === 'object') {
+        for (const field of listFields) {
+          if (data.user[field] == null) data.user[field] = [];
+        }
+      }
+
       const store = { instancekey: instancekeyFrom(data) };
       return tenantContext.run(store, () =>
         Promise.resolve(methodHandler(data, metadata, call)).then((result) =>

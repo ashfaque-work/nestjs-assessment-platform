@@ -347,7 +347,7 @@ export class InstituteService {
                 inst.coverImageUrl = request.user.coverImageUrl;
             }
 
-            if (request.user.specialization) {
+            if (request.user.specialization?.length) {
                 inst.specialization = request.user.specialization;
             }
 

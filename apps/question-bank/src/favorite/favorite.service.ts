@@ -29,7 +29,7 @@ export class FavoriteService {
             var grades = req.query.grades.split(',');
             filter['grades._id'] = { $in: grades };
         }
-        else if (req.user.grade) {
+        else if (req.user.grade?.length) {
             filter['grades._id'] = { $in: req.user.grade.map(g => new ObjectId(g)) };
         }
 
