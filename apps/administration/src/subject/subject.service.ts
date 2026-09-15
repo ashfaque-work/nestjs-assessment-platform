@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import {
   AttemptDetailRepository, AttemptRepository, isEmail, LocationRepository, NotificationRepository,
@@ -12,7 +13,7 @@ import {
   ImportSubjectsReq, GetAttemptTrendByGradeReq
 } from '@app/common/dto/administration/subject.dto';
 import { ObjectId } from 'mongodb';
-import { GrpcInternalException, GrpcInvalidArgumentException } from 'nestjs-grpc-exceptions';
+import { GrpcInternalException, GrpcInvalidArgumentException, GrpcNotFoundException } from 'nestjs-grpc-exceptions';
 import slugify from 'slugify';
 import * as mainHelper from '@app/common/helpers/main-helper';
 import * as roleHelper from '@app/common/helpers/role-helper';
@@ -609,17 +610,17 @@ export class SubjectService {
       } else if (program) {
         query.programs = { $in: program };
       } else {
-        throw ('Invalid request. Either subjectName or program must be provided.');
+        throw new GrpcInvalidArgumentException('Either subjectName or program must be provided');
       }
 
       this.subjectRepository.setInstanceKey(instancekey);
       const subject = await this.subjectRepository.findOne(query);
       if (!subject) {
-        throw ('No subject found. Please enter another name for your subject.');
+        throw new GrpcNotFoundException('No subject found. Please enter another name for your subject.');
       }
       return { response: subject };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -714,9 +715,9 @@ export class SubjectService {
         subjects = await this.subjectRepository.populate(subjects, { path: 'units', select: '_id name', options: { lean: true } });
         return { response: subjects };
       }
-      throw ('Subject not found');
+      throw new GrpcInvalidArgumentException('subjects query parameter is required');
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -733,9 +734,9 @@ export class SubjectService {
         units = await this.unitRepository.populate(units, { path: 'topics', select: '_id name', options: { lean: true } });
         return { response: units };
       }
-      throw ('Unit not found');
+      throw new GrpcInvalidArgumentException('units query parameter is required');
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 

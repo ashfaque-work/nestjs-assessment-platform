@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { resolveGrpc, withoutUserSecrets } from '@app/common/helpers/user-secrets';
 import {
   CreateUserDto,
   LoginReqDto,
@@ -102,11 +103,11 @@ export class AuthGatewayService {
   }
 
   async getUser(request: GetUserRequest) {
-    return this.authGrpcService.GetUser(request);
+    // Public API: never expose password hashes or one-time tokens
+    return withoutUserSecrets(await resolveGrpc(this.authGrpcService.GetUser(request)));
   }
 
   async login(request: LoginReqDto) {
-    console.log(request)
     return this.authGrpcService.login(request);
   }
 
@@ -187,11 +188,13 @@ export class AuthGatewayService {
 
   async resetPassword(request: ResetPasswordReq, token: string) {
     request.token = token;
-    return this.authGrpcService.ResetPassword(request);
+    const result: any = await resolveGrpc(this.authGrpcService.ResetPassword(request));
+    return { ...result, user: withoutUserSecrets(result?.user) };
   }
 
   async confirmPasswordResetToken(request: ConfirmPasswordResetTokenRequest) {
-    return this.authGrpcService.ConfirmPasswordResetToken(request);
+    const result: any = await resolveGrpc(this.authGrpcService.ConfirmPasswordResetToken(request));
+    return { ...result, user: withoutUserSecrets(result?.user) };
   }
 
   async voiceService(request: VoiceServiceRequest) {

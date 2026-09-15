@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import {
     AttemptRepository, AttemptSubmissionRepository, AttendanceRepository, ClassroomRepository, Constants,
     DiscussionRepository, EventBus, FavoriteRepository, KhanAcademyRepository, MappingRepository, PracticeSetRepository,
@@ -27,7 +28,7 @@ import { Types } from "mongoose";
 import { _ } from 'lodash'
 import { config } from "@app/common/config";
 import { S3Service } from "@app/common/components/aws/s3.service";
-import { GrpcInternalException, GrpcNotFoundException, GrpcUnauthenticatedException } from "nestjs-grpc-exceptions";
+import { GrpcInternalException, GrpcNotFoundException, GrpcUnauthenticatedException, GrpcInvalidArgumentException } from 'nestjs-grpc-exceptions';
 import { WhiteboardService } from "@app/common/components/whiteboard/whiteboard.service";
 import { MessageCenter } from "@app/common/components/messageCenter";
 import { HttpService } from "@nestjs/axios";
@@ -1269,7 +1270,7 @@ export class StudentService {
             }
 
             if (!recommended && !alreadyAttempt.length) {
-                return []
+                return { results: [] }
             }
 
             var sort: any = { 'statusChangedAt': -1 }
@@ -1310,6 +1311,9 @@ export class StudentService {
 
     async getRecommendedVideos(request: GetRecommendedVideosReq): Promise<any> {
         try {
+            if (!request.query?.topics) {
+                throw new GrpcInvalidArgumentException('topics query parameter is required');
+            }
             this.khanAcademyRepository.setInstanceKey(request.instancekey)
             this.mappingRepository.setInstanceKey(request.instancekey)
             let vlist: any = await this.redisCaching.getAsync(request.instancekey, 'khan');
@@ -1356,7 +1360,7 @@ export class StudentService {
 
             return { videos: videos };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 

@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import {
     AttemptDetailRepository, AttemptRepository, ClassroomRepository, Constants, globals, TestSeriesRepository,
     UserCourseRepository, UsersRepository
@@ -5,7 +6,7 @@ import {
 import { AllFirstQuestionsDetailReq, GetTimeWastedReq, PeakTimeAndDurationReq } from "@app/common/dto/analysis.dto";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Types } from "mongoose";
-import { GrpcInternalException, GrpcInvalidArgumentException, GrpcNotFoundException } from "nestjs-grpc-exceptions";
+import { GrpcInternalException, GrpcInvalidArgumentException, GrpcNotFoundException } from 'nestjs-grpc-exceptions';
 
 @Injectable()
 
@@ -374,6 +375,9 @@ export class AnalysisService {
 
     async firstQuestionDetail(request: AllFirstQuestionsDetailReq): Promise<any> {
         try {
+            if (!request.query?.attemptId) {
+                throw new GrpcInvalidArgumentException('attemptId query parameter is required');
+            }
             this.attemptDetailRepository.setInstanceKey(request.instancekey)
             const attemptId = new Types.ObjectId(request.query.attemptId);
             const userId = new Types.ObjectId(request.user._id);
@@ -439,7 +443,7 @@ export class AnalysisService {
 
             return {};
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -653,7 +657,7 @@ export class AnalysisService {
             const result = await this.attemptDetailRepository.aggregate(aggregationPipe);
 
             if (result.length === 0) {
-                throw new Error('Internal error...');
+                return { result: [] };
             }
             return { result };
         } catch (error) {
@@ -720,7 +724,7 @@ export class AnalysisService {
             this.attemptDetailRepository.setInstanceKey(request.instancekey)
             const result = await this.attemptDetailRepository.aggregate(aggregationPipe);
             if (result.length === 0) {
-                throw new Error('Internal error...');
+                return { result: [] };
             }
             return { result };
         } catch (error) {

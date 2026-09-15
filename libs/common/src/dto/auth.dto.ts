@@ -192,7 +192,10 @@ export class ConfirmPasswordResetTokenRequest {
     token: string;
 }
 
-export class ConfirmPasswordResetTokenResponse { }
+export class ConfirmPasswordResetTokenResponse {
+    status?: boolean;
+    user?: any;
+}
 
 class VoiceServiceHeaders {
     userAgent: string;

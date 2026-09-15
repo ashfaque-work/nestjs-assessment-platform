@@ -5,3 +5,5 @@ export * from './constants';
 export * from './globals';
 export * from './satScoreCalc';
 export * from './time-helper';
+export * from './grpc-error';
+export * from './user-secrets';

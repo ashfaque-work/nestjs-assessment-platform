@@ -1,6 +1,7 @@
 import { BitlyService, ConfirmEmailReq, ConfirmPasswordResetTokenRequest, LoginReqDto, NotificationRepository, RecoverPasswordReq, RedisCaching, RefreshTokenReq, ResetPasswordReq, Setting, SettingRepository, User, UserLogRepository, UsersRepository, VoiceServiceRequest } from '@app/common';
 import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { JwtService } from '@nestjs/jwt';
 import { RpcException } from '@nestjs/microservices';
 import { TokenPayload } from './interfaces/token-payload.interface';
@@ -203,6 +204,10 @@ export class AuthService {
   }
 
   async resetPassword(request: ResetPasswordReq) {
+    // Without a token the query below would match any user with a pending reset
+    if (!request.token) {
+      throw new GrpcInvalidArgumentException('Reset token is required.');
+    }
     const now = new Date();
     const user = await this.userService.getOneUser({
       passwordResetToken: request.token,
@@ -212,7 +217,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw 'Your code is invalid or has expired.';
+      throw new GrpcInvalidArgumentException('Your code is invalid or has expired.');
     }
 
     return { status: true, user: user }
@@ -324,6 +329,9 @@ export class AuthService {
 
   async confirmPasswordResetToken(req: ConfirmPasswordResetTokenRequest) {
     try {
+      if (!req.token) {
+        throw new BadRequestException('Reset token is required.');
+      }
       var now = new Date()
       this.usersRepository.setInstanceKey(req.instancekey);
       const user = await this.usersRepository.findOne({
@@ -346,7 +354,7 @@ export class AuthService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error")
+      throw toGrpcError(error);
     }
     // Only reset this token when user change password
     // user.passwordResetToken = null

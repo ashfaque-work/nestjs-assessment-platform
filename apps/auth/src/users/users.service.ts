@@ -65,7 +65,6 @@ export class UsersService {
 
   async create(request: CreateUserDto) {
     try {
-      console.log(request);
 
       let newUser = { ...request }
       delete newUser.user;
@@ -359,7 +358,6 @@ export class UsersService {
 
   async updateUser(request: UpdateUserDto) {
     try {
-      console.log(request);
 
       var userParams = _.omit(request.body, '_id', 'createdAt', 'emailVerified', 'hashedPassword', 'passwordResetToken', 'salt', 'gradeObject', 'status', '__v')
       var toRemoveSubjects = []
@@ -2690,7 +2688,6 @@ export class UsersService {
 
   async partnerUser(request: PartnerUserReq) {
     try {
-      console.log(request);
 
       let practice;
       let testCode = request.body.examSeriesCode || request.body.testCode || '';
@@ -3302,7 +3299,6 @@ export class UsersService {
       let now = new Date();
       console.log("user id >>>>>>>>>>", request)
       this.redisCaching.get(request, 'user_' + userId, async (data) => {
-        console.log(data);
         if (!data) {
           throw new Error('Sorry, we cannot find your information');
         }
@@ -3331,10 +3327,8 @@ export class UsersService {
 
   async tempSignup(request: TempSignupReq) {
     try {
-      console.log(request);
 
       let data = _.pick(request.body, 'userId', 'phoneNumber', 'email', 'country', 'password')
-      console.log(data);
       let user = await this.usersRepository.findOne({
         userId: data.userId
       })
@@ -3343,7 +3337,6 @@ export class UsersService {
         throw new Error('Email or phone number is already registered.')
       }
 
-      console.log(data);
 
       // user = await this.usersRepository.create(data);
       const emailVerify = await this.getVerificationCode(request);

@@ -1,8 +1,9 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { ClassroomRepository, LocationRepository, ProgramRepository, RedisCaching, SocketClientService, UsersRepository, isEmail } from "@app/common";
 import { ChangeActiveInstituteReq, CheckAvailibilityReq, CreateInstituteReq, GetAllLocationsReq, GetInstituteInviteesReq, GetInstituteReq, GetMyInstitutesReq, GetMyOwnInstituteReq, GetProfileProgramsReq, GetPublicProfileReq, InviteToJoinReq, JoinInstituteReq, LeaveInstituteReq, SetDefaultReq, UpdateInstitutePreferncesReq, UpdateInstituteReq } from "@app/common/dto/userManagement/institute.dto";
 import { Injectable, Logger } from "@nestjs/common";
 import { ObjectId } from "mongodb";
-import { GrpcInternalException } from "nestjs-grpc-exceptions";
+import { GrpcInternalException, GrpcNotFoundException } from 'nestjs-grpc-exceptions';
 import * as _ from 'lodash'
 import * as slug from 'slug'
 import { MessageCenter } from '@app/common/components/messageCenter';
@@ -112,14 +113,14 @@ export class InstituteService {
             let result = await this.locationRepository.findOne({ user: new ObjectId(request.user._id), active: true }, { name: 1, logo: 1, user: 1, code: 1, isDefault: true })
 
             if (!result) {
-                throw new Error("Not found")
+                throw new GrpcNotFoundException('You do not own an institute')
             }
 
             return {
                 ...result
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 

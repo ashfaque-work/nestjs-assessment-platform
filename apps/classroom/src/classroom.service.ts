@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import {
   AttemptDetailRepository, AttemptRepository, AttendanceRepository, ClassroomRepository, Constants, CourseRepository, DiscussionRepository,
@@ -15,7 +16,7 @@ import {
   ImportMentorReq, ImportStudentAdminReq,
 } from '@app/common/dto/classroom.dto';
 import { ObjectId } from 'mongodb';
-import { GrpcInternalException, GrpcNotFoundException } from 'nestjs-grpc-exceptions';
+import { GrpcInternalException, GrpcNotFoundException, GrpcInvalidArgumentException } from 'nestjs-grpc-exceptions';
 import mongoose, { Types } from 'mongoose';
 import { config } from '@app/common/config';
 import { WhiteboardService } from '@app/common/components/whiteboard/whiteboard.service';
@@ -1378,7 +1379,7 @@ export class ClassroomService {
       );
 
       if (!classroom) {
-        throw new InternalServerErrorException ('Classroom not found');
+        throw new GrpcNotFoundException('Classroom not found');
       }
 
       classroom = await this.redisCache.getSetting(request, async (settings: any) => {
@@ -1401,7 +1402,7 @@ export class ClassroomService {
 
       return { classroom: classroom };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3299,7 +3300,7 @@ export class ClassroomService {
       const { query, instancekey } = request;
 
       if (!query.classroom || !query.assignment || !query.student) {
-        throw new Error('Missing required parameters');
+        throw new GrpcInvalidArgumentException('classroom, assignment and student query parameters are required');
       }
 
       this.classroomRepository.setInstanceKey(instancekey);
@@ -3357,7 +3358,7 @@ export class ClassroomService {
         };
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 

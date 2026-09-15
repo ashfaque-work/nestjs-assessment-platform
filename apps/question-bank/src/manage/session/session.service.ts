@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { PracticeSetRepository,  UsersRepository, ClassroomRepository, RedisCaching, regexName, SessionManagementRepository } from '@app/common';
 import { CreateSessionRequest, FilterTestListsRequest, GetPracticesBySessionRequest, GetSessionByIdRequest, GetSessionDetailsRequest, GetSessionsRequest, GetStudentsByPracticeRequest, TestStatusRequest, UpdateSessionRequest, UpdateStudentStatusRequest } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
@@ -20,7 +21,7 @@ export class SessionService {
     async filterTestLists(req: FilterTestListsRequest) {
         try {
             if (!req.query.selectedSubjects) {
-                throw new BadRequestException();
+                throw new GrpcInvalidArgumentException('selectedSubjects query parameter is required');
             }
             var page = (req.query.page) ? req.query.page : 1
             var limit = (req.query.limit) ? req.query.limit : 20
@@ -99,12 +100,15 @@ export class SessionService {
             return { tests: tests, count: testCount ? testCount : 0 }
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error);
         }
     }
 
     async getSessions(req: GetSessionsRequest) {
         try {
+            if (!req.query?.selectedSlot) {
+                throw new GrpcInvalidArgumentException('selectedSlot query parameter is required');
+            }
             let selectedSlot = new Date(req.query.selectedSlot);
             // const start = selectedSlot.setHours(0, 0, 0, 0);
             // const end = selectedSlot.setHours(23, 59, 59, 999)
@@ -285,7 +289,7 @@ export class SessionService {
             }
         } catch (error) {
             Logger.error(error)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error);
         }
     }
 
