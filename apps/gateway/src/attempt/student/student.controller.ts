@@ -321,6 +321,8 @@ export class StudentController {
     @ApiQuery({ name: "limit", required: false })
     @ApiQuery({ name: "includeCount", required: false })
     @ApiParam({ name: "id", description: "practiceSetId" })
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     summaryPsychoPractice(@Headers("instancekey") instancekey: string,
         @Param('id') practicesetId: string,
         @Query("classroom") classroom: string,
@@ -426,6 +428,8 @@ export class StudentController {
     @ApiHeader({ name: "auth_token" })
     @ApiQuery({ name: "fileName", required: false })
     @ApiParam({ name: "attemptId", description: "attemptId" })
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     getQrUploadSignedUrl(@Headers("instancekey") instanceKey: string, @Param("attemptId") attemptId: string, @Query("fileName") fileName: string) {
         return this.studentService.getQrUploadSignedUrl({ instanceKey, query: { fileName }, attemptId })
     }

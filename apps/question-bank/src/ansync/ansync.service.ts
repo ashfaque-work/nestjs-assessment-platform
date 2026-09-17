@@ -174,7 +174,7 @@ export class AnsyncService {
 
         [totalAttempts, practice] = await Promise.all([
             await this.attemptRepository.countDocuments({ user: new ObjectId(req.user._id as string), practicesetId: data.practicesetId }),
-            await this.practiceSetRepository.findById(data.practicesetId, null, null, [{ path: 'user' }])
+            await this.practiceSetRepository.findById(data.practicesetId, null, null, [{ path: 'user', select: '-salt -hashedPassword' }])
         ]);
 
         return { totalAttempts, practice };

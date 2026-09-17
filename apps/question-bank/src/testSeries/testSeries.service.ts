@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { AttemptRepository, canOnlySeeHisOwnContents, canOnlySeeLocationContents, ClassroomRepository, CourseRepository, escapeRegex, FavoriteRepository, LocationRepository, PaymentDetailRepository, PracticeSetRepository, QuestionRepository, RedisCaching, regexName, Settings, SubjectRepository, TestSeriesRepository, UserEnrollmentRepository, UsersRepository } from '@app/common';
 import { AddFavoriteRequest, AddTestRequest, AssesmentWiseMarksTestSeriesRequest, BoughtTestSeriesByOthersRequest, CountPackagesRequest, CreateTestseriesRequest, DeleteTestseriesRequest, FindRequest, GetAttemptedTestsOfTestseriesRequest, GetAuthorsRequest, GetBestSellerRequest, GetFavoriteTsRequest, GetMyTestSeriesRequest, GetOngoingClassesRequest, GetPackageAttemptCountRequest, GetPublicListingRequest, GetPublisherTestseriesRequest, GetStudentRankRequest, GetSubjectsRequest, GetTeacherHighestPaidRequest, GetTeacherMostPopularRequest, GetTestByPracticeRequest, GetTestseriesPublicRequest, GetTotalStudentRequest, LevelStatusOfPackageRequest, PackageHasLevelRequest, PercentAccuracyTestseriesRequest, PercentCompleteTestseriesRequest, PracticeHoursTestSeriesRequest, PublishRequest, QuestionCategoryTestSeriesRequest, RecommendedTestSeriesRequest, RemoveClassroomRequest, RemoveFavoriteRequest, RemoveTestRequest, RevokeRequest, SearchForMarketPlaceRequest, SubjectWiseMarksTestSeriesRequest, SummaryPackagesByStudentRequest, SummaryPackagesByTeacherRequest, SummaryPackagesRequest, SummaryTestseriesRequest, TeacherCountPackagesRequest, TeacherSummaryTestseriesRequest, UpdateTestOrderRequest, UpdateTestseriesRequest } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
@@ -1560,84 +1561,90 @@ export class TestSeriesService {
     }
 
     async teacherCountPackages(req: TeacherCountPackagesRequest) {
-        const settings = await this.redisCache.getSetting({ instancekey: req.instancekey }, function (settings: any) {
-            return settings;
-        })
-        var filter: any = { locations: new ObjectId(req.user.activeLocation) };
-        var packageStatus = [];
-        if (req.query.multiStatus && req.query.multiStatus.length > 0) {
-            var multiStatus = req.query.multiStatus.split(',');
-            if (multiStatus && multiStatus.length > 0) {
-                for (var i in multiStatus) {
-                    packageStatus.push(multiStatus[i])
+        try {
+            const settings = await this.redisCache.getSetting({ instancekey: req.instancekey }, function (settings: any) {
+                return settings;
+            })
+            var filter: any = { locations: new ObjectId(req.user.activeLocation) };
+            var packageStatus = [];
+            if (req.query.multiStatus && req.query.multiStatus.length > 0) {
+                var multiStatus = req.query.multiStatus.split(',');
+                if (multiStatus && multiStatus.length > 0) {
+                    for (var i in multiStatus) {
+                        packageStatus.push(multiStatus[i])
+                    }
+                    filter.status = {
+                        $in: packageStatus
+                    }
                 }
-                filter.status = {
-                    $in: packageStatus
+
+            }
+            var gradesFilter = [];
+            if (req.query.grades) {
+                var grades = req.query.grades.split(',');
+                gradesFilter = gradesFilter.concat(grades);
+            } else {
+                if (req.user && req.user.grade?.length) {
+                    gradesFilter = gradesFilter.concat(req.user.grade.map(g => new ObjectId(g)));
                 }
             }
 
-        }
-        var gradesFilter = [];
-        if (req.query.grades) {
-            var grades = req.query.grades.split(',');
-            gradesFilter = gradesFilter.concat(grades);
-        } else {
-            if (req.user && req.user.grade?.length) {
-                gradesFilter = gradesFilter.concat(req.user.grade.map(g => new ObjectId(g)));
+            if (gradesFilter.length > 0) {
+                filter['grades._id'] = {
+                    $in: gradesFilter
+                };
             }
+            if (req.query.name) {
+                var regexName = {
+                    $regex: util.regex(req.query.name, 'i')
+                };
+                filter.name = regexName;
+            }
+
+            if (req.user.roles.includes(config.roles.publisher)) {
+                filter.user = new ObjectId(req.user._id);
+            }
+            let teacherIds = [];
+
+            if (req.user.locations.length > 0) {
+                this.usersRepository.setInstanceKey(req.instancekey);
+                teacherIds = await this.usersRepository.distinct('_id', {
+                    locations: {
+                        $in: req.user.locations.map(l => new ObjectId(l))
+                    },
+                    roles: {
+                        $nin: ["student"]
+                    }
+                });
+            }
+
+            if (req.user.roles.includes(config.roles.centerHead)) {
+                filter.$or = [{
+                    user: { $in: teacherIds }
+
+                }, {
+                    user: new ObjectId(req.user._id)
+                }];
+            }
+            if (req.user.roles.includes(config.roles.teacher)) {
+                filter.$or = [{
+                    $and: [{ peerVisibility: true }, { user: { $in: teacherIds } }]
+
+                }, {
+                    user: new ObjectId(req.user._id)
+                }];
+            }
+
+            this.testSeriesRepository.setInstanceKey(req.instancekey);
+            var count = await this.testSeriesRepository.countDocuments(filter);
+
+            count = count ? count : 0;
+            return { count: count };
+    
+        } catch (error) {
+            Logger.error(error);
+            throw toGrpcError(error);
         }
-
-        if (gradesFilter.length > 0) {
-            filter['grades._id'] = {
-                $in: gradesFilter
-            };
-        }
-        if (req.query.name) {
-            var regexName = {
-                $regex: util.regex(req.query.name, 'i')
-            };
-            filter.name = regexName;
-        }
-
-        if (req.user.roles.includes(config.roles.publisher)) {
-            filter.user = new ObjectId(req.user._id);
-        }
-        let teacherIds = [];
-
-        if (req.user.locations.length > 0) {
-            this.usersRepository.setInstanceKey(req.instancekey);
-            teacherIds = await this.usersRepository.distinct('_id', {
-                locations: {
-                    $in: req.user.locations.map(l => new ObjectId(l))
-                },
-                roles: {
-                    $nin: ["student"]
-                }
-            });
-        }
-
-        if (req.user.roles.includes(config.roles.centerHead)) {
-            filter.$or = [{
-                user: { $in: teacherIds }
-
-            }, {
-                user: new ObjectId(req.user._id)
-            }];
-        }
-        if (req.user.roles.includes(config.roles.teacher)) {
-            filter.$or = [{
-                $and: [{ peerVisibility: true }, { user: { $in: teacherIds } }]
-
-            }, {
-                user: new ObjectId(req.user._id)
-            }];
-        }
-
-        this.testSeriesRepository.setInstanceKey(req.instancekey);
-        var count = await this.testSeriesRepository.countDocuments(filter);
-
-        count = count ? count : 0;
-        return { count: count };
     }
 
     async getPackageAttemptCount(req: GetPackageAttemptCountRequest) {

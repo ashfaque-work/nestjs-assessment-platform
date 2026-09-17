@@ -107,6 +107,11 @@ export class TestSeriesController {
     summaryPackagesByTeacher(request: SummaryPackagesByTeacherRequest): Promise<SummaryPackagesByTeacherResponse> {
         return this.testSeriesService.summaryPackagesByTeacher(request);
     }
+
+    @GrpcMethod(protobufTestSeriesService, 'TeacherCountPackages')
+    teacherCountPackages(request: TeacherCountPackagesRequest): Promise<TeacherCountPackagesResponse> {
+        return this.testSeriesService.teacherCountPackages(request);
+    }
     
     @GrpcMethod(protobufTestSeriesService, 'GetPackageAttemptCount')
     getPackageAttemptCount(request: GetPackageAttemptCountRequest): Promise<GetPackageAttemptCountResponse> {

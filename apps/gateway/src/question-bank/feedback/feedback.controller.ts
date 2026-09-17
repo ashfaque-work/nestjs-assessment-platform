@@ -13,6 +13,8 @@ export class FeedbackController {
 
     @Get('/find-all-by-practice/:practiceSetId')
     @ApiParam({ name: 'practiceSetId' })
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     findAllByPractice(@Headers('instancekey') instancekey: string, @Param('practiceSetId') practiceSetId: string, @Query() query: FindAllByPracticeQuery) {
         return this.feedbackService.findAllByPractice({ instancekey, practiceSetId, query })
     }

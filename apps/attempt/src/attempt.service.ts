@@ -5782,6 +5782,7 @@ export class AttemptService {
       const results = await this.studentBus.countStudents(request);      
       return results;
     } catch (err) {
+      Logger.error(err);
       throw new GrpcInternalException(err.message);
     }
   }
@@ -7991,6 +7992,7 @@ export class AttemptService {
       const results = await this.summarySubjectCorrectByDate(request, condition)
       return { results }
     } catch (error) {
+      Logger.error(error);
       throw new GrpcInternalException(error.message);
     }
   }

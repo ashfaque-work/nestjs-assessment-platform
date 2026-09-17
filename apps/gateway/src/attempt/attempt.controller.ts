@@ -113,6 +113,8 @@ export class AttemptController {
     }
 
     @Get('/practiceset/:practicesetId')
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     findAllByPracticeSet(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string) {
         return this.attemptService.findAllByPractice({ instancekey, practicesetId })
     }
@@ -144,11 +146,15 @@ export class AttemptController {
     }
 
     @Get('/getListPercentCorrectByPractice/:practice')
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     getListPercentCorrectByPractice(@Headers('instancekey') instancekey: string, @Param('practice') practicesetId: string, @Query() query: GetListPercentCorrectByPracticeRequest) {
         return this.attemptService.getListPercentCorrectByPractice({ instancekey, ...query, practicesetId })
     }
 
     @Get('allProviders')
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     getAllProviders(@Headers('instancekey') instancekey: string) {
         return this.attemptService.getAllProviders({ instancekey })
     }
@@ -170,6 +176,8 @@ export class AttemptController {
     }
 
     @Get('/findAllNotCreatedBy')
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     findAllNotCreatedBy(@Headers('instancekey') instancekey: string) {
         return this.attemptService.findAllNotCreatedBy({ instancekey });
     }
@@ -322,6 +330,8 @@ export class AttemptController {
     }
 
     @Get("/getAccuracyPercentile/:attempt")
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     getAccuracyPercentile(@Headers('instancekey') instancekey: string, @Param('attempt') attemptId: string, @Query() query: GetAccuracyPercentileRequest,) {
         return this.attemptService.getAccuracyPercentile({ instancekey, ...query, attemptId });
     }
@@ -479,6 +489,8 @@ export class AttemptController {
     @ApiQuery({ name: 'classroom', required: false, description: "ClassroomId" })
     @ApiQuery({ name: "locations", required: false })
     @ApiQuery({ name: "name", required: false })
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     test(
         @Headers('instancekey') instancekey: string, @Query('classroom') classroom: string,
         @Query('locations') locations: string, @Query('name') name: string, @Req() req
@@ -726,11 +738,15 @@ export class AttemptController {
     }
 
     @Get("/get-one/:id")
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     getAttempt(@Headers('instancekey') instancekey: string, @Param('id') attemptId: string) {
         return this.attemptService.getAttempt({ instancekey, attemptId })
     }
 
     @Get("/me/summaryAllSubjectCorrectByDate")
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     summaryAllSubjectCorrectByDateMe(
         @Headers('instancekey') instancekey: string, @Headers('timezoneoffset') timezoneoffset: number,
         @Query() query: SummarySubjectCorrectByDateMeRequest, @Req() req

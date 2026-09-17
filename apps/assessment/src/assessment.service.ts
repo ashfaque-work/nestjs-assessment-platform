@@ -3071,7 +3071,7 @@ export class AssessmentService {
       }
 
       this.practiceSetRepository.setInstanceKey(req.instancekey);
-      const practiceSets = await this.practiceSetRepository.find({ $and: filter }, null, { sort: sort, skip: skip, limit: limit }, [{ path: 'user', options: { lean: true } }])
+      const practiceSets = await this.practiceSetRepository.find({ $and: filter }, null, { sort: sort, skip: skip, limit: limit }, [{ path: 'user', select: '-salt -hashedPassword', options: { lean: true  } }])
 
       return { response: practiceSets };
     } catch (error) {
@@ -5993,7 +5993,7 @@ export class AssessmentService {
       this.feedbackRepository.setInstanceKey(request.instancekey)
 
       const [data, count] = await Promise.all([
-        await this.feedbackRepository.find(conditions, null, { sort: { [sortAttr]: sortType }, skip: skip, limit: limit }, [{ path: 'user', options: { lean: true } }]),
+        await this.feedbackRepository.find(conditions, null, { sort: { [sortAttr]: sortType }, skip: skip, limit: limit }, [{ path: 'user', select: '-salt -hashedPassword', options: { lean: true  } }]),
         await this.feedbackRepository.countDocuments(conditions),
       ]);
 

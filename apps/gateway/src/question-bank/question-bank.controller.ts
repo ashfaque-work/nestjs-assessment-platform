@@ -36,6 +36,8 @@ export class QuestionBankController {
 
   // get all question
   @Get()
+  @ApiHeader({ name: 'authtoken' })
+  @UseGuards(AuthenticationGuard)
   getAllQuestion(@Headers('instancekey') instancekey: string, @Query() request: GetAllQuestionRequest) {
     return this.questionBankService.getAllQuestion({ ...request, instancekey });
   }
@@ -187,6 +189,8 @@ export class QuestionBankController {
   }
 
   @Get('/questionTags')
+  @ApiHeader({ name: 'authtoken' })
+  @UseGuards(AuthenticationGuard)
   async getQuestionTags(@Headers('instancekey') instancekey: string) {
     return this.questionBankService.getQuestionTags({ instancekey })
   }
@@ -240,12 +244,16 @@ export class QuestionBankController {
   }
 
   @Get('/summarySubjectPractice/:practice')
+  @ApiHeader({ name: 'authtoken' })
+  @UseGuards(AuthenticationGuard)
   async summarySubjectPractice(@Headers('instancekey') instancekey: string, @Param('practice') practice: string) {
     return this.questionBankService.summarySubjectPractice(instancekey, practice)
   }
 
 
   @Get('/testSeriesSummaryBySubject')
+  @ApiHeader({ name: 'authtoken' })
+  @UseGuards(AuthenticationGuard)
   async testSeriesSummaryBySubject(@Headers('instancekey') instancekey: string, @Query('practice') practice: string) {
     return this.questionBankService.testSeriesSummaryBySubject(instancekey, practice)
   }
@@ -272,6 +280,8 @@ export class QuestionBankController {
   // get feedback of questions in a practice_set with question details
   @Get('/feedbackQuestion/:id')
   @ApiParam({ name: 'id', description: 'Practice ID' })
+  @ApiHeader({ name: 'authtoken' })
+  @UseGuards(AuthenticationGuard)
   async feedbackQuestion(@Headers('instancekey') instancekey: string, @Param('id') id: string, @Query() query: FeedbackQuestionRequest) {
     return this.questionBankService.feedbackQuestion({ instancekey, id, ...query })
   }
@@ -279,6 +289,8 @@ export class QuestionBankController {
   // how much practice question got feedback
   @Get('/feedbackQuestionCount/:id')
   @ApiParam({ name: 'id', description: 'Practice ID' })
+  @ApiHeader({ name: 'authtoken' })
+  @UseGuards(AuthenticationGuard)
   async feedbackQuestionCount(@Headers('instancekey') instancekey: string, @Param('id') id: string) {
     return this.questionBankService.feedbackQuestionCount({ instancekey, id })
   }
