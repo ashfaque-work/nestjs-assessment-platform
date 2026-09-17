@@ -2,6 +2,20 @@
 
 Backend for an online assessment and learning platform (tests, question bank, classrooms, courses, proctoring, e-commerce), built as a **NestJS microservices monorepo**.
 
+## Live demo
+
+**[assess.ashfaqueahmad.com/api](https://assess.ashfaqueahmad.com/api)** — Swagger UI for the running API.
+
+All 10 services, MongoDB and Redis run in Docker on a single 2-core ARM VM.
+
+To call a protected endpoint:
+
+1. `POST /auth/login` with the header `instancekey: staging` and body
+   `{ "userId": "demo-student@example.com", "password": "DmnTAiBaXDSPM4#7a" }`
+2. Send the returned token as the `authtoken` header, together with `instancekey: staging`.
+
+The demo holds sample data only, and is reset from time to time.
+
 ## Architecture
 
 ```
