@@ -9,6 +9,12 @@ import { RedisIoAdapter } from '@app/common';
 async function bootstrap() {
   const app = await NestFactory.create(GatewayModule);
   const configService = app.get(ConfigService);
+
+  // Behind a reverse proxy (nginx, Caddy, a load balancer) the client address is in
+  // X-Forwarded-For; without this, per-IP rate limits would count every visitor as one.
+  if (configService.get('TRUST_PROXY') !== 'false') {
+    app.getHttpAdapter().getInstance().set('trust proxy', 1);
+  }
   const config = new DocumentBuilder()
     .setTitle('Assessment Platform API')
     .setDescription('REST gateway for the assessment platform microservices')

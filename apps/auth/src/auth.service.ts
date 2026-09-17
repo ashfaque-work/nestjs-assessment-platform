@@ -44,11 +44,17 @@ export class AuthService {
       return { token: token };
 
     } catch (error) {
-      console.log('Error occured while login', error);
       if (error instanceof TypeError) {
+        Logger.error(error);
         throw new GrpcInvalidArgumentException('Some error occured!. Possible solution: Check with your Instance Key.');
       }
-      throw new GrpcInternalException(error);
+      // wrong email/password is a client error, not a server failure
+      const message = error?.message || (typeof error === 'string' ? error : 'Login failed');
+      if (/credential|password|not valid|not found/i.test(message)) {
+        throw new GrpcUnauthenticatedException('Invalid email or password');
+      }
+      Logger.error(error);
+      throw toGrpcError(error);
     }
   }
 

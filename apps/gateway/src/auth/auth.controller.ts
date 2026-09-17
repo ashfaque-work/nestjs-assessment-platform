@@ -4,6 +4,7 @@ import { AuthGatewayService } from './auth.service';
 import { ApiTags, ApiHeader, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { AuthenticationGuard, RequestAuthenticationGuard, RolesGuard, UserIdConversion } from '@app/common/auth';
 import { Roles } from '@app/common/decorators';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -383,6 +384,8 @@ export class AuthController {
     );
   }
 
+  // brute-force protection: a handful of attempts per minute per IP
+  @Throttle({ default: { limit: Number(process.env.LOGIN_THROTTLE_LIMIT ?? 10), ttl: 60_000 } })
   @Post('login')
   async login(@Headers('instancekey') instancekey: string, @Body() request: LoginReqDto, @Req() req: any) {
     const combinedData = {
@@ -598,6 +601,7 @@ export class AuthController {
     return this.authService.addSubjects(request);
   }
 
+  @Throttle({ default: { limit: Number(process.env.LOGIN_THROTTLE_LIMIT ?? 10), ttl: 60_000 } })
   @Post('recoverPassword')
   async recoverPassword(@Headers('instancekey') instancekey: string, @Body() request: RecoverPasswordReq) {
     request = {
