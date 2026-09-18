@@ -2,7 +2,8 @@ import {
   Attempt, AttemptDetail, AttemptDetailRepository, AttemptRepository, AttemptSubmissionRepository, ClassroomRepository,
   Constants, KhanAcademyRepository, MappingRepository, PracticeSetRepository,
   PsychoResult, PsychoResultRepository, QuestionFeedbackRepository, RedisCaching, SettingRepository, globals,
-  StudentRecommendationRepository, SubjectRepository, TopicRepository, UserLogRepository, UsersRepository, regexCode
+  StudentRecommendationRepository, SubjectRepository, TopicRepository, UserLogRepository, UsersRepository, regexCode,
+  toGrpcError
 } from '@app/common';
 import { fetchVideos, regex } from '@app/common/Utils';
 import { AttendanceRepository } from '@app/common/database/repositories/attendance.repository';
@@ -7809,7 +7810,7 @@ export class AttemptService {
       return { attempt: newAttempt }
 
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err);
     }
   }
 

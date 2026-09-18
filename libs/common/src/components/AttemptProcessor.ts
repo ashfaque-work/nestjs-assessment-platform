@@ -3,7 +3,7 @@ import { AttemptDetail, AttemptDetailRepository, AttemptRepository, ClassroomRep
 import { RedisCaching } from "../services";
 import { codingAnswerCompare, codingPartialMark, fibAnswerCompare, mixmatchAnswerCompare } from "../helpers/attempt";
 import { _ } from 'lodash'
-import { Constants } from "../helpers";
+import { Constants, toGrpcError } from "../helpers";
 import { round } from "../Utils";
 import { Types } from "mongoose";
 import { ObjectId } from "mongodb";
@@ -1292,9 +1292,9 @@ export class AttemptProcessor {
                 let userCorrectAnswers = [];
                 let userIncorrectAnswers = [];
                 if (userAnswerLookup[qId]) {
-                    userAnswerLookup[qId].subject = questions[i].subject
-                    userAnswerLookup[qId].unit = question[i].unit
-                    userAnswerLookup[qId].topic = question[i].topic
+                    userAnswerLookup[qId].subject = question.subject
+                    userAnswerLookup[qId].unit = question.unit
+                    userAnswerLookup[qId].topic = question.topic
                 }
 
 
@@ -1339,7 +1339,7 @@ export class AttemptProcessor {
                             if (codeData) {
                                 hasWrongAnswer = false;
                                 question.testcases.forEach(function (testcase) {
-                                    let userCase = _.find(userAnswerLookup[qId].answer[0].testcases, utc => {
+                                    let userCase = _.find(userAnswerLookup[qId].answers[0].testcases, utc => {
                                         let isTheCase = true
                                         if (question.hasArg) {
                                             isTheCase = utc.args == testcase.args
@@ -1410,7 +1410,7 @@ export class AttemptProcessor {
                             })
 
                             for (let c = 0; c < answers.length; c++) {
-                                if (answers[c].isCorreceAnswer) {
+                                if (answers[c].isCorrectAnswer) {
                                     answerCorrect.push(answers[c]._id.toString());
                                 } else {
                                     answerIncorrect.push(answers[c]._id.toString())
@@ -1447,7 +1447,7 @@ export class AttemptProcessor {
                         userAnswers = [];
                         userAnswers = userAnswerLookup[qId].answers;
                         for (let c in answers) {
-                            if (answers[c].isCorreceAnswer) {
+                            if (answers[c].isCorrectAnswer) {
                                 answerCorrect.push(answers[c]._id.toString());
                             }
                         }
@@ -1584,15 +1584,19 @@ export class AttemptProcessor {
             if (questionOrder) {
                 let newOrder = []
                 try {
-                    questionOrder.forEach(function (qOrder) {
+                    questionOrder.forEach(function (qOrder: any) {
+                        // The client sends plain question ids; older ones sent { q, answers }.
+                        const orderedId = qOrder && qOrder.q ? qOrder.q : qOrder;
                         // Find question data in order
                         let idx = _.findIndex(answerList, (q) => {
-                            return q.question.toString() == qOrder.q;
+                            return q.question.toString() == orderedId.toString();
                         });
                         if (idx > -1) {
                             let reorderQuestion = answerList[idx]
                             newOrder.push(reorderQuestion);
-                            reorderQuestion.answerOrder = qOrder.answers
+                            if (qOrder && qOrder.answers) {
+                                reorderQuestion.answerOrder = qOrder.answers
+                            }
                         } else {
                             Logger.warn('missing question order')
                             Logger.debug('%j', qOrder)
@@ -1679,8 +1683,8 @@ export class AttemptProcessor {
             }
 
         } catch (err) {
-            console.log(err);
-            throw "Internal server error"
+            Logger.error(`failed to evaluate attempt ${attemptId}`, err?.stack ?? err);
+            throw toGrpcError(err);
         }
     }
 }
