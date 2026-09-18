@@ -1,5 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { bool } from "aws-sdk/clients/signer";
 import { Types } from "mongoose";
 
 export interface Empty { }
@@ -343,7 +342,7 @@ class PracticeSetId {
     user: Types.ObjectId | User
     lastModifiesBy: Types.ObjectId
     lastModifiedDate: Date;
-    active: bool;
+    active: boolean;
     userInfo: UserInfo;
     units: Subject[];
     subjects: Subject[];
@@ -375,7 +374,7 @@ class PracticeSetId {
     expiresOn: Date;
     startDate: Date;
     startTimeAllowance: number;
-    requireAttendance: bool;
+    requireAttendance: boolean;
     totalJoinedStudent: number;
     createdAt: Date;
     updatedAt: Date;
@@ -547,7 +546,7 @@ export class User {
     email: string;
     roles: string[];
     name: string;
-    isActive: bool;
+    isActive: boolean;
     emailVerifyExpired: Date;
     managerPractice: boolean;
     practiceView: Types.ObjectId[];

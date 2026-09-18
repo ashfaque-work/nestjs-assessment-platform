@@ -6,7 +6,7 @@ import {
   PutObjectCommandOutput,
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
-import * as aws from 'aws-sdk';
+import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
 import { ConfigService } from '@nestjs/config';
 import { config } from '@app/common/config';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -155,26 +155,8 @@ export class S3Service {
   }
 
   async adaptive(method, payload) {
-    const lambda = new aws.Lambda({
-      accessKeyId: config.aws.lambda.accessKeyId,
-      secretAccessKey: config.aws.lambda.secretAccessKey,
-      region: config.aws.lambda.region
-    });
     payload.method = method;
-    const params = {
-      FunctionName: config.aws.lambda.functions.adaptive,
-      Payload: JSON.stringify(payload)
-    };
-
-    return new Promise((resolve, reject) => {
-      lambda.invoke(params, (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          return resolve(data);
-        }
-      });
-    });
+    return this.invokeLambda(config.aws.lambda.functions.adaptive, payload);
   }
 
   async downloadUserAsset(fileKey: string, fileDestination: string): Promise<void> {
@@ -200,30 +182,32 @@ export class S3Service {
   }
 
   async recognito(mode, database, userId, attemptId) {
-    const lambda = new aws.Lambda({
-      accessKeyId: config.aws.lambda.accessKeyId,
-      secretAccessKey: config.aws.lambda.secretAccessKey
+    return this.invokeLambda(config.aws.lambda.functions.faceRec, {
+      db: database,
+      student: userId,
+      attempt: attemptId,
+      mode: mode
     });
+  }
 
-    const params = {
-      FunctionName: config.aws.lambda.functions.faceRec,
-      Payload: JSON.stringify({
-        db: database,
-        student: userId,
-        attempt: attemptId,
-        mode: mode
-      })
+  // Invokes a Lambda function and returns { StatusCode, Payload } with Payload as the
+  // response text, the shape callers relied on with the v2 SDK (v3 returns bytes).
+  private async invokeLambda(functionName: string, payload: any) {
+    const lambda = new LambdaClient({
+      region: config.aws.lambda.region || this.region,
+      credentials: {
+        accessKeyId: config.aws.lambda.accessKeyId,
+        secretAccessKey: config.aws.lambda.secretAccessKey,
+      },
+    });
+    const response = await lambda.send(new InvokeCommand({
+      FunctionName: functionName,
+      Payload: new TextEncoder().encode(JSON.stringify(payload)),
+    }));
+    return {
+      ...response,
+      Payload: response.Payload ? new TextDecoder().decode(response.Payload) : undefined,
     };
-
-    return new Promise((resolve, reject) => {
-      lambda.invoke(params, (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          return resolve(data);
-        }
-      });
-    });
   }
 
   async faceCompare(sourceImage: string, targetImage: string) {

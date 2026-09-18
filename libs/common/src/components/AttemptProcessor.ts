@@ -1160,8 +1160,10 @@ export class AttemptProcessor {
 
                 Logger.debug('lambda invoked ' + attempt._id.toString())
 
-                const data = this.s3Service.recognito(config.aws.lambda.mode, database, attempt.user.toString(), attempt._id.toString());
-                Logger.log('%j', data)
+                // Runs in the background so the student does not wait for face recognition
+                this.s3Service.recognito(config.aws.lambda.mode, database, attempt.user.toString(), attempt._id.toString())
+                    .then((data) => Logger.log(`face recognition for attempt ${attempt._id}: status ${data.StatusCode}`))
+                    .catch((err) => Logger.error(`face recognition for attempt ${attempt._id} failed: ${err.message}`));
             }
         }
 

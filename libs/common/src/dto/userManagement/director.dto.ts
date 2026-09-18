@@ -1,4 +1,3 @@
-import { StepIndex } from "aws-sdk/clients/databrew";
 
 export class GetDashboardSummaryReq {
     id: string;
