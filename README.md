@@ -20,20 +20,62 @@ The demo holds sample data only, and is reset from time to time.
 
 ## Architecture
 
+One public HTTP service in front of nine gRPC services. Only the gateway is reachable from
+the internet; the services talk to each other over gRPC on a private Docker network.
+
+```mermaid
+flowchart LR
+    client["Browser / mobile client"]
+    caddy["Caddy<br/>TLS termination"]
+    gw["gateway<br/>REST + Swagger<br/>JWT, roles, rate limit"]
+
+    subgraph services["gRPC services (apps/)"]
+        direction TB
+        auth["auth<br/>users, login, institutes"]
+        admin["administration<br/>settings, platform, reports"]
+        assessment["assessment<br/>tests, sections"]
+        attempt["attempt<br/>attempts, analysis, proctoring"]
+        classroom["classroom"]
+        course["course"]
+        qbank["question-bank<br/>questions, feedback"]
+        ecommerce["ecommerce<br/>payments, coupons"]
+        notify["notify<br/>email"]
+    end
+
+    mongo[("MongoDB<br/>one database per instance")]
+    redis[("Redis<br/>cache + Bull queues")]
+    s3["AWS S3<br/>media, recordings"]
+
+    client -->|HTTPS| caddy --> gw
+    gw -->|gRPC| services
+    services --> mongo
+    gw --> redis
+    attempt --> redis
+    attempt --> s3
 ```
-            HTTP (REST + Swagger)             gRPC
-Client ───────────────────────────► gateway ──────────► auth            (users, login, institutes)
-                                      │    ├──────────► administration  (settings, platform, reports)
-                                      │    ├──────────► assessment      (tests, sections)
-                                      │    ├──────────► attempt         (test attempts, analysis, Bull queue)
-                                      │    ├──────────► classroom
-                                      │    ├──────────► course
-                                      │    ├──────────► question-bank   (questions, feedback, sessions)
-                                      │    ├──────────► ecommerce       (payments, coupons)
-                                      │    └──────────► notify          (email)
-                                      │
-                                   MongoDB (one database per instance) + Redis (cache, queues)
+
+Every RPC carries the caller's `instancekey`, which decides the database the repositories read:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant G as gateway
+    participant S as assessment
+    participant M as MongoDB
+
+    C->>G: GET /test/list<br/>authtoken + instancekey: staging
+    G->>G: verify the JWT, load roles
+    G->>S: gRPC ListTests (instancekey travels with the call)
+    Note over S: TenantAwareServerGrpc opens an<br/>AsyncLocalStorage scope for this call
+    S->>M: read from stagingdb
+    M-->>S: documents
+    S-->>G: tests
+    G-->>C: 200 JSON
 ```
+
+A second concurrent request for another instance runs in its own scope, so the two never
+share the key.
 
 | Path | What it is |
 |---|---|
