@@ -61,6 +61,7 @@ apps/*/.env
 *.yaml
 *.yml
 !docker-compose.local.yml
+!.github/workflows/*.yml
 DEPLOYMENT.md
 
 # SSL certificates and private keys

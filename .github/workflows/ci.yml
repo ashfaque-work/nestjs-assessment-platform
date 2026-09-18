@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check every app and library
+        run: npx tsc --noEmit -p tsconfig.json
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Unit tests
+        run: npx jest --ci --passWithNoTests
+
+      # A type error can still hide behind webpack's own resolution, so build the
+      # gateway and one microservice the way the Dockerfiles do.
+      - name: Build gateway and auth
+        run: |
+          npx nest build gateway
+          npx nest build auth
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the gateway image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/gateway/Dockerfile
+          target: production
+          push: false
