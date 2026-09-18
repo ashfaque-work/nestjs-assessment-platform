@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { CourseRepository, PracticeSetRepository, QuestionRepository, TestSeriesRepository, UserEnrollmentRepository, UsersRepository, regexName, shuffleArray } from "@app/common";
 import { AsessmentTrendReq, CourseTrendReq, GetAssessmetSubjectDistributionReq, GetCourseSubjectDistributionReq, GetQuestionSubjectDistributionReq, GetSoldDataReq, GetTestseriesSubjectDistributionReq, GetTransactionLogsReq, IndexPublisherReq, TestSeriesTrendReq } from "@app/common/dto/userManagement/publisher.dto";
 import { Injectable } from "@nestjs/common";
@@ -56,7 +57,7 @@ export class PublisherService {
                 };
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -231,7 +232,7 @@ export class PublisherService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -258,7 +259,7 @@ export class PublisherService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -285,7 +286,7 @@ export class PublisherService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -312,7 +313,7 @@ export class PublisherService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -338,7 +339,7 @@ export class PublisherService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -413,7 +414,7 @@ export class PublisherService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -488,7 +489,7 @@ export class PublisherService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -563,7 +564,7 @@ export class PublisherService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -690,7 +691,7 @@ export class PublisherService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 }

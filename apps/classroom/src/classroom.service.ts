@@ -99,7 +99,7 @@ export class ClassroomService {
         throw new InternalServerErrorException ('not found');
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -319,7 +319,7 @@ export class ClassroomService {
       }
 
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -548,7 +548,7 @@ export class ClassroomService {
       }));
       return subjects;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -577,7 +577,7 @@ export class ClassroomService {
 
       return result;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -619,7 +619,7 @@ export class ClassroomService {
 
       return topics;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -693,7 +693,7 @@ export class ClassroomService {
 
       return populatedResults;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -806,7 +806,7 @@ export class ClassroomService {
       return result;
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -913,7 +913,7 @@ export class ClassroomService {
       return result;
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1039,7 +1039,7 @@ export class ClassroomService {
         await this.messageCenter.sendWithTemplate(request, file, options, dataMsgCenter);
       }));
     } catch (err) {
-      throw new GrpcInternalException(err.message)
+      throw toGrpcError(err);
     }
   }
 
@@ -1140,7 +1140,7 @@ export class ClassroomService {
 
       return { response: classrooms || [] };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1254,7 +1254,7 @@ export class ClassroomService {
 
       return { response: results };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1318,7 +1318,7 @@ export class ClassroomService {
 
       return { count: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1355,7 +1355,7 @@ export class ClassroomService {
         return { response: locations };
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1439,7 +1439,7 @@ export class ClassroomService {
 
       return { response: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1479,7 +1479,7 @@ export class ClassroomService {
       if(error instanceof NotFoundException){
         throw new GrpcNotFoundException(error.message)
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1554,7 +1554,7 @@ export class ClassroomService {
 
       return classroom;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1568,7 +1568,7 @@ export class ClassroomService {
         return { response: result };
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1594,7 +1594,7 @@ export class ClassroomService {
         return { count: count };
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1668,7 +1668,7 @@ export class ClassroomService {
 
       return { response: teachers };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1754,7 +1754,7 @@ export class ClassroomService {
 
       return { response: students };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1835,7 +1835,7 @@ export class ClassroomService {
 
       return result;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1923,7 +1923,7 @@ export class ClassroomService {
       });
 
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2000,7 +2000,7 @@ export class ClassroomService {
 
       return { count: count };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2054,7 +2054,7 @@ export class ClassroomService {
 
       return { results: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2094,7 +2094,7 @@ export class ClassroomService {
       }
       return { results: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2135,7 +2135,7 @@ export class ClassroomService {
 
       return { results: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2179,7 +2179,7 @@ export class ClassroomService {
 
       return { results: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2224,7 +2224,7 @@ export class ClassroomService {
 
       return { results: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2290,7 +2290,7 @@ export class ClassroomService {
       }
       return { message: "No classroom found." }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2359,7 +2359,7 @@ export class ClassroomService {
         return { message: 'No Files Found' };
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2396,7 +2396,7 @@ export class ClassroomService {
         return { message: "No classroom found." }
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2544,7 +2544,7 @@ export class ClassroomService {
       }
       return result;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2607,7 +2607,7 @@ export class ClassroomService {
 
       return { subjects: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2788,7 +2788,7 @@ export class ClassroomService {
         }
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2903,7 +2903,7 @@ export class ClassroomService {
 
       return { students: students };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2947,7 +2947,7 @@ export class ClassroomService {
       const result = await this.classroomRepository.aggregate(pipe);
       return result[0] || { count: 0 };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2991,7 +2991,7 @@ export class ClassroomService {
 
       return oStudent;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3009,7 +3009,7 @@ export class ClassroomService {
 
       return data.length > 0 ? { assignments: data } : { assignments: [] };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3057,7 +3057,7 @@ export class ClassroomService {
 
       return { results: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3180,7 +3180,7 @@ export class ClassroomService {
 
       return { data: data };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3244,7 +3244,7 @@ export class ClassroomService {
       Logger.warn('No Assignment Found');
       return { status: 422, error: 'No Assignment Found' };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3291,7 +3291,7 @@ export class ClassroomService {
 
       return { status: 200, classroom: updateResult };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3416,7 +3416,7 @@ export class ClassroomService {
 
       return { status: 200, _id: updateResult._id };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3447,7 +3447,7 @@ export class ClassroomService {
 
       return { assignment: assignments[0].students.assignments };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3474,7 +3474,7 @@ export class ClassroomService {
 
       return { status: 200, classroom: updatedClassroom };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3588,7 +3588,7 @@ export class ClassroomService {
       }
       return { data: assign };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3619,7 +3619,7 @@ export class ClassroomService {
 
       return { status: 400, error: 'Invalid data' };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3647,7 +3647,7 @@ export class ClassroomService {
 
       return { status: 200, _id: updatedClassroom._id };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3700,7 +3700,7 @@ export class ClassroomService {
 
       return { status: 200, classroom: updatedClassroom };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3750,7 +3750,7 @@ export class ClassroomService {
         return { sessions };
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3788,7 +3788,7 @@ export class ClassroomService {
       }
       return { status: 403, error: 'Invalid input' };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3828,7 +3828,7 @@ export class ClassroomService {
 
       return { response: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3849,7 +3849,7 @@ export class ClassroomService {
 
       return { status: 200, message: 'Sessions has been reset.' };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3889,7 +3889,7 @@ export class ClassroomService {
 
       return { admitted: att.admitted, status: att.status, updatedAt: att.updatedAt };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3908,7 +3908,7 @@ export class ClassroomService {
 
       return { status: 200, classroom: updateResult };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3936,7 +3936,7 @@ export class ClassroomService {
 
       return { status: 200, message: 'Student status updated successfully.' };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3972,7 +3972,7 @@ export class ClassroomService {
 
       return { status: 200, classroom: newClassRoom };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4006,7 +4006,7 @@ export class ClassroomService {
       const newClassroom = await this.classroomRepository.create(data);
       return newClassroom;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4065,7 +4065,7 @@ export class ClassroomService {
 
       return { status: 200, result: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4213,7 +4213,7 @@ export class ClassroomService {
       });
       return results;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4249,7 +4249,7 @@ export class ClassroomService {
 
       return { message: 'OK' };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4334,7 +4334,7 @@ export class ClassroomService {
 
       return { studentId: studentId };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4499,7 +4499,7 @@ export class ClassroomService {
 
       return result
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4677,7 +4677,7 @@ export class ClassroomService {
 
       return { response: students }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4692,7 +4692,7 @@ export class ClassroomService {
       }
       return { response: classStatusUpdated }
     } catch (error) {
-      throw new GrpcInternalException('Failed to update Class Status');
+      throw toGrpcError(error, 'Failed to update Class Status');
     }
   }
 
@@ -4749,7 +4749,7 @@ export class ClassroomService {
       });
       return results;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4790,7 +4790,7 @@ export class ClassroomService {
 
       return { status: 200, result: updateResult._id };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4879,7 +4879,7 @@ export class ClassroomService {
         response: reqStudents
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5045,7 +5045,7 @@ export class ClassroomService {
 
       return { status: 200, students: students };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5076,7 +5076,7 @@ export class ClassroomService {
 
       return { data: data };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5163,7 +5163,7 @@ export class ClassroomService {
 
       return { status: 200, data: data };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5260,7 +5260,7 @@ export class ClassroomService {
 
       return { status: 200, data: data };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5336,7 +5336,7 @@ export class ClassroomService {
       ]);
       return { status: 200, currentDay: data[0] };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5423,7 +5423,7 @@ export class ClassroomService {
       ]);
       return { status: 200, students: students };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5469,7 +5469,7 @@ export class ClassroomService {
 
       return { status: 200, students: students };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5504,7 +5504,7 @@ export class ClassroomService {
 
       return { status: 200, students: students };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5546,7 +5546,7 @@ export class ClassroomService {
 
       return { status: 200, students: students };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5624,7 +5624,7 @@ export class ClassroomService {
 
       return { status: 200, result: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5658,7 +5658,7 @@ export class ClassroomService {
       }
       return { status: 200, result: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5747,7 +5747,7 @@ export class ClassroomService {
 
       return { status: 200, results: results };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5772,7 +5772,7 @@ export class ClassroomService {
 
       return { status: 200, result: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5793,7 +5793,7 @@ export class ClassroomService {
 
       return { status: 200, data: data };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5818,7 +5818,7 @@ export class ClassroomService {
 
       return { status: 200, result: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5839,7 +5839,7 @@ export class ClassroomService {
 
       return { status: 200, meeting: meeting };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5861,7 +5861,7 @@ export class ClassroomService {
 
       return { status: 200, meeting: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5887,7 +5887,7 @@ export class ClassroomService {
 
       return { status: 200, recordings: recordings };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5912,7 +5912,7 @@ export class ClassroomService {
 
       return { status: 200, total: total };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -6052,9 +6052,9 @@ export class ClassroomService {
       }
     } catch (error) {
       if (error instanceof InternalServerErrorException) {
-        throw new GrpcInternalException(error.getResponse())
+        throw toGrpcError(error, error.getResponse());
       }
-      throw new GrpcInternalException({ code: 1, data: 'Corupted excel file' })
+      throw toGrpcError(error, { code: 1, data: 'Corupted excel file' });
     }
   }
 
@@ -6196,9 +6196,9 @@ export class ClassroomService {
       }
     } catch (error) {
       if (error instanceof InternalServerErrorException) {
-        throw new GrpcInternalException(error.getResponse())
+        throw toGrpcError(error, error.getResponse());
       }
-      throw new GrpcInternalException({ code: 1, data: 'Corupted excel file' })
+      throw toGrpcError(error, { code: 1, data: 'Corupted excel file' });
     }
   }
 
@@ -6576,9 +6576,9 @@ export class ClassroomService {
       }
     } catch (error) {
       if (error instanceof InternalServerErrorException) {
-        throw new GrpcInternalException(error.getResponse())
+        throw toGrpcError(error, error.getResponse());
       }
-      throw new GrpcInternalException({ code: 1, data: 'Corupted excel file' })
+      throw toGrpcError(error, { code: 1, data: 'Corupted excel file' });
     }
   }
 }

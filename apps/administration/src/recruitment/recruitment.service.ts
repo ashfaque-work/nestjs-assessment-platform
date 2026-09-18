@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { AttemptRepository, globals, InstanceRepository, ProgramRepository, RedisCaching, regex, RegionRepository, SettingRepository, SubjectRepository, urlJoin, UserFavRepository, UserSearchRepository, UsersRepository } from '@app/common';
 import { greenTDBik, instanceKeys } from '@app/common/config';
 import { AddFavoriteRequest, DeleteByIdRequest, GetBehaviorRequest, GetCollegesRequest, GetGradeSummaryRequest, GetMetadataRequest, GetRegionRequest, GetSavedSearchRequest, GetSearchDetailRequest, GetTierRequest, RemoveFavoriteRequest, SaveRequest, SearchRequest, ViewProfileRequest } from '@app/common/dto/administration';
@@ -29,7 +30,7 @@ export class RecruitmentService {
         }
         catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -184,7 +185,7 @@ export class RecruitmentService {
         }
         catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -206,7 +207,7 @@ export class RecruitmentService {
         }
         catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -242,7 +243,7 @@ export class RecruitmentService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -502,7 +503,7 @@ export class RecruitmentService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -538,7 +539,7 @@ export class RecruitmentService {
             return { ...res };
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -1150,7 +1151,7 @@ export class RecruitmentService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -1165,7 +1166,7 @@ export class RecruitmentService {
             return { status: 'OK' };
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -1184,7 +1185,7 @@ export class RecruitmentService {
         }
         catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -1196,7 +1197,7 @@ export class RecruitmentService {
             return { status: 'OK' };
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 

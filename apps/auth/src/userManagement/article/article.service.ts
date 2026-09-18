@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { ArticlesRepository } from "@app/common";
 import { CreateArticleReq, DestroyArticleReq, FindOneReq, IndexReq, NotvoteReq, UndoNotvoteReq, UnvoteReq, UpdateArticleReq, UpdateCountReq, VoteReq } from "@app/common/dto/userManagement/article.dto";
 import { Injectable } from "@nestjs/common";
@@ -160,7 +161,7 @@ export class ArticleService {
                 response: "Ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -180,7 +181,7 @@ export class ArticleService {
                 throw new Error("Id is required")
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -255,7 +256,7 @@ export class ArticleService {
                 response: "Ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -281,7 +282,7 @@ export class ArticleService {
                 response: "Okk"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -321,7 +322,7 @@ export class ArticleService {
                 response: updatedArticle
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -411,7 +412,7 @@ export class ArticleService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException("error.message")
+            throw toGrpcError(error, "error.message");
         }
     }
 
@@ -432,7 +433,7 @@ export class ArticleService {
                 response: article
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 }

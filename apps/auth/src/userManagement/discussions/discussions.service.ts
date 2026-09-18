@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { ClassroomRepository, CourseRepository, DiscussionRepository, NotificationRepository, PushService, QuestionFeedbackRepository, RedisCaching, RedisClient, UsersRepository } from "@app/common";
 import { GetClassroomPostsReq, GetCommentsReq, GetCreateReq, GetDeleteReq, GetDiscussionOfCourseReq, GetDiscussionReq, GetFlagDiscussionReq, GetFlaggedPostReq, GetMySavedPostsReq, GetNotvoteReq, GetOneFlaggedPostReq, GetOneReq, GetUndonotvoteReq, GetUnflagDiscussionReq, GetUnvoteReq, GetVoteReq, GetYourPostsReq, PostCommentReq, PostUpdateReq, SavePostReq, UnsavedPostReq, createDiscussionRespondReq } from "@app/common/dto/userManagement/discussions.dto";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
@@ -549,7 +550,7 @@ export class DiscussionsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -599,7 +600,7 @@ export class DiscussionsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -651,7 +652,7 @@ export class DiscussionsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -710,7 +711,7 @@ export class DiscussionsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -722,7 +723,7 @@ export class DiscussionsService {
                 response: "Ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -738,7 +739,7 @@ export class DiscussionsService {
                 response: "Ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -776,7 +777,7 @@ export class DiscussionsService {
 
             return request.query.count ? { posts, count } : { posts };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -806,7 +807,7 @@ export class DiscussionsService {
                 response: post
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -947,7 +948,7 @@ export class DiscussionsService {
             }
 
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -978,7 +979,7 @@ export class DiscussionsService {
 
 
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1006,7 +1007,7 @@ export class DiscussionsService {
             }
 
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1066,7 +1067,7 @@ export class DiscussionsService {
             if (error instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(error.message)
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1109,7 +1110,7 @@ export class DiscussionsService {
                 response: newcomment
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -1156,7 +1157,7 @@ export class DiscussionsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -1181,7 +1182,7 @@ export class DiscussionsService {
                 response: "Ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1206,7 +1207,7 @@ export class DiscussionsService {
                 response: "Ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1236,7 +1237,7 @@ export class DiscussionsService {
                 response: "Ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1263,7 +1264,7 @@ export class DiscussionsService {
                 response: "Ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1313,7 +1314,7 @@ export class DiscussionsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -1342,7 +1343,7 @@ export class DiscussionsService {
                 response: "ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1370,7 +1371,7 @@ export class DiscussionsService {
                 response: "ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1515,7 +1516,7 @@ export class DiscussionsService {
                 throw new Error("Add response first")
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 }

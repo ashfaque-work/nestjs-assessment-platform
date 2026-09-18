@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CodesnippetRepository, escapeRegex, getRandomCode } from '@app/common';
 import {
@@ -42,7 +43,7 @@ export class CodesnippetService {
         return { snippets };
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -62,7 +63,7 @@ export class CodesnippetService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -76,7 +77,7 @@ export class CodesnippetService {
 
       return { message: 'ok' };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -96,7 +97,7 @@ export class CodesnippetService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -125,7 +126,7 @@ export class CodesnippetService {
 
       return newCode;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -138,7 +139,7 @@ export class CodesnippetService {
 
       return { message: 'ok' };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 }

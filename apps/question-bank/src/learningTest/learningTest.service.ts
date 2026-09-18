@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { QuestionRepository, AttemptDetailRepository, AttemptRepository, PracticeSetRepository, SubjectRepository, UnitRepository, AttendanceRepository, RedisCaching, TestSeriesRepository, UsersRepository, UserCourseRepository, ClassroomRepository, Constants, AttemptDetail, CourseRepository } from '@app/common';
 import { AttemptProcessor } from '@app/common/components/AttemptProcessor';
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException, PreconditionFailedException } from '@nestjs/common';
@@ -79,7 +80,7 @@ export class LearningTestService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -256,7 +257,7 @@ export class LearningTestService {
             return { 'practice': practiceSet, attemptDetailId: attemptdetails._id, question: question, attempt: req.query.attempt, currPage: 1 }
         } catch (err) {
             Logger.error(err);
-            throw new InternalServerErrorException(err.message);
+            throw toGrpcError(err);
         }
     }
     // The practice set along with creater of that practice set.
@@ -317,7 +318,7 @@ export class LearningTestService {
             }
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -805,7 +806,7 @@ export class LearningTestService {
                 })
             } catch (err) {
                 Logger.error(err)
-                throw new InternalServerErrorException('Something went wrong while updating Attempt!');
+                throw toGrpcError(err, 'Something went wrong while updating Attempt!');
             }
 
             if (!doc.partiallyAttempted) {
@@ -828,7 +829,7 @@ export class LearningTestService {
                     new: true
                 })
             } catch (err) {
-                throw new InternalServerErrorException('Something went wrong while updating Attempt!');
+                throw toGrpcError(err, 'Something went wrong while updating Attempt!');
             }
 
             var totalTime = resp.totalTime

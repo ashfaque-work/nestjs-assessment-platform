@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable, Logger } from '@nestjs/common';
 import { AttemptRepository } from '@app/common';
 import { GrpcInternalException } from 'nestjs-grpc-exceptions';
@@ -50,7 +51,7 @@ export class NiitService {
 
       return { result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 

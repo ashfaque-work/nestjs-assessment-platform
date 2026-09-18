@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { AttemptRepository, CourseRepository, DiscussionRepository, PracticeSetRepository, QuestionRepository, TestSeriesRepository, UsersRepository } from "@app/common";
 import { GetAbandonedAttemptTrendReq, GetAttemptTrendReq, GetAvgTimeSpendByCourseReq, GetDashboardSummaryReq, GetLoginTrendByClassroomReq, GetMostAttemptedStudentReq, GetPostTrendByLocationReq, GetQuestionAddedTrendReq, GetStudentOnboardingDistributionReq, GetTestSeriesAttemptTrendBySubjectReq } from "@app/common/dto/userManagement/director.dto";
 import timeHelper from "@app/common/helpers/time-helper";
@@ -150,7 +151,7 @@ export class DirectorService {
                 ...summary
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -193,7 +194,7 @@ export class DirectorService {
                 ...result[0]
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -297,7 +298,7 @@ export class DirectorService {
                 ...result[0]
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -355,7 +356,7 @@ export class DirectorService {
                 response: results
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -417,7 +418,7 @@ export class DirectorService {
                 return { response: [] }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -463,7 +464,7 @@ export class DirectorService {
                 ...result[0]
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -511,7 +512,7 @@ export class DirectorService {
                 response: result[0]
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -557,7 +558,7 @@ export class DirectorService {
                 ...result[0]
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -591,7 +592,7 @@ export class DirectorService {
                 response: 'Ok'
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -659,7 +660,7 @@ export class DirectorService {
                 ...result[0]
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 }

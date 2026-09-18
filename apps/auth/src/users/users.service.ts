@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, AttemptDetailRepository, AttemptRepository, AttendanceRepository, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, ClassroomRepository, CloseUserAccountReq, CompetenciesRepository, CountTotalUsersReq, CouponRepository, CourseRepository, CreateUserDto, CreateUserResponse, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, EventBus, EventsRepository, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LocationRepository, LoginAfterOauthReq, LoginReqDto, ManageSessionReq, MarketingUtmRepository, NotificationRepository, NotificationTemplateRepository, PartnerUserReq, PracticeSetRepository, PsychoIndexReq, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReportedUserRepository, RequestEmailCodeReq, SendForReviewDossierReq, Setting, SettingRepository, SocialLoginReq, SocketClientService, StartOneOnOneWbSessionRequest, SubjectRepository, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUtmStatusReq, User, UserCourseRepository, UserLiveBoardRequest, UserRecentActivityReq, UserSuperCoinsRepository, UsersRepository, ValidateUserPictureRequest, VerifiedCodeReq, canOnlySeeHisOwnContents, canOnlySeeLocationContents, getRandomCode, isEmail } from "@app/common";
 import { NotifyGrpcClientService } from "@app/common/grpc-clients/notify";
 import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UnprocessableEntityException } from "@nestjs/common";
@@ -198,7 +199,7 @@ export class UsersService {
       return { response: 'OK' };
     } catch (err) {
       console.log(err);
-      throw new GrpcInternalException(err);
+      throw toGrpcError(err);
     }
   }
 
@@ -310,7 +311,7 @@ export class UsersService {
       }
       else {
         console.log("Token Error", error);
-        throw new GrpcInternalException("Internal Server Error");
+        throw toGrpcError(error, "Internal Server Error");
       }
     }
   }
@@ -593,7 +594,7 @@ export class UsersService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message)
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -614,7 +615,7 @@ export class UsersService {
       return updatedCounry.country;
     } catch (error) {
       console.error('Error updating user country', error);
-      throw new GrpcInternalException('Something went wrong while updating user country');
+      throw toGrpcError(error, 'Something went wrong while updating user country');
     }
   }
 
@@ -679,7 +680,7 @@ export class UsersService {
 
       return { response: updatedUser };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -709,7 +710,7 @@ export class UsersService {
 
       return { response: 'Status updated' };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -741,7 +742,7 @@ export class UsersService {
 
       return { response: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -757,7 +758,7 @@ export class UsersService {
 
       return { response: 'User blocked' }
     } catch (e) {
-      throw new GrpcInternalException(e);
+      throw toGrpcError(e);
     }
   }
 
@@ -787,7 +788,7 @@ export class UsersService {
       return { response: newLocation };
     } catch (error) {
       console.error('Error adding location:', error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -810,7 +811,7 @@ export class UsersService {
       return { response: editLocation };
     } catch (error) {
       console.error('Error adding location:', error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -838,7 +839,7 @@ export class UsersService {
       return { response: 'Subjects added successfully' };
     } catch (error) {
       console.error('Error adding subjects:', error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -953,7 +954,7 @@ export class UsersService {
         certPath: 'download/certificate/' + com.userId.toString() + '/' + request.code + '.pdf'
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -972,7 +973,7 @@ export class UsersService {
       }
     } catch (error) {
       console.error('Error getting user public profile:', error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -990,7 +991,7 @@ export class UsersService {
       }
     } catch (error) {
       console.error('Error getting new roll numbver:', error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1069,7 +1070,7 @@ export class UsersService {
       }
     } catch (error) {
       console.error('Error getting the user:', error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1080,7 +1081,7 @@ export class UsersService {
         response: updatedField
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1430,7 +1431,7 @@ export class UsersService {
         response: res
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -1453,7 +1454,7 @@ export class UsersService {
         ...result
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1702,7 +1703,7 @@ export class UsersService {
         response: data
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2044,7 +2045,7 @@ export class UsersService {
         throw new Error("Please add Activity Id")
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -2315,7 +2316,7 @@ export class UsersService {
       }
     } catch (error) {
       Logger.error(error.message)
-      throw new GrpcInternalException("Internal Server Error")
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -2433,7 +2434,7 @@ export class UsersService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Interna Server Error");
+      throw toGrpcError(error, "Interna Server Error");
     }
   }
 
@@ -2788,9 +2789,9 @@ export class UsersService {
     } catch (error) {
       Logger.error(error)
       if (error instanceof UnprocessableEntityException) {
-        throw new GrpcInternalException(error.message);
+        throw toGrpcError(error);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3056,7 +3057,7 @@ export class UsersService {
         response: "ok"
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3245,7 +3246,7 @@ export class UsersService {
       }
     } catch (error) {
       console.log(error)
-      throw new GrpcInternalException(error)
+      throw toGrpcError(error);
     }
   }
 
@@ -3348,7 +3349,7 @@ export class UsersService {
         response: "OK"
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -3523,7 +3524,7 @@ export class UsersService {
       }
     } catch (error) {
       console.log(error)
-      throw new InternalServerErrorException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -3613,7 +3614,7 @@ export class UsersService {
         return user;
       }
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3665,7 +3666,7 @@ export class UsersService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3927,7 +3928,7 @@ export class UsersService {
 
         } catch (err) {
           // validationError(res, err);
-          throw new GrpcInternalException(err.message);
+          throw toGrpcError(err);
         }
       } else {
         throw new GrpcInternalException("Identity verification failed. Make sure to re-take the picture with only you in the camera. You may also upload a different and most current identity verification document");
@@ -3997,7 +3998,7 @@ export class UsersService {
         }
         return { msg: "ok" }
       } catch (error) {
-        throw new GrpcInternalException(error);
+        throw toGrpcError(error);
       }
     }
 
@@ -4036,7 +4037,7 @@ export class UsersService {
 
       return { valid: true, confidence: validFaces[0].Confidence };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4773,7 +4774,7 @@ export class UsersService {
       }
     } catch (error) {
       console.log(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5018,7 +5019,7 @@ export class UsersService {
 
     } catch (ex) {
       Logger.error(ex)
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(ex, "Internal Server Error");
     }
   }
 
@@ -5078,7 +5079,7 @@ export class UsersService {
       return result;
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5150,7 +5151,7 @@ export class UsersService {
       return { status: 'ok' };
     } catch (ex) {
       Logger.error(ex)
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(ex, "Internal Server Error");
     }
   }
 
@@ -5265,9 +5266,9 @@ export class UsersService {
         throw new GrpcPermissionDeniedException(error.message)
       }
       if (error instanceof InternalServerErrorException) {
-        throw new GrpcInternalException(error.getResponse());
+        throw toGrpcError(error, error.getResponse());
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5371,7 +5372,7 @@ export class UsersService {
       return;
     } catch (error) {
       Logger.log(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5436,7 +5437,7 @@ export class UsersService {
       if (error instanceof ForbiddenException) {
         throw new GrpcPermissionDeniedException(error.message)
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5490,7 +5491,7 @@ export class UsersService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5606,7 +5607,7 @@ export class UsersService {
       } else if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 

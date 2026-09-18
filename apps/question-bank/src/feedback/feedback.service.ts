@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { AttemptDetailRepository, AttemptRepository, AttendanceRepository, emailMapFromEnv, FeedbackRepository, isEmail, NotificationRepository, PracticeSetRepository, QuestionFeedbackRepository, QuestionRepository, RedisCaching, regexCode, SocketClientService, UsersRepository } from '@app/common';
 import { MessageCenter } from '@app/common/components/messageCenter';
 import { config } from '@app/common/config';
@@ -153,7 +154,7 @@ export class FeedbackService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -180,7 +181,7 @@ export class FeedbackService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -487,7 +488,7 @@ export class FeedbackService {
             }
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -513,7 +514,7 @@ export class FeedbackService {
             return { response: data };
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -539,7 +540,7 @@ export class FeedbackService {
             return result;
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -564,7 +565,7 @@ export class FeedbackService {
                     }
                 } catch (ex) {
                     Logger.error(ex);
-                    throw new InternalServerErrorException(ex.message);
+                    throw toGrpcError(ex);
                 }
             }
 
@@ -573,7 +574,7 @@ export class FeedbackService {
             return count;
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -712,9 +713,9 @@ export class FeedbackService {
         } catch (error) {
             Logger.error(error);
             if (error instanceof UnprocessableEntityException) {
-                throw new GrpcInternalException(error.getResponse());
+                throw toGrpcError(error, error.getResponse());
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -773,7 +774,7 @@ export class FeedbackService {
             this.messageCenter.sendWithTemplate({ instancekey: req.instancekey }, 'question-feedback', options, dataMsgCenter)
         } catch (ex) {
             Logger.error(ex)
-            throw new InternalServerErrorException(ex);
+            throw toGrpcError(ex);
         }
     }
 
@@ -832,7 +833,7 @@ export class FeedbackService {
                 }
             })
         } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -888,7 +889,7 @@ export class FeedbackService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 }

@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import {
   LocationRepository, UsersRepository, ClassroomRepository, getRandomCode, NotificationRepository, isEmail
@@ -48,7 +49,7 @@ export class AdministrationService {
       });
       return location;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -119,7 +120,7 @@ export class AdministrationService {
       ]);
       return { response: locations };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -135,7 +136,7 @@ export class AdministrationService {
         throw ('Location not found');
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -178,7 +179,7 @@ export class AdministrationService {
         throw new InternalServerErrorException('Location not found');
       }
     } catch (error) {
-      throw new GrpcInternalException('Failed to update location');
+      throw toGrpcError(error, 'Failed to update location');
     }
   }
 
@@ -217,7 +218,7 @@ export class AdministrationService {
       return { response: updatedLocation };
 
     } catch (error) {
-      throw new GrpcInternalException('Failed to update location');
+      throw toGrpcError(error, 'Failed to update location');
     }
   }
 
@@ -232,7 +233,7 @@ export class AdministrationService {
         throw ('Location not found');
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -253,7 +254,7 @@ export class AdministrationService {
       return { response: locationNames };
 
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -347,9 +348,9 @@ export class AdministrationService {
       }
     } catch (error) {
       if (error instanceof InternalServerErrorException) {
-        throw new GrpcInternalException(error.getResponse())
+        throw toGrpcError(error, error.getResponse());
       }
-      throw new GrpcInternalException({ code: 1, data: 'Corupted excel file' })
+      throw toGrpcError(error, { code: 1, data: 'Corupted excel file' });
     }
   }
 

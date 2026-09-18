@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { FavoriteRepository, PracticeSetRepository } from '@app/common';
 import { CountByMeRequest, CreateFavoriteRequest, DestroyByUserRequest, FindAllPracticesRequest, FindByPracticeRequest } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -65,7 +66,7 @@ export class FavoriteService {
             return { response: practiceSets };
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     };
 
@@ -83,7 +84,7 @@ export class FavoriteService {
             return practice;
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -102,7 +103,7 @@ export class FavoriteService {
             return { count: result };
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -140,7 +141,7 @@ export class FavoriteService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.message);
               }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 }

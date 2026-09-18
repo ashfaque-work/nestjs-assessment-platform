@@ -1956,7 +1956,7 @@ export class AttemptService {
         }
         return subject
       } catch (err) {
-        throw new InternalServerErrorException ("Instance " + request.instancekey + " Missing subject with Id: " + subject._id.toString())
+        throw toGrpcError(err, "Instance " + request.instancekey + " Missing subject with Id: " + subject._id.toString());
       }
     }))
     return results
@@ -2109,7 +2109,7 @@ export class AttemptService {
         }
         return subject
       } catch (err) {
-        throw new InternalServerErrorException ("Instance " + request.instancekey + " Missing subject with Id: " + subject._id.toString())
+        throw toGrpcError(err, "Instance " + request.instancekey + " Missing subject with Id: " + subject._id.toString());
       }
     }))
     return results
@@ -2758,7 +2758,7 @@ export class AttemptService {
       return results
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -3323,7 +3323,7 @@ export class AttemptService {
       return result
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
   async findOneItem(request, filter) {
@@ -3447,7 +3447,7 @@ export class AttemptService {
       return attemptObj;
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -3666,7 +3666,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -3691,7 +3691,7 @@ export class AttemptService {
       return { attempt }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -3705,7 +3705,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -3747,7 +3747,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -3792,7 +3792,7 @@ export class AttemptService {
       })
       return { allowed }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -3839,7 +3839,7 @@ export class AttemptService {
       return { docs }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -3936,7 +3936,7 @@ export class AttemptService {
       return { count }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -3973,7 +3973,7 @@ export class AttemptService {
       }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4025,7 +4025,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -4047,7 +4047,7 @@ export class AttemptService {
       return { attempt }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server Error"
+      throw toGrpcError(err, "Internal server Error");
     }
   }
 
@@ -4064,7 +4064,7 @@ export class AttemptService {
       return { attempt }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server Error"
+      throw toGrpcError(err, "Internal server Error");
     }
   }
 
@@ -4312,7 +4312,7 @@ export class AttemptService {
     } catch (err) {
       Logger.error(err);
 
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -4348,7 +4348,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -4369,7 +4369,7 @@ export class AttemptService {
       return { contents }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4483,11 +4483,11 @@ export class AttemptService {
         return { attemptObj };
       } catch (err) {
         Logger.error(err);
-        throw "Internal Server Error"
+        throw toGrpcError(err, "Internal Server Error");
       }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4504,7 +4504,7 @@ export class AttemptService {
       return { attemptObj }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4536,7 +4536,7 @@ export class AttemptService {
       return { attempts }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4567,7 +4567,7 @@ export class AttemptService {
       let results = await this.getListSubjects(request, condition)
       return { results }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4580,7 +4580,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4593,7 +4593,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -4608,7 +4608,7 @@ export class AttemptService {
       return { result }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -4628,7 +4628,7 @@ export class AttemptService {
       return { result }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4639,7 +4639,7 @@ export class AttemptService {
       let result = await this.summarySubjectCorrect(request, condition)
       return { result }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4656,7 +4656,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4670,7 +4670,7 @@ export class AttemptService {
       return { results }
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4683,7 +4683,7 @@ export class AttemptService {
       return { results }
 
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4697,7 +4697,7 @@ export class AttemptService {
       let results = await this.summaryAttemptedBySubject(request, condition)
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -4708,7 +4708,7 @@ export class AttemptService {
       let results = await this.summarySubjectSpeed(request, condition)
       return { results }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4720,7 +4720,7 @@ export class AttemptService {
       let results = await this.summaryQuestionByTopic(request, condition)
       return { results }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -4747,7 +4747,7 @@ export class AttemptService {
       let results = await this.summaryPractice(request, filter)
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -4758,7 +4758,7 @@ export class AttemptService {
       let results = await this.summaryQuestionBySubject(request, condition)
       return { results }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4782,7 +4782,7 @@ export class AttemptService {
         return { results }
       }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -4863,7 +4863,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -4876,7 +4876,7 @@ export class AttemptService {
       let results = await this.summarySpeedTopicByDate(request, condition)
       return { results }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -5014,7 +5014,7 @@ export class AttemptService {
         return { rank: null }
       }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -5149,7 +5149,7 @@ export class AttemptService {
       }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -5299,7 +5299,7 @@ export class AttemptService {
         return { result }
       }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -5312,7 +5312,7 @@ export class AttemptService {
       let result = await this.getListSubjects(request, condition)
       return { result }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -5337,7 +5337,7 @@ export class AttemptService {
         return { results }
       }
     } catch (err) {
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -5378,7 +5378,7 @@ export class AttemptService {
         return { results }
       }
     } catch (err) {
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -5406,7 +5406,7 @@ export class AttemptService {
         }
       }
     } catch (err) {
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -5532,7 +5532,7 @@ export class AttemptService {
         return results
       }
     } catch (err) {
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -5555,7 +5555,7 @@ export class AttemptService {
 
       return { results };
     } catch (err) {
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -5596,7 +5596,7 @@ export class AttemptService {
         return { results }
       }
     } catch (err) {
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -5712,7 +5712,7 @@ export class AttemptService {
         return { results }
       }
     } catch (err) {
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -5784,7 +5784,7 @@ export class AttemptService {
       return results;
     } catch (err) {
       Logger.error(err);
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -5797,7 +5797,7 @@ export class AttemptService {
       let result = await this.getListSubjects(request, condition);
       return { result };
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -5808,7 +5808,7 @@ export class AttemptService {
       let results = await this.getTotalQuestionTopic(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -5819,7 +5819,7 @@ export class AttemptService {
       let results = await this.getTotalQuestionBySubject(request, condition);
       return { results }
     } catch (err) {
-      throw "internal Server error"
+      throw toGrpcError(err, "internal Server error");
     }
   }
 
@@ -5830,7 +5830,7 @@ export class AttemptService {
       let results = await this.getListTopic(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -5841,7 +5841,7 @@ export class AttemptService {
       let results = await this.summaryTopicSpeed(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -5853,7 +5853,7 @@ export class AttemptService {
 
       return { results }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -5864,7 +5864,7 @@ export class AttemptService {
       let results = await this.summarySubjectCorrect(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -5875,7 +5875,7 @@ export class AttemptService {
       let results = await this.summarySubjectCorrectByDate(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -5886,7 +5886,7 @@ export class AttemptService {
       let results = await this.summarySubjectSpeedByDate(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -5897,7 +5897,7 @@ export class AttemptService {
       let results = await this.summaryCorrectByDate(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -5909,7 +5909,7 @@ export class AttemptService {
       let results = await this.summaryAttemptedBySubject(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -5920,7 +5920,7 @@ export class AttemptService {
       let results = await this.summarySubjectSpeed(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -5934,7 +5934,7 @@ export class AttemptService {
       let results = await this.summaryAbondoned(request, filter);
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -6106,7 +6106,7 @@ export class AttemptService {
       let results = await this.attemptRepository.aggregate(pipeline)
       return { results }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -6117,7 +6117,7 @@ export class AttemptService {
       let results = await this.summaryQuestionBySubject(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -6128,7 +6128,7 @@ export class AttemptService {
       let results = await this.summarySpeedTopicByDate(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -6139,7 +6139,7 @@ export class AttemptService {
       let results = await this.summaryQuestionByTopic(request, condition);
       return { results }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -6241,7 +6241,7 @@ export class AttemptService {
       let topic = await this.attemptRepository.aggregate(pipeline);
       return { topic }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -6344,7 +6344,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -6410,7 +6410,7 @@ export class AttemptService {
       ])
       return { results }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -6661,7 +6661,7 @@ export class AttemptService {
       }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server Error"
+      throw toGrpcError(err, "Internal server Error");
     }
   }
 
@@ -6691,7 +6691,7 @@ export class AttemptService {
       return { count: result.length }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -6713,7 +6713,7 @@ export class AttemptService {
 
       return { result }
     } catch (err) {
-      throw "internal server error"
+      throw toGrpcError(err, "internal server error");
     }
   }
 
@@ -6731,7 +6731,7 @@ export class AttemptService {
 
       return { count }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -6744,7 +6744,7 @@ export class AttemptService {
       )
       return { status: "ok" }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -6763,7 +6763,7 @@ export class AttemptService {
       )
       return { markedSuspicious: request.markedSuspicious }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -6861,7 +6861,7 @@ export class AttemptService {
 
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -6929,7 +6929,7 @@ export class AttemptService {
       test.totalAttempt += 1;
       return { psychoAttempt }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -7011,7 +7011,7 @@ export class AttemptService {
         return { attemptId: existingAtt._id }
       }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7060,7 +7060,7 @@ export class AttemptService {
       return { status: "ok" }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7097,7 +7097,7 @@ export class AttemptService {
       }
       return { status: "reset" }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -7207,7 +7207,7 @@ export class AttemptService {
       }
       return { attemptId: existingAtt._id }
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -7264,7 +7264,7 @@ export class AttemptService {
       }
       return { status: "Ok" }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -7292,7 +7292,7 @@ export class AttemptService {
       )
       return { status: "Ok" }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -7320,7 +7320,7 @@ export class AttemptService {
       )
       return { status: "Ok" }
     } catch (err) {
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -7364,7 +7364,7 @@ export class AttemptService {
       }
 
     } catch (err) {
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -7427,7 +7427,7 @@ export class AttemptService {
         return { attempt }
       }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7443,7 +7443,7 @@ export class AttemptService {
 
       return { result }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7495,7 +7495,7 @@ export class AttemptService {
         b5Result: b5,
       }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7543,7 +7543,7 @@ export class AttemptService {
       return { attemptObj }
 
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7595,7 +7595,7 @@ export class AttemptService {
         throw "Please enter valid parameters"
       }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7713,7 +7713,7 @@ export class AttemptService {
 
       return { res: stdRecommendation }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7748,7 +7748,7 @@ export class AttemptService {
 
       return { attempt }
     } catch (err) {
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7772,7 +7772,7 @@ export class AttemptService {
 
       return newAttempt;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -7836,7 +7836,7 @@ export class AttemptService {
       return { results: query }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7891,7 +7891,7 @@ export class AttemptService {
         );
       });
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -7932,7 +7932,7 @@ export class AttemptService {
       return { atm }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7958,7 +7958,7 @@ export class AttemptService {
       }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7983,7 +7983,7 @@ export class AttemptService {
       }
     } catch (err) {
       Logger.error(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -7994,7 +7994,7 @@ export class AttemptService {
       return { results }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -8034,7 +8034,7 @@ export class AttemptService {
         return { totalScore: totalRequiredScore };
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -8082,7 +8082,7 @@ export class AttemptService {
         return {}
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -8115,7 +8115,7 @@ export class AttemptService {
 
       return topperSummary;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -8173,7 +8173,7 @@ export class AttemptService {
 
       return { unitSummary };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -8207,7 +8207,7 @@ export class AttemptService {
       }
       return { QA: [] }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 

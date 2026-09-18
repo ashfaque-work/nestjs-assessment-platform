@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable } from '@nestjs/common';
 import { QuestionRepository, SubjectRepository, UnitRepository } from '@app/common';
 import {
@@ -76,7 +77,7 @@ export class UnitService {
 
       return createdUnit;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -101,7 +102,7 @@ export class UnitService {
 
       return { response: units || [] };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -116,7 +117,7 @@ export class UnitService {
 
       return { response: unit };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -157,7 +158,7 @@ export class UnitService {
 
       return { response: updatedUnit };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -180,7 +181,7 @@ export class UnitService {
 
       return { response: updatedUnit };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -194,7 +195,7 @@ export class UnitService {
         throw ('Unit not found');
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -239,7 +240,7 @@ export class UnitService {
       );
       return { response: units };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 }

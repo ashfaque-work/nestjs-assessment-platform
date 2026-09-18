@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   ClassroomRepository, ContentRepository, regexName,
@@ -60,7 +61,7 @@ export class ContentService {
       if(error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -85,7 +86,7 @@ export class ContentService {
 
       return { count: count };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -147,7 +148,7 @@ export class ContentService {
         return newContent;
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -162,7 +163,7 @@ export class ContentService {
 
       return { response: content };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -185,7 +186,7 @@ export class ContentService {
 
       return content;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -201,7 +202,7 @@ export class ContentService {
 
       return { response: content };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -248,7 +249,7 @@ export class ContentService {
 
       return { response: content };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -290,7 +291,7 @@ export class ContentService {
       }
       return { response: users };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -333,7 +334,7 @@ export class ContentService {
         return { contents: shuffleArray(toReturn) };
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -369,7 +370,7 @@ export class ContentService {
       
       return { response: populatedSubjects };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -384,7 +385,7 @@ export class ContentService {
 
       return { response: content };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -463,7 +464,7 @@ export class ContentService {
         return updatedContent;
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 }

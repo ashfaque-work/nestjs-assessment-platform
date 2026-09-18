@@ -104,7 +104,7 @@ export class InstituteService {
                 response: result
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -131,7 +131,7 @@ export class InstituteService {
                 response: locations
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -172,7 +172,7 @@ export class InstituteService {
 
             return result;
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -257,7 +257,7 @@ export class InstituteService {
                 response: programs
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -280,7 +280,7 @@ export class InstituteService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -318,7 +318,7 @@ export class InstituteService {
                 ...result
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -330,7 +330,7 @@ export class InstituteService {
                 ...ins
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -397,7 +397,7 @@ export class InstituteService {
                 throw new Error(error)
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -437,7 +437,7 @@ export class InstituteService {
                 institute: ins._id
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -469,7 +469,7 @@ export class InstituteService {
                 response: 'ok'
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -495,7 +495,7 @@ export class InstituteService {
                 response: "ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -519,7 +519,7 @@ export class InstituteService {
                 response: 'OK'
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -544,7 +544,7 @@ export class InstituteService {
                 response: 'ok'
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -627,7 +627,7 @@ export class InstituteService {
                 response: 'Ok'
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -651,7 +651,7 @@ export class InstituteService {
                 response: 'ok'
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 }

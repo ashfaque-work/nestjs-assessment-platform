@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable } from '@nestjs/common';
 import { BackpackReq, DeleteBackpackReq, UpdateBackpackReq } from '@app/common/dto/administration';
 import { ObjectId } from 'mongodb';
@@ -23,7 +24,7 @@ export class BackpackService {
 
       return { response: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -63,7 +64,7 @@ export class BackpackService {
 
       return updateResult;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -79,7 +80,7 @@ export class BackpackService {
       }
       return result;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -94,7 +95,7 @@ export class BackpackService {
       }
       return result;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 

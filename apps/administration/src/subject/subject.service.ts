@@ -326,7 +326,7 @@ export class SubjectService {
       if(error instanceof BadRequestException){
         throw new GrpcInvalidArgumentException(error.message)
       }
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -358,7 +358,7 @@ export class SubjectService {
       return { response: subjects };
 
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -375,7 +375,7 @@ export class SubjectService {
         ...subject
       };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -468,7 +468,7 @@ export class SubjectService {
 
       return { response: updatedSubject };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -500,7 +500,7 @@ export class SubjectService {
 
       return updatedSubject;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -593,7 +593,7 @@ export class SubjectService {
       console.log('sub', JSON.stringify(subjects));
       return { response: subjects };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -645,7 +645,7 @@ export class SubjectService {
 
       return { response: users };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -669,7 +669,7 @@ export class SubjectService {
 
       return { response: subjects };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -698,7 +698,7 @@ export class SubjectService {
 
       return { response: updatedSubject };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -829,7 +829,7 @@ export class SubjectService {
       console.log('sss', subjects)
       return { response: subjects };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -911,7 +911,7 @@ export class SubjectService {
 
       return { response: subjects };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -987,7 +987,7 @@ export class SubjectService {
 
       return { response: subjects };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1029,7 +1029,7 @@ export class SubjectService {
       
       return { response: subjects };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1113,7 +1113,7 @@ export class SubjectService {
       }
 
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1168,7 +1168,7 @@ export class SubjectService {
 
       return { response: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1228,7 +1228,7 @@ export class SubjectService {
 
       return { response: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1284,7 +1284,7 @@ export class SubjectService {
         return { response: result };
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1395,7 +1395,7 @@ export class SubjectService {
 
       return { response: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1440,7 +1440,7 @@ export class SubjectService {
         return { trend: trend };
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1527,7 +1527,7 @@ export class SubjectService {
 
       return { trend: trend };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1618,7 +1618,7 @@ export class SubjectService {
 
       return { response: response };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1708,7 +1708,7 @@ export class SubjectService {
 
       return { response: response };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1778,7 +1778,7 @@ export class SubjectService {
 
       return { response: response };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1903,9 +1903,9 @@ export class SubjectService {
       }
     } catch (error) {
       if (error instanceof InternalServerErrorException) {
-        throw new GrpcInternalException(error.getResponse())
+        throw toGrpcError(error, error.getResponse());
       }
-      throw new GrpcInternalException({ code: 1, data: 'Corupted excel file' })
+      throw toGrpcError(error, { code: 1, data: 'Corupted excel file' });
     }
   }
 }

@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { GrpcInternalException, GrpcNotFoundException } from 'nestjs-grpc-exceptions';
 import { Types } from 'mongoose';
@@ -45,7 +46,7 @@ export class CouponService {
 
       return coupon;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -65,7 +66,7 @@ export class CouponService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException('Not Found')
       }
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -96,7 +97,7 @@ export class CouponService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException('Not Found')
       }
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -130,7 +131,7 @@ export class CouponService {
 
       return { couponList: couponList };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -154,7 +155,7 @@ export class CouponService {
 
       return { statusCode: 200, ...createdCoupon };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -183,7 +184,7 @@ export class CouponService {
 
       return { statusCode: 200, ...updatedCoupon };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 }

@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ServiceRepository, RedisCaching, escapeRegex, UserEnrollmentRepository, Settings } from '@app/common';
 import {
@@ -71,7 +72,7 @@ export class ServiceService {
 
       return { _id: createdService._id };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -124,7 +125,7 @@ export class ServiceService {
 
       return { response: activeServices };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -159,7 +160,7 @@ export class ServiceService {
 
       return { statusCode: 200, message: 'Service updated successfully' };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -190,7 +191,7 @@ export class ServiceService {
 
       return { statusCode: 200, message: 'Service updated successfully' };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -228,7 +229,7 @@ export class ServiceService {
 
       return { statusCode: 200, message: 'Service updated successfully' };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -255,7 +256,7 @@ export class ServiceService {
 
       return { statusCode: 200, message: 'Service deleted successfully' };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -297,7 +298,7 @@ export class ServiceService {
       return { services: services };
 
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -337,7 +338,7 @@ export class ServiceService {
       return { response: services };
 
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -401,7 +402,7 @@ export class ServiceService {
 
       return {users: result.users, count: result.count};
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -449,7 +450,7 @@ export class ServiceService {
 
       return { response: activeServices };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -466,7 +467,7 @@ export class ServiceService {
 
       return service;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 }

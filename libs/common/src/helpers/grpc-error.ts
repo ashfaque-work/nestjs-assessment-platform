@@ -27,7 +27,9 @@ export function isInvalidIdError(error: any): boolean {
 
 // Converts an error caught in a gRPC handler into a gRPC error with the matching status code,
 // so the gateway can answer 400/401/403/404 instead of turning everything into a 500.
-export function toGrpcError(error: any): RpcException {
+// `internalMessage`, when given, is what an unexpected error reports, as the handler's own
+// catch block did before.
+export function toGrpcError(error: any, internalMessage?: any): RpcException {
   if (isInvalidIdError(error)) return new GrpcInvalidArgumentException('Invalid id');
   if (error instanceof RpcException) return error;
   const message = error?.message || (typeof error === 'string' ? error : 'Internal Server Error');
@@ -35,7 +37,7 @@ export function toGrpcError(error: any): RpcException {
   if (error instanceof BadRequestException) return new GrpcInvalidArgumentException(message);
   if (error instanceof ForbiddenException) return new GrpcPermissionDeniedException(message);
   if (error instanceof UnauthorizedException) return new GrpcUnauthenticatedException(message);
-  return new GrpcInternalException(message);
+  return new GrpcInternalException(internalMessage ?? message);
 }
 
 // Global filter for the gRPC services: a malformed id in a request is the caller's mistake,

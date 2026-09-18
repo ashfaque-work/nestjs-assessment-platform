@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { MappingRepository } from '@app/common';
 import { VideoForPracticeSetRequest } from '@app/common/dto/question-bank.dto';
 import { Injectable } from '@nestjs/common';
@@ -18,7 +19,7 @@ export class MappingService {
             return mappingsdata;
         } catch (error) {
             console.log(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     };
 }

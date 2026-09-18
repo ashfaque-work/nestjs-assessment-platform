@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import {
   CourseRepository, UsersRepository, SubjectRepository, SettingRepository, LocationRepository, FeedbackRepository,
@@ -427,9 +428,9 @@ export class CourseService {
       return await this.courseRepository.create(course);
     } catch (error) {
       if (error instanceof (UnprocessableEntityException)) {
-        throw new GrpcInternalException(error.getResponse());
+        throw toGrpcError(error, error.getResponse());
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -526,7 +527,7 @@ export class CourseService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException('Not Found')
       }
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -558,7 +559,7 @@ export class CourseService {
 
       return { classrooms: stringClassrooms };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -585,7 +586,7 @@ export class CourseService {
 
       return { removedItemId: itemId };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -709,7 +710,7 @@ export class CourseService {
 
       return { result }
     } catch (err) {
-      throw new GrpcInternalException(err)
+      throw toGrpcError(err);
     }
   }
 
@@ -741,7 +742,7 @@ export class CourseService {
       return { _id: id };
     } catch (ex) {
       Logger.log(ex);
-      throw "Internal Server error"
+      throw toGrpcError(ex, "Internal Server error");
     }
   }
   async removeFavorite(request: RemoveFavoriteRequest): Promise<RemoveFavoriteResponse> {
@@ -766,7 +767,7 @@ export class CourseService {
     } catch (ex) {
       Logger.log(ex);
 
-      throw "Internal Server error"
+      throw toGrpcError(ex, "Internal Server error");
     }
   }
   async addFeedback(request: AddFeedbackRequest): Promise<AddFeedbackResponse> {
@@ -820,7 +821,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
   async addSection(request: AddSectionRequest): Promise<AddSectionResponse> {
@@ -905,7 +906,7 @@ export class CourseService {
       return { _id: upCrs._id.toString() }
     } catch (err) {
       Logger.log(err);
-      throw "Internal server Error"
+      throw toGrpcError(err, "Internal server Error");
 
     }
   }
@@ -1035,7 +1036,7 @@ export class CourseService {
       return { id: course._id }
     } catch (err) {
       Logger.log(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
   async addContentFavorite(request: AddContentFavoriteRequest): Promise<AddContentFavoriteResponse> {
@@ -1210,7 +1211,7 @@ export class CourseService {
         }
       }
     } catch (err) {
-      throw new GrpcInternalException(err.message)
+      throw toGrpcError(err);
     }
   }
 
@@ -1436,7 +1437,7 @@ export class CourseService {
 
       return { authors };
     } catch (err) {
-      throw new GrpcInternalException(err.message)
+      throw toGrpcError(err);
     }
   }
 
@@ -1523,7 +1524,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
 
     }
   }
@@ -1626,7 +1627,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err)
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   /* 
@@ -1707,7 +1708,7 @@ export class CourseService {
       return { response: result }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
   async verifyCourseUserProgress(request: VerifyCourseUserProgressRequest) {
@@ -1920,7 +1921,7 @@ export class CourseService {
         a.findIndex((v2) => v2._id.toString() == v._id.toString()) == i);
       return { response: subjects }
     } catch (err) {
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
   async getStudentCourses(request: GetStudentCoursesRequest) {
@@ -2482,7 +2483,7 @@ export class CourseService {
       if (error instanceof (NotFoundException)) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
   async editContentInSection(request: EditContentInSectionRequest) {
@@ -2687,7 +2688,7 @@ export class CourseService {
       return { response: result }
     } catch (err) {
       Logger.log(err);
-      throw "New Internal Server Error"
+      throw toGrpcError(err, "New Internal Server Error");
     }
   }
 
@@ -2779,7 +2780,7 @@ export class CourseService {
       return { response: course }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async getTeacherCourseDetail(request: GetTeacherCourseDetailRequest) {
@@ -2845,7 +2846,7 @@ export class CourseService {
       }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async updateContentTimeSpent(request: UpdateContentTimeSpentRequest) {
@@ -2894,7 +2895,7 @@ export class CourseService {
       return { timeSpent }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async completeContent(request: CompleteContentRequest) {
@@ -2954,7 +2955,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
 
     }
   }
@@ -3058,7 +3059,7 @@ export class CourseService {
       return { ...toreturn }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -3400,7 +3401,7 @@ export class CourseService {
 
       return { courses: allCourses, total: totalCount }
     } catch (err) {
-      throw new GrpcInternalException(err.message)
+      throw toGrpcError(err);
     }
   }
 
@@ -3442,7 +3443,7 @@ export class CourseService {
 
       return { result: allCourses };
     } catch (err) {
-      throw new GrpcInternalException(err)
+      throw toGrpcError(err);
     }
   }
 
@@ -3543,7 +3544,7 @@ export class CourseService {
       return { response: allCourses }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -3612,7 +3613,7 @@ export class CourseService {
       return { courses }
 
     } catch (err) {
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -3661,7 +3662,7 @@ export class CourseService {
       return { courses }
     } catch (err) {
       Logger.log(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
 
@@ -3747,7 +3748,7 @@ export class CourseService {
       return { courses }
     } catch (err) {
       Logger.log(err)
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -3901,7 +3902,7 @@ export class CourseService {
       }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -3977,7 +3978,7 @@ export class CourseService {
       return { courses }
     } catch (err) {
       Logger.log(err)
-      throw new InternalServerErrorException ("internal Server Error")
+      throw toGrpcError(err, "internal Server Error");
     }
   }
   async getArchiveCourses(request: GetArchiveCoursesRequest) {
@@ -4007,7 +4008,7 @@ export class CourseService {
       return { result }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async getQuestionDistributionAnalytics(request: GetQuestionDistributionAnalyticsRequest) {
@@ -4066,7 +4067,7 @@ export class CourseService {
       return { dis }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
   async getRankingAnalytics(request: GetRankingAnalyticsRequest) {
@@ -4219,7 +4220,7 @@ export class CourseService {
       }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async getCourseContentAttemptByStudent(request) {
@@ -4231,7 +4232,7 @@ export class CourseService {
       return { response: res }
     } catch (err) {
       Logger.log(err);
-      throw new InternalServerErrorException ("Internal Server error")
+      throw toGrpcError(err, "Internal Server error");
     }
   }
   async getPracticeTimeAnalytics(request: GetPracticeTimeAnalyticsRequest) {
@@ -4439,7 +4440,7 @@ export class CourseService {
       return { top: data.top, average: data.average, student: data.student, lastDaysData: data.lastDaysData }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async getLearningTimeAnalytics(request: GetLearningTimeAnalyticsRequest) {
@@ -4649,7 +4650,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async getCompletionAnalytics(request: GetCompletionAnalyticsRequest) {
@@ -4923,7 +4924,7 @@ export class CourseService {
       return { top: data.top, average: data.average, student: data.student, lastDaysData: data.lastDaysData }
     } catch (err) {
       Logger.log(err);
-      throw "Internal server error"
+      throw toGrpcError(err, "Internal server error");
     }
   }
   async getAccuracyAnalytics(request: GetAccuracyAnalyticsRequest) {
@@ -5171,7 +5172,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -5326,7 +5327,7 @@ export class CourseService {
       }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async getFavoriteSubjects(request: GetFavoriteSubjectsRequest) {
@@ -5340,7 +5341,7 @@ export class CourseService {
       return { response: subjects }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server error"
+      throw toGrpcError(err, "Internal Server error");
     }
   }
   /*
@@ -5487,7 +5488,7 @@ export class CourseService {
       return { total: courses[0] ? courses[0].total : 0 + withdrawnCount }
     } catch (err) {
       Logger.log(err);
-      throw "Internal Server Error"
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async notifyStudentsAfterWithdrawal(request: NotifyStudentsAfterWithdrawalRequest) {
@@ -5512,7 +5513,7 @@ export class CourseService {
       if (error instanceof (NotFoundException)) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
   /*
@@ -5759,7 +5760,7 @@ export class CourseService {
       } else if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.getResponse())
       }
-      throw new GrpcInternalException(error)
+      throw toGrpcError(error);
     }
   }
 }

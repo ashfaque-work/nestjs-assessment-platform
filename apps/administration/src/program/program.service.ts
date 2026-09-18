@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable, InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common';
 import { LocationRepository, ProgramRepository, SubjectRepository } from '@app/common';
 import {
@@ -58,7 +59,7 @@ export class ProgramService {
 
       return newProgram;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -204,7 +205,7 @@ export class ProgramService {
 
       return { response: programs };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -221,7 +222,7 @@ export class ProgramService {
 
       return { response: program };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -284,7 +285,7 @@ export class ProgramService {
 
       return { response: updatedProg };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -310,7 +311,7 @@ export class ProgramService {
 
       return { response: updatedProgram };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -325,7 +326,7 @@ export class ProgramService {
         throw new InternalServerErrorException ('Program not found');
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -360,7 +361,7 @@ export class ProgramService {
 
       return { response: programs };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -386,7 +387,7 @@ export class ProgramService {
       }
       return { response: programs };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 }

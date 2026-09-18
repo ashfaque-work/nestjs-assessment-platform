@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { AttemptDetailRepository, AttemptRepository, AttendanceRepository, isEmail, PracticeSetRepository, QuestionRepository, RedisCaching, SubjectRepository, UnitRepository } from '@app/common';
 import { CheckQuestionCountInAdaptiveTestRequest, GenerateAdaptiveLearningTestRequest, GenerateAdaptiveTestRequest, GetAdaptiveTestRequest, GetFirstQuestionRequest, GetNextQuestionRequest } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException, PreconditionFailedException, UnprocessableEntityException } from '@nestjs/common';
@@ -104,9 +105,9 @@ export class AdaptiveTestService {
             if (error instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(error.message);
             } else if (error instanceof InternalServerErrorException) {
-                throw new GrpcInternalException(error.getResponse());
+                throw toGrpcError(error, error.getResponse());
             }
-            throw new GrpcInternalException({ message: 'Internal server error' });
+            throw toGrpcError(error, { message: 'Internal server error' });
         }
     }
 
@@ -130,7 +131,7 @@ export class AdaptiveTestService {
             return questions.map((q: any) => q._id);
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
 
     }
@@ -192,7 +193,7 @@ export class AdaptiveTestService {
             return { questionsPresented, subjectsOfQuestions, unitsOfQuestions };
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
 
     }
@@ -225,7 +226,7 @@ export class AdaptiveTestService {
             };
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -280,7 +281,7 @@ export class AdaptiveTestService {
                 throw new GrpcInvalidArgumentException(error.message);
             }
 
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -482,7 +483,7 @@ export class AdaptiveTestService {
             if (error instanceof UnprocessableEntityException) {
                 throw new GrpcCancelledException(error.getResponse());
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -540,7 +541,7 @@ export class AdaptiveTestService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -575,7 +576,7 @@ export class AdaptiveTestService {
                         }
                     } catch (error) {
                         Logger.error(error)
-                        throw new InternalServerErrorException();
+                        throw toGrpcError(error, 'Internal Server Error');
                     }
                 } else {
                     Logger.error(data)
@@ -584,7 +585,7 @@ export class AdaptiveTestService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -680,7 +681,7 @@ export class AdaptiveTestService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -743,7 +744,7 @@ export class AdaptiveTestService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -870,7 +871,7 @@ export class AdaptiveTestService {
             return;
         } catch (error) {
             Logger.error(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1419,7 +1420,7 @@ export class AdaptiveTestService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -1436,7 +1437,7 @@ export class AdaptiveTestService {
             return { response: adaptiveTest };
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 }

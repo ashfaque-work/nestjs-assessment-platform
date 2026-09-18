@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable, Logger } from '@nestjs/common';
 import { AttemptRepository, PracticeSetRepository, RedisCaching, UserLogRepository, UsersRepository } from '@app/common';
 import { GrpcInternalException } from 'nestjs-grpc-exceptions';
@@ -117,7 +118,7 @@ export class PlatformByNumbersService {
 
       return summary;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 

@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { RedisCaching, SuperCoinsRepository, UserSuperCoinsRepository } from "@app/common";
 import { CreateSupercoinsReq, GetMembersReq, IndexSupercoinsReq, RequestStudentsReq, UpdateStatusReq, UpdateSupercoinsReq } from "@app/common/dto/userManagement/supercoins.dto";
 import { Injectable } from "@nestjs/common";
@@ -46,7 +47,7 @@ export class SupercoinsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);            
+            throw toGrpcError(error);            
         }
     }
 
@@ -88,7 +89,7 @@ export class SupercoinsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -118,7 +119,7 @@ export class SupercoinsService {
                 ...coinsToSave
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 
@@ -190,7 +191,7 @@ export class SupercoinsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -227,7 +228,7 @@ export class SupercoinsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -325,7 +326,7 @@ export class SupercoinsService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 

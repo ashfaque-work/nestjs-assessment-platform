@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { QuestionRepository, UsersRepository } from "@app/common";
 import { GetQuestionDistributionBySubjectReq, OperatorQuestionAddedTrendReq } from "@app/common/dto/userManagement/operator.dto";
 import { Injectable } from "@nestjs/common";
@@ -76,7 +77,7 @@ export class OperatorService {
 
             return trend[0]
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -163,7 +164,7 @@ export class OperatorService {
 
             return tempResult
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 }

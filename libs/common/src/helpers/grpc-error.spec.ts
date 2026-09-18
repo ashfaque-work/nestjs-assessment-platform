@@ -67,6 +67,17 @@ describe('toGrpcError', () => {
     expect(codeOf(toGrpcError(new mongoose.Error.CastError('ObjectId', 'abc', '_id')))).toBe(3);
   });
 
+  it('reports an unexpected error with the handler\'s own message', () => {
+    const mapped = toGrpcError(new Error('E11000 duplicate key'), 'Failed to save course');
+    expect(codeOf(mapped)).toBe(13);
+    expect(JSON.stringify(mapped.getError())).toContain('Failed to save course');
+    expect(JSON.stringify(mapped.getError())).not.toContain('E11000');
+  });
+
+  it('still keeps not found as 404 when the handler had its own message', () => {
+    expect(codeOf(toGrpcError(new NotFoundException('no course'), 'Failed to get course by Id'))).toBe(5);
+  });
+
   it('carries the message across', () => {
     const mapped = toGrpcError(new NotFoundException('no classroom')) as GrpcInternalException;
     expect(JSON.stringify(mapped.getError())).toContain('no classroom');

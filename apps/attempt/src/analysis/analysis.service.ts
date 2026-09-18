@@ -143,7 +143,7 @@ export class AnalysisService {
 
             return reqResponse;
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -241,7 +241,7 @@ export class AnalysisService {
                 };
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -293,7 +293,7 @@ export class AnalysisService {
             if (error instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(error.getResponse());
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -369,7 +369,7 @@ export class AnalysisService {
                 return { result };
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -527,7 +527,7 @@ export class AnalysisService {
 
             return { result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -589,7 +589,7 @@ export class AnalysisService {
 
             return { results };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -661,7 +661,7 @@ export class AnalysisService {
             }
             return { result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -728,7 +728,7 @@ export class AnalysisService {
             }
             return { result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -800,7 +800,7 @@ export class AnalysisService {
 
             return { result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -880,7 +880,7 @@ export class AnalysisService {
             };
             return requiredResult;
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -963,7 +963,7 @@ export class AnalysisService {
                 };
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1041,7 +1041,7 @@ export class AnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1127,7 +1127,7 @@ export class AnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1215,7 +1215,7 @@ export class AnalysisService {
 
             return analysis[0] || {};
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1311,7 +1311,7 @@ export class AnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1327,7 +1327,7 @@ export class AnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 

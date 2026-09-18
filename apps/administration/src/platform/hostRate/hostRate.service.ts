@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable } from '@nestjs/common';
 import { emailsFromEnv, HostRateRepository, NotificationRepository, RedisCaching, UsersRepository } from '@app/common';
 import { GrpcInternalException } from 'nestjs-grpc-exceptions';
@@ -30,7 +31,7 @@ export class HostRateService {
 
       return;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -100,7 +101,7 @@ export class HostRateService {
 
       return;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -125,7 +126,7 @@ export class HostRateService {
 
       return;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -150,7 +151,7 @@ export class HostRateService {
 
       return;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 

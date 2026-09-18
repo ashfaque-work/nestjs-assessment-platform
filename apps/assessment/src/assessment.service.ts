@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import {
   ArchiveRequest,
@@ -176,7 +177,7 @@ export class AssessmentService {
 
       return { response: result };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -194,7 +195,7 @@ export class AssessmentService {
         throw 'Params: subject | The selected subject or examination is no longer active';
       }
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -226,7 +227,7 @@ export class AssessmentService {
       }
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -245,7 +246,7 @@ export class AssessmentService {
       }
       return data;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -324,7 +325,7 @@ export class AssessmentService {
 
       return newPracticeset
     } catch (error) {
-      throw new InternalServerErrorException(error)
+      throw toGrpcError(error);
     }
   }
 
@@ -368,7 +369,7 @@ export class AssessmentService {
         },
       }, { strict: false });
     } catch (error) {
-      throw new InternalServerErrorException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -610,7 +611,7 @@ export class AssessmentService {
         return result;
       }
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -689,7 +690,7 @@ export class AssessmentService {
       })
       return result;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -720,7 +721,7 @@ export class AssessmentService {
       }
       return;
     } catch (error) {
-      throw new InternalServerErrorException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -765,7 +766,7 @@ export class AssessmentService {
       }
       return;
     } catch (error) {
-      throw new InternalServerErrorException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -786,7 +787,7 @@ export class AssessmentService {
       }
       return;
     } catch (error) {
-      throw new InternalServerErrorException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -816,7 +817,7 @@ export class AssessmentService {
       }
       return arrayValue;
     } catch (error) {
-      throw new InternalServerErrorException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -845,7 +846,7 @@ export class AssessmentService {
       this.messageCenter.send_with_template(request.instancekey, 'published', tmp, dataMsg)
       return;
     } catch (error) {
-      throw new InternalServerErrorException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -878,7 +879,7 @@ export class AssessmentService {
       }
       return true;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -919,7 +920,7 @@ export class AssessmentService {
         });
       }
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -936,7 +937,7 @@ export class AssessmentService {
         }
       })
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1220,7 +1221,7 @@ export class AssessmentService {
 
         } catch (error) {
           Logger.error(error);
-          throw new InternalServerErrorException(error.message);
+          throw toGrpcError(error);
         }
 
       }
@@ -1233,7 +1234,7 @@ export class AssessmentService {
       } else if (error instanceof ForbiddenException) {
         throw new GrpcPermissionDeniedException(error.getResponse());
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1270,7 +1271,7 @@ export class AssessmentService {
       return { message: 'Subjects successfully added' };
     } catch (err) {
       Logger.error(err);
-      throw new GrpcInternalException('Some Error Occured!');
+      throw toGrpcError(err, 'Some Error Occured!');
     }
   }
 
@@ -1389,7 +1390,7 @@ export class AssessmentService {
       return { response: tests };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException('Some Error Occured!');
+      throw toGrpcError(error, 'Some Error Occured!');
     }
   }
 
@@ -1427,7 +1428,7 @@ export class AssessmentService {
       return updated;
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException('Some Error Occured!');
+      throw toGrpcError(error, 'Some Error Occured!');
     }
   }
 
@@ -1483,7 +1484,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException('Some Error Occured!');
+      throw toGrpcError(error, 'Some Error Occured!');
     }
   }
 
@@ -1530,7 +1531,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1630,7 +1631,7 @@ export class AssessmentService {
       return { total: docs.length, attendants: docs };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -1660,7 +1661,7 @@ export class AssessmentService {
       return { status: 'ok' };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -1802,7 +1803,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -1820,7 +1821,7 @@ export class AssessmentService {
       return { status: 'ok' }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1875,7 +1876,7 @@ export class AssessmentService {
       return { data: 'ok' }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -1901,7 +1902,7 @@ export class AssessmentService {
       return { response: results }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1918,7 +1919,7 @@ export class AssessmentService {
       return { status: att.status };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1929,7 +1930,7 @@ export class AssessmentService {
       return { response: result }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1956,7 +1957,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2044,7 +2045,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message)
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2127,7 +2128,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -2159,7 +2160,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2204,7 +2205,7 @@ export class AssessmentService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message)
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2276,7 +2277,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message)
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2343,7 +2344,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException('Internal Server Error')
+      throw toGrpcError(error, 'Internal Server Error');
     }
   }
 
@@ -2424,7 +2425,7 @@ export class AssessmentService {
       } else if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -2526,7 +2527,7 @@ export class AssessmentService {
       return { response: classrooms }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -2560,7 +2561,7 @@ export class AssessmentService {
       } else if (error instanceof ForbiddenException) {
         throw new GrpcAbortedException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -2792,7 +2793,7 @@ export class AssessmentService {
       }
 
     } catch (err) {
-      throw new InternalServerErrorException();
+      throw toGrpcError(err, 'Internal Server Error');
     }
   }
 
@@ -2810,7 +2811,7 @@ export class AssessmentService {
         return [];
       }
     } catch (err) {
-      throw new InternalServerErrorException();
+      throw toGrpcError(err, 'Internal Server Error');
     }
   }
 
@@ -2823,7 +2824,7 @@ export class AssessmentService {
       }
       return practiceBuy;
     } catch (err) {
-      throw new InternalServerErrorException();
+      throw toGrpcError(err, 'Internal Server Error');
     }
   }
 
@@ -3031,7 +3032,7 @@ export class AssessmentService {
       return filters;
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3081,7 +3082,7 @@ export class AssessmentService {
       } else if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3112,7 +3113,7 @@ export class AssessmentService {
       return { count: count };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3233,7 +3234,7 @@ export class AssessmentService {
 
       return finalFilter;
     } catch (err) {
-      throw new InternalServerErrorException(err);
+      throw toGrpcError(err);
     }
   }
 
@@ -3245,7 +3246,7 @@ export class AssessmentService {
       return filters;
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3358,7 +3359,7 @@ export class AssessmentService {
         return { $and: [locFilter, accessMode, expire] };
       }
     } catch (err) {
-      throw new InternalServerErrorException(err);
+      throw toGrpcError(err);
     }
   }
 
@@ -3384,7 +3385,7 @@ export class AssessmentService {
         maxLevel: 0
       };
     } catch (err) {
-      throw new InternalServerErrorException(err);
+      throw toGrpcError(err);
     }
   }
 
@@ -3424,7 +3425,7 @@ export class AssessmentService {
         return result;
       }
     } catch (error) {
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3464,7 +3465,7 @@ export class AssessmentService {
       return { ...test };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3505,7 +3506,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3554,7 +3555,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3594,7 +3595,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3642,7 +3643,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3687,7 +3688,7 @@ export class AssessmentService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -3755,7 +3756,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3768,7 +3769,7 @@ export class AssessmentService {
       oPractice.deActiceSubject = subjects.map(g => g._id);
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3781,7 +3782,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3794,7 +3795,7 @@ export class AssessmentService {
       oPractice.unitObj = unitObjects;
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3803,7 +3804,7 @@ export class AssessmentService {
       oPractice.numberQuestions = oPractice.questions.length;
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3822,7 +3823,7 @@ export class AssessmentService {
       };
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3832,7 +3833,7 @@ export class AssessmentService {
       oPractice.totalAttempt = result;
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3847,7 +3848,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3862,7 +3863,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3877,7 +3878,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3889,7 +3890,7 @@ export class AssessmentService {
       oPractice.enrolled = !!enrollment;
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -3906,7 +3907,7 @@ export class AssessmentService {
       await this.settings.setPriceByUserCountry(req, oPractice);
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4096,7 +4097,7 @@ export class AssessmentService {
 
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4140,7 +4141,7 @@ export class AssessmentService {
       return accessRule;
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4160,7 +4161,7 @@ export class AssessmentService {
       oPractice.totalAttempt = result;
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4209,7 +4210,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4230,7 +4231,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4248,7 +4249,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4266,7 +4267,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4296,7 +4297,7 @@ export class AssessmentService {
       return count;
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4306,7 +4307,7 @@ export class AssessmentService {
       const result = await this.findOnePractice(request, filter);
       return { ...result };
     } catch (error) {
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -4628,7 +4629,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -4728,7 +4729,7 @@ export class AssessmentService {
       } else if (error instanceof ForbiddenException) {
         throw new GrpcPermissionDeniedException(error.message);
       }
-      throw new GrpcInternalException('Internal Server Error')
+      throw toGrpcError(error, 'Internal Server Error');
     }
   }
 
@@ -4748,7 +4749,7 @@ export class AssessmentService {
       return { status: 'finished' }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -4821,7 +4822,7 @@ export class AssessmentService {
       } else if (error instanceof ForbiddenException) {
         throw new GrpcPermissionDeniedException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -4855,7 +4856,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5083,7 +5084,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5128,7 +5129,7 @@ export class AssessmentService {
       return accessRule;
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5175,7 +5176,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5231,7 +5232,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5413,7 +5414,7 @@ export class AssessmentService {
       return { results: results, count };
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -5453,7 +5454,7 @@ export class AssessmentService {
       return { response: gameAttempts };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5471,7 +5472,7 @@ export class AssessmentService {
       return { response: attempts };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5529,7 +5530,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5631,7 +5632,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5695,7 +5696,7 @@ export class AssessmentService {
       } else if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -5710,7 +5711,7 @@ export class AssessmentService {
       });
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5743,7 +5744,7 @@ export class AssessmentService {
       return foundQuestions;
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5845,7 +5846,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
       }
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5897,7 +5898,7 @@ export class AssessmentService {
       }));
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5930,7 +5931,7 @@ export class AssessmentService {
       })
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -5971,7 +5972,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6000,7 +6001,7 @@ export class AssessmentService {
       return { data, count };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6022,7 +6023,7 @@ export class AssessmentService {
       return { response: result }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6042,7 +6043,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6134,7 +6135,7 @@ export class AssessmentService {
       return { practiceSetByExam: tests };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6150,7 +6151,7 @@ export class AssessmentService {
       return {};
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6299,7 +6300,7 @@ export class AssessmentService {
       } else if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
 
   }
@@ -6346,7 +6347,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6385,7 +6386,7 @@ export class AssessmentService {
       return { response: results };
     } catch (e) {
       Logger.error(e)
-      throw new GrpcInternalException(e)
+      throw toGrpcError(e);
     }
   }
 
@@ -6493,7 +6494,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -6615,7 +6616,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6703,7 +6704,7 @@ export class AssessmentService {
       return { tests: result, loggedIn: userLogs.length };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6786,7 +6787,7 @@ export class AssessmentService {
 
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6854,7 +6855,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -6987,7 +6988,7 @@ export class AssessmentService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -7008,7 +7009,7 @@ export class AssessmentService {
       return { tests: tests };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -7055,7 +7056,7 @@ export class AssessmentService {
       return { response: times }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -7104,7 +7105,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -7380,7 +7381,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -7413,7 +7414,7 @@ export class AssessmentService {
       return { response: aggregate }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -7453,7 +7454,7 @@ export class AssessmentService {
       return { response: results };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -7507,7 +7508,7 @@ export class AssessmentService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -7580,7 +7581,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -7612,7 +7613,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -7718,7 +7719,7 @@ export class AssessmentService {
               })
             }
           } catch (err) {
-            throw new InternalServerErrorException();
+            throw toGrpcError(err, 'Internal Server Error');
           }
         }
 
@@ -8130,7 +8131,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
 
   }
@@ -8169,7 +8170,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -8211,7 +8212,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -8252,7 +8253,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -8269,7 +8270,7 @@ export class AssessmentService {
       }
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -8329,7 +8330,7 @@ export class AssessmentService {
       return;
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -8679,7 +8680,7 @@ export class AssessmentService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -8763,7 +8764,7 @@ export class AssessmentService {
       return practiceInfo;
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -8817,7 +8818,7 @@ export class AssessmentService {
       if (err instanceof NotFoundException) {
         throw new GrpcNotFoundException(err.message);
       }
-      throw new GrpcInternalException('Internal Server Error')
+      throw toGrpcError(err, 'Internal Server Error');
     }
   }
 
@@ -8848,7 +8849,7 @@ export class AssessmentService {
         throw new GrpcInvalidArgumentException(err.message);
       }
 
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -9077,7 +9078,7 @@ export class AssessmentService {
       if (err instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(err.message);
       }
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -9163,7 +9164,7 @@ export class AssessmentService {
       } else if (err instanceof NotFoundException) {
         throw new GrpcNotFoundException(err.message);
       }
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -9501,7 +9502,7 @@ export class AssessmentService {
       } else if (err instanceof NotFoundException) {
         throw new GrpcNotFoundException(err.message);
       }
-      throw new GrpcInternalException(err.message);
+      throw toGrpcError(err);
     }
   }
 
@@ -10296,7 +10297,7 @@ export class AssessmentService {
 
     } catch (ex) {
       Logger.error(ex)
-      throw new GrpcInternalException('Internal Server Error')
+      throw toGrpcError(ex, 'Internal Server Error');
     }
   }
 }

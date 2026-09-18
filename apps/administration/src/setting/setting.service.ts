@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CouponRepository, SettingRepository, Settings } from '@app/common';
 import {
@@ -321,7 +322,7 @@ export class SettingService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message)
       }
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -459,7 +460,7 @@ export class SettingService {
         }
       }
     } catch (error) {
-      throw new GrpcInternalException(error.message)
+      throw toGrpcError(error);
     }
   }
 
@@ -553,7 +554,7 @@ export class SettingService {
       }
     } catch (error) {
       Logger.log(error)
-      throw new GrpcInternalException('Internal Server Error')
+      throw toGrpcError(error, 'Internal Server Error');
     }
   }
 
@@ -602,7 +603,7 @@ export class SettingService {
       if (error instanceof BadRequestException) {
         throw new GrpcNotFoundException(error.getResponse);
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 }

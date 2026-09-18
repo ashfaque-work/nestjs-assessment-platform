@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { ApproveStudentExplanationRequest, CountByPracticeRequest, CreateExplanationRequest, CreateQuestionRequest, CreateTestFormPoolRequest, DeleteQuestionRequest, ExecuteCodeRequest, FeedbackQuestionCountRequest, FeedbackQuestionRequest, GenerateRandomTestRequest, GetAllQuestionRequest, GetByAttemptRequest, GetLastInPracticeRequest, GetLastRequest, GetQuestionForOnlineTestRequest, GetQuestionRequest, GetQuestionTagsResquest, GetRandomQuestionsRequest, GetReusedCountRequest, InternalSearchDto, InternalSearchRequest, PersonalTopicAnalysisRequest, QuestionBankDto, QuestionCategoryDto, QuestionComplexityByTopicRequest, QuestionDistributionCategoryResponse, QuestionDistributionMarksResponse, QuestionDistributionRequest, QuestionIsAttemptRequest, QuestionPerformanceRequest, QuestionSummaryTopicRequest, QuestionUsedCountResponse, SummarySubjectPracticeRequest, SummaryTopicOfPracticeBySubjectRequest, SummaryTopicPracticeRequest, TestSeriesSummaryBySubjectRequest, UpdateQuestionRequest, UpdateStudentQuestionRequest, UpdateTagsRequest, UserDto } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Types } from 'mongoose';
@@ -165,7 +166,7 @@ export class QuestionBankService {
         question = await this.questionRepository.create(data);
       } catch (error) {
         Logger.error(error);
-        throw new InternalServerErrorException("Unable to create question");
+        throw toGrpcError(error, "Unable to create question");
       }
 
       // In case student make this question, we set default value for it
@@ -206,7 +207,7 @@ export class QuestionBankService {
       } catch (error) {
         // this.logger.error(error.message);
         Logger.error(error);
-        throw new InternalServerErrorException("Unable to update the created question");
+        throw toGrpcError(error, "Unable to update the created question");
       }
 
       await this.questionBus.addTags(instancekey, user._id, question)
@@ -247,7 +248,7 @@ export class QuestionBankService {
       } else if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message)
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -291,7 +292,7 @@ export class QuestionBankService {
       const updatedTest = await this.practiceSetRepository.findByIdAndUpdate(test._id, test);
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException('Unable to update practice set');
+      throw toGrpcError(error, 'Unable to update practice set');
     }
   }
   async getQuestions(request: GetAllQuestionRequest) {
@@ -315,7 +316,7 @@ export class QuestionBankService {
       questions = await this.questionRepository.populate(questionsFind, 'topic._id');
     } catch (error) {
       Logger.error(error);
-      throw new InternalServerErrorException('Error finding Question')
+      throw toGrpcError(error, 'Error finding Question');
     }
 
     return {
@@ -499,7 +500,7 @@ export class QuestionBankService {
         try {
           result = await this.practiceSetRepository.aggregate(pipe);
         } catch (error) {
-          throw new InternalServerErrorException("Error finding Practice Set")
+          throw toGrpcError(error, "Error finding Practice Set");
         }
 
         if (result == null || result.length === 0) {
@@ -550,7 +551,7 @@ export class QuestionBankService {
       }
     } catch (error) {
       console.error(error);
-      throw new GrpcInternalException('Internal Server Error');
+      throw toGrpcError(error, 'Internal Server Error');
     }
   }
 
@@ -582,7 +583,7 @@ export class QuestionBankService {
         throw new GrpcNotFoundException('Question not found');
       }
       Logger.error(error);
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 
@@ -798,9 +799,9 @@ export class QuestionBankService {
     } catch (error) {
       Logger.error(error);
       if(error instanceof UnprocessableEntityException){
-        throw new GrpcInternalException(error.getResponse());
+        throw toGrpcError(error, error.getResponse());
       }
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -888,7 +889,7 @@ export class QuestionBankService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException('Bad Request')
       }
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -920,7 +921,7 @@ export class QuestionBankService {
       if (error instanceof ForbiddenException || error instanceof NotFoundException) {
         throw error;
       }
-      throw new InternalServerErrorException({ message: 'Failed to save the question' });
+      throw toGrpcError(error, { message: 'Failed to save the question' });
     }
   }
 
@@ -987,7 +988,7 @@ export class QuestionBankService {
       if (error instanceof ForbiddenException || error instanceof NotFoundException) {
         throw error;
       }
-      throw new InternalServerErrorException({ message: 'Failed to save the question' });
+      throw toGrpcError(error, { message: 'Failed to save the question' });
     }
   }
 
@@ -1026,7 +1027,7 @@ export class QuestionBankService {
       if (error instanceof ForbiddenException || error instanceof NotFoundException) {
         throw error;
       }
-      throw new InternalServerErrorException({ message: 'Failed to save the question' });
+      throw toGrpcError(error, { message: 'Failed to save the question' });
     }
   }
 
@@ -1162,7 +1163,7 @@ export class QuestionBankService {
 
       return { response: units };
     } catch (err) {
-      throw new GrpcInternalException(`Error while fetching practice summary: ${err.message}`);
+      throw toGrpcError(err, `Error while fetching practice summary: ${err.message}`);
     }
   }
 
@@ -1195,7 +1196,7 @@ export class QuestionBankService {
       if(error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message)
       }      
-      throw new GrpcInternalException('Internal Server Error');
+      throw toGrpcError(error, 'Internal Server Error');
     }
   }
 
@@ -1223,7 +1224,7 @@ export class QuestionBankService {
 
       return { response: result };
     } catch (error) {
-      throw new GrpcInternalException('Internal Server Error');
+      throw toGrpcError(error, 'Internal Server Error');
     }
   }
 
@@ -1298,7 +1299,7 @@ export class QuestionBankService {
     } catch (error) {
       // Logger.warn('validationError %j', err);
       Logger.error(error);
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1316,7 +1317,7 @@ export class QuestionBankService {
     } catch (err) {
       // Logger.warn('validationError %j', err);
       Logger.error(err);
-      throw new GrpcInternalException(err);
+      throw toGrpcError(err);
     }
   }
 
@@ -1363,7 +1364,7 @@ export class QuestionBankService {
       return { response: result[0] };
     } catch (err) {
       Logger.error(err);
-      throw new GrpcInternalException(err);
+      throw toGrpcError(err);
     }
   }
 
@@ -1760,7 +1761,7 @@ export class QuestionBankService {
       return { count: result.length === 0 ? 0 : result[0].count };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException('Internal Server error')
+      throw toGrpcError(error, 'Internal Server error');
     }
 
   }
@@ -1771,7 +1772,7 @@ export class QuestionBankService {
       return { tags: res };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException('Internal Server error')
+      throw toGrpcError(error, 'Internal Server error');
     }
   }
 
@@ -1784,7 +1785,7 @@ export class QuestionBankService {
       return { result: true };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException('Internal Server Error')
+      throw toGrpcError(error, 'Internal Server Error');
     }
   }
 
@@ -1836,7 +1837,7 @@ export class QuestionBankService {
       return { response: res };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException('Internal Server Error');
+      throw toGrpcError(error, 'Internal Server Error');
     }
   }
 
@@ -1864,7 +1865,7 @@ export class QuestionBankService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1917,7 +1918,7 @@ export class QuestionBankService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2002,7 +2003,7 @@ export class QuestionBankService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2020,7 +2021,7 @@ export class QuestionBankService {
 
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2083,7 +2084,7 @@ export class QuestionBankService {
 
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2164,7 +2165,7 @@ export class QuestionBankService {
       return { response: units };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2200,7 +2201,7 @@ export class QuestionBankService {
       return { response: questions };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2219,7 +2220,7 @@ export class QuestionBankService {
       return { count: result };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2427,7 +2428,7 @@ export class QuestionBankService {
       return { response: fQ };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2712,7 +2713,7 @@ export class QuestionBankService {
       return { response: result };
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -2908,7 +2909,7 @@ export class QuestionBankService {
               }
             }
           } catch (error) {
-            throw new InternalServerErrorException(error.message)
+            throw toGrpcError(error);
           }
         }
 
@@ -2927,7 +2928,7 @@ export class QuestionBankService {
               }
             }
           } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
           }
         } else if (request.excludeTempt == true) {
           try {
@@ -2949,7 +2950,7 @@ export class QuestionBankService {
               }
             }
           } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
           }
         }
 
@@ -2975,13 +2976,13 @@ export class QuestionBankService {
           return results;
 
         } catch (error) {
-          throw new InternalServerErrorException(error.message)
+          throw toGrpcError(error);
         }
       })
       return { response: results }
     } catch (error) {
       Logger.error(error);
-      throw new GrpcInternalException(error.message)
+      throw toGrpcError(error);
     }
 
   }
@@ -3208,7 +3209,7 @@ export class QuestionBankService {
       if (error instanceof UnprocessableEntityException) {
         throw new GrpcNotFoundException(error.message)
       }
-      throw new GrpcInternalException('Something went wrong, please try again.');
+      throw toGrpcError(error, 'Something went wrong, please try again.');
     }
   }
 
@@ -3569,7 +3570,7 @@ export class QuestionBankService {
       if (error instanceof UnprocessableEntityException) {
         throw new GrpcNotFoundException(error.message)
       }
-      throw new GrpcInternalException('Something went wrong, please try again.');
+      throw toGrpcError(error, 'Something went wrong, please try again.');
     }
   }
 
@@ -3756,7 +3757,7 @@ export class QuestionBankService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.getResponse());
       }
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(error, "Internal Server Error");
     }
   }
 }

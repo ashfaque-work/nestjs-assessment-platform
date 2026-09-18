@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { FindAllStatesReq, GetInfoReq, GetInfoRes, GetStateReq } from '@app/common/dto/administration';
 import { Injectable } from '@nestjs/common';
 import { info, states } from 'countryjs';
@@ -16,7 +17,7 @@ export class CountryService {
 
       return { response: countries };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -26,7 +27,7 @@ export class CountryService {
 
       return { response };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -41,7 +42,7 @@ export class CountryService {
 
       return { ...response };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -51,7 +52,7 @@ export class CountryService {
 
       return { response };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 }

@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable } from '@nestjs/common';
 import { FileRepository } from '@app/common';
 import { FileRequest } from '@app/common/dto/administration/file.dto';
@@ -53,7 +54,7 @@ export class FileService {
 
       return newFile;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -75,7 +76,7 @@ export class FileService {
 
       return { filePath: `/${userId}/${newFilename}` };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -112,7 +113,7 @@ export class FileService {
 
       return newFile;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 

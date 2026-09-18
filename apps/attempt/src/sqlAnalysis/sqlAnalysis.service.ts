@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { AttemptRepository, globals } from "@app/common";
 import { GetStudentLevelTestReq } from "@app/common/dto/sqlAnalysis.dto";
 import { Injectable, NotFoundException } from "@nestjs/common";
@@ -58,7 +59,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -96,7 +97,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -134,7 +135,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -169,7 +170,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -212,7 +213,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -243,7 +244,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -296,7 +297,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -334,7 +335,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -372,7 +373,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -407,7 +408,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -441,7 +442,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -500,7 +501,7 @@ export class SqlAnalysisService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 

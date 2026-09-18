@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable, Logger } from '@nestjs/common';
 import { RedisCaching } from '@app/common';
 import { GrpcInternalException } from 'nestjs-grpc-exceptions';
@@ -59,7 +60,7 @@ export class ToolService {
 
       return {}
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -79,7 +80,7 @@ export class ToolService {
 
       return;
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 

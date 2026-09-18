@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { AttemptRepository, ClassroomRepository, PracticeSetRepository, UsersRepository } from '@app/common';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
@@ -227,7 +228,7 @@ export class AnsyncService {
             return savedAttempt;
         } catch (error) {
             console.log(error);
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -244,7 +245,7 @@ export class AnsyncService {
             if (error instanceof BadRequestException) {
                 throw new BadRequestException(error.getResponse());
             }
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 }

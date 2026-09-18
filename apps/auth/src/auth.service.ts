@@ -87,11 +87,11 @@ export class AuthService {
       }
     } catch (error) {
       if (error instanceof InternalServerErrorException) {
-        throw new GrpcInternalException(error.getResponse());
+        throw toGrpcError(error, error.getResponse());
       } else if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.getResponse());
       }
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -205,7 +205,7 @@ export class AuthService {
       }
       return { response: msg };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -237,7 +237,7 @@ export class AuthService {
       return validToken;
     } catch (error) {
       console.log(error);
-      throw new RpcException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -401,7 +401,7 @@ export class AuthService {
       throw new NotFoundException();
     } catch (err) {
       Logger.error(err)
-      throw new GrpcInternalException("Internal Server Error");
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -470,7 +470,7 @@ export class AuthService {
       if (error instanceof ForbiddenException) {
         throw new GrpcPermissionDeniedException(error);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 

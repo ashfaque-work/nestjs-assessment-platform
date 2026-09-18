@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { UserFollowRepository, UsersRepository } from "@app/common";
 import { AmIFollowReq, AmIFollowRes, FollowListReq, FollowReq } from "@app/common/dto/userFollow.dto";
 import { Injectable } from "@nestjs/common";
@@ -19,7 +20,7 @@ export class UserFollowService {
                 response: result
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -78,7 +79,7 @@ export class UserFollowService {
             }
 
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -147,7 +148,7 @@ export class UserFollowService {
             }
 
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 }

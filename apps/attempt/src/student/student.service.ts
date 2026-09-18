@@ -161,7 +161,7 @@ export class StudentService {
             if (error instanceof ForbiddenException) {
                 throw new GrpcUnauthenticatedException(error.message);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -584,7 +584,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal Server error"
+            throw toGrpcError(err, "Internal Server error");
         }
     }
 
@@ -602,7 +602,7 @@ export class StudentService {
                 return [];
             }
         } catch (err) {
-            throw new InternalServerErrorException();
+            throw toGrpcError(err, 'Internal Server Error');
         }
     }
 
@@ -615,7 +615,7 @@ export class StudentService {
             }
             return practiceBuy;
         } catch (err) {
-            throw new InternalServerErrorException();
+            throw toGrpcError(err, 'Internal Server Error');
         }
     }
 
@@ -710,7 +710,7 @@ export class StudentService {
             }
 
         } catch (err) {
-            throw new InternalServerErrorException();
+            throw toGrpcError(err, 'Internal Server Error');
         }
     }
 
@@ -843,7 +843,7 @@ export class StudentService {
 
             return finalFilter;
         } catch (err) {
-            throw new InternalServerErrorException(err);
+            throw toGrpcError(err);
         }
     }
 
@@ -976,7 +976,7 @@ export class StudentService {
                 : await this.filterForGuest(req);
             return filters;
         } catch (error) {
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -1160,7 +1160,7 @@ export class StudentService {
 
             return { results: results, count };
         } catch (error) {
-            throw new InternalServerErrorException(error);
+            throw toGrpcError(error);
         }
     }
 
@@ -1189,7 +1189,7 @@ export class StudentService {
 
             return count;
         } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
     //Internal Fucntions - End
@@ -1246,7 +1246,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal Server Error"
+            throw toGrpcError(err, "Internal Server Error");
         }
     }
 
@@ -1305,7 +1305,7 @@ export class StudentService {
             return { results }
         } catch (err) {
             console.log(err);
-            throw "Internal Server error"
+            throw toGrpcError(err, "Internal Server error");
         }
     }
 
@@ -1400,7 +1400,7 @@ export class StudentService {
 
             return { docs: docs }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1493,7 +1493,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -1653,7 +1653,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -1898,7 +1898,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
     async getAverageTimeOnPlatform(request: GetAverageTimeOnPlatformRequest) {
@@ -2125,7 +2125,7 @@ export class StudentService {
             return { user: currentUser, topper: topper, average: average }
         } catch (err) {
             console.log(err);
-            throw "internal server error"
+            throw toGrpcError(err, "internal server error");
         }
     }
 
@@ -2315,7 +2315,7 @@ export class StudentService {
             return { user: attemptCount, average: averageAttemptCount, topper: topperCount }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -2386,7 +2386,7 @@ export class StudentService {
             return { learningCount }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -2489,7 +2489,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -2581,7 +2581,7 @@ export class StudentService {
             return { quesDistribution }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -2634,7 +2634,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -2679,7 +2679,7 @@ export class StudentService {
             return { persist }
         } catch (err) {
             console.log(err);
-            throw "Internal Server error"
+            throw toGrpcError(err, "Internal Server error");
         }
     }
 
@@ -2883,7 +2883,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -3098,7 +3098,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -3250,7 +3250,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -3382,7 +3382,7 @@ export class StudentService {
             return { subjects }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -3498,7 +3498,7 @@ export class StudentService {
             return { topics }
         } catch (err) {
             console.log(err);
-            throw "Internal Server error"
+            throw toGrpcError(err, "Internal Server error");
         }
     }
 
@@ -4101,7 +4101,7 @@ export class StudentService {
             return { ...result }
         } catch (err) {
             Logger.error(err);
-            throw "Internal server Error"
+            throw toGrpcError(err, "Internal server Error");
         }
     }
 
@@ -4554,7 +4554,7 @@ export class StudentService {
 
             return { response: totalResults };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -4677,7 +4677,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -4763,7 +4763,7 @@ export class StudentService {
                 return { results }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -4789,7 +4789,7 @@ export class StudentService {
             attempt = this.removeAttemptDetails(attempt)
             return { attempt }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -4843,7 +4843,7 @@ export class StudentService {
                 return { results: practiceSets };
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -4923,7 +4923,7 @@ export class StudentService {
             }
             return { attempts }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -4960,7 +4960,7 @@ export class StudentService {
             count = count ? count : 0;
             return { count }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -4975,7 +4975,7 @@ export class StudentService {
             let attempt = await this.findOneAttempt(request, condition)
             return { ...attempt }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -5001,7 +5001,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5030,7 +5030,7 @@ export class StudentService {
             }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5056,7 +5056,7 @@ export class StudentService {
             return data;
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5082,7 +5082,7 @@ export class StudentService {
             return data;
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5102,7 +5102,7 @@ export class StudentService {
             return { attempt }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5208,7 +5208,7 @@ export class StudentService {
             return { subjects }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5250,7 +5250,7 @@ export class StudentService {
             return { data }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5355,7 +5355,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5439,7 +5439,7 @@ export class StudentService {
             return { attempt }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5477,7 +5477,7 @@ export class StudentService {
             return { count }
         } catch (err) {
             console.log(err);
-            throw "Internal server error"
+            throw toGrpcError(err, "Internal server error");
         }
     }
 
@@ -5495,7 +5495,7 @@ export class StudentService {
             let attempt = await this.findOneAttempt(request, condition, { createdAt: -1 });
             return { attempt }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -5515,7 +5515,7 @@ export class StudentService {
 
         } catch (err) {
             console.log(err);
-            throw "Internals server error"
+            throw toGrpcError(err, "Internals server error");
         }
     }
 
@@ -5525,7 +5525,7 @@ export class StudentService {
             const attempt = await this.findOneAttempt(request, condition);
             return { attempt }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -5566,7 +5566,7 @@ export class StudentService {
 
             return { classrooms: classrooms };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -5754,7 +5754,7 @@ export class StudentService {
 
             return { mentors, total: count };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -5790,7 +5790,7 @@ export class StudentService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.message);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -5827,7 +5827,7 @@ export class StudentService {
 
             return { message: 'OK' };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -5851,7 +5851,7 @@ export class StudentService {
             const downloadLink = `${config.reportApi}/exports/${response.data.data}`;
             return { downloadLink };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -5881,7 +5881,7 @@ export class StudentService {
 
             return response.data;
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -6033,7 +6033,7 @@ export class StudentService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.message);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -6113,7 +6113,7 @@ export class StudentService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.message);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -6190,7 +6190,7 @@ export class StudentService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.message);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -6242,7 +6242,7 @@ export class StudentService {
             if (error instanceof ForbiddenException) {
                 throw new GrpcUnauthenticatedException(error.message);
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 

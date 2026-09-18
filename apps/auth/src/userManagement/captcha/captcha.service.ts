@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { RedisCaching } from "@app/common";
 import { GetKeyReq, VerifyReq } from "@app/common/dto/userManagement/captcha.dto";
 import { Injectable, Logger } from "@nestjs/common";
@@ -19,7 +20,7 @@ export class CaptchaService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -41,7 +42,7 @@ export class CaptchaService {
                 }
             })
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 }

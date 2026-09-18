@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { CourseRepository, UserCourseRepository } from '@app/common';
 import { CertificateRepository } from '@app/common/database/repositories/certificate.repository';
 import { CreateCertificateRequest, GetPublicProfileCertificatesRequest, IndexRequest } from '@app/common/dto/question-bank.dto';
@@ -31,7 +32,7 @@ export class CertificateService {
             return { response: enrolledCourses }
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException('Internal Server Error')
+            throw toGrpcError(ex, 'Internal Server Error');
         }
     }
 
@@ -75,7 +76,7 @@ export class CertificateService {
             if (error instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(error.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -90,7 +91,7 @@ export class CertificateService {
             return { response: enrolledCourses }
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 }

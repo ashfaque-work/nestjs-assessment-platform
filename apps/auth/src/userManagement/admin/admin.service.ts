@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { config, getAssets } from "@app/common/config";
 import {
     CreateCourseReq, CreateEvaluationReq, CreateNewsReq, CreateProgramOutcomeReq, DeleteCourseReq, DeleteEvaluationReq, DeleteProgramOutcomeReq,
@@ -589,7 +590,7 @@ export class AdminService {
                 await this.getData(_id, exportDir, wb, sh);
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -649,7 +650,7 @@ export class AdminService {
             }
 
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -676,7 +677,7 @@ export class AdminService {
 
             return { reports: reports };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -691,7 +692,7 @@ export class AdminService {
             }
             return report;
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -768,7 +769,7 @@ export class AdminService {
 
             return data;
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -820,7 +821,7 @@ export class AdminService {
                 return { downloadLink: dl };
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -870,7 +871,7 @@ export class AdminService {
                 return { statusCode: 200, downloadLink: dl };
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -887,7 +888,7 @@ export class AdminService {
             const templates = await this.notificationTemplateRepository.find(filter);
             return { statusCode: 200, templates };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -906,7 +907,7 @@ export class AdminService {
 
             return { statusCode: 200, result: result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -957,7 +958,7 @@ export class AdminService {
 
             return { result: result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -982,7 +983,7 @@ export class AdminService {
 
             return { statusCode: 200, message: 'ok' };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -997,7 +998,7 @@ export class AdminService {
 
             return { statusCode: 200, message: 'ok' };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1021,7 +1022,7 @@ export class AdminService {
 
             return { statusCode: 200, message: 'ok' };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1057,7 +1058,7 @@ export class AdminService {
 
             return { statusCode: 200, message: 'ok' };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1138,7 +1139,7 @@ export class AdminService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.getResponse());
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1152,7 +1153,7 @@ export class AdminService {
 
             return { statusCode: 200, message: 'ok' };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1163,7 +1164,7 @@ export class AdminService {
 
             return { statusCode: 200, programs: programs };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1186,7 +1187,7 @@ export class AdminService {
             const program = await this.programOutcomeRepository.create(data);
             return { statusCode: 200, response: program };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1211,7 +1212,7 @@ export class AdminService {
                 return { statusCode: 400, msg: 'no record found' };
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1235,7 +1236,7 @@ export class AdminService {
                 return { statusCode: 400, msg: 'no record found' };
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1249,7 +1250,7 @@ export class AdminService {
 
             return { results: results };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1277,7 +1278,7 @@ export class AdminService {
             const result = await this.accreditationCoursesRepository.create(data);
             return { statusCode: 200, response: result }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1297,7 +1298,7 @@ export class AdminService {
 
             return { statusCode: 200, response: result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1319,7 +1320,7 @@ export class AdminService {
 
             return { response: result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1330,7 +1331,7 @@ export class AdminService {
 
             return { statusCode: 200, results: evaluations };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1356,7 +1357,7 @@ export class AdminService {
             const result = await this.accreditationEvaluationsRepository.create(data);
             return { statusCode: 200, response: result }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1376,7 +1377,7 @@ export class AdminService {
 
             return { statusCode: 200, response: result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1394,7 +1395,7 @@ export class AdminService {
 
             return { response: result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1405,7 +1406,7 @@ export class AdminService {
 
             return { ...settings };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1436,7 +1437,7 @@ export class AdminService {
 
             return { statusCode: 200, response: results };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1449,7 +1450,7 @@ export class AdminService {
 
             return { statusCode: 200, results: reports };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1466,7 +1467,7 @@ export class AdminService {
 
             return { statusCode: 200, response: result };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1481,7 +1482,7 @@ export class AdminService {
 
             return { statusCode: 200, teacherList: teacherList };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1556,7 +1557,7 @@ export class AdminService {
             if (error instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(error.getResponse());
             }
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1579,7 +1580,7 @@ export class AdminService {
 
             return { statusCode: 200, results: results };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1602,7 +1603,7 @@ export class AdminService {
 
             return { statusCode: 200, news: news }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -1619,7 +1620,7 @@ export class AdminService {
 
             return { statusCode: 200, news: news };
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 }

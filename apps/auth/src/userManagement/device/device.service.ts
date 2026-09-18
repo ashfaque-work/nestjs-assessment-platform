@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { DeviceRepository } from "@app/common";
 import { InsertDeviceReq, RemoveDeviceReq, RemoveDeviceTokenReq } from "@app/common/dto/userManagement/device.dto";
 import { Injectable } from "@nestjs/common";
@@ -47,7 +48,7 @@ export class DeviceService {
                 }
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -66,7 +67,7 @@ export class DeviceService {
                 response: "OK"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -85,7 +86,7 @@ export class DeviceService {
                 response: "Ok"
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -97,7 +98,7 @@ export class DeviceService {
                 response: found
             }
         } catch (error) {
-            throw new GrpcInternalException(error.message)
+            throw toGrpcError(error);
         }
     }
 

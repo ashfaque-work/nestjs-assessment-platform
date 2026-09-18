@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { GrpcInternalException } from 'nestjs-grpc-exceptions';
 import { Types } from 'mongoose';
@@ -185,7 +186,7 @@ export class PaymentService {
       return updatedpayment;
     } catch (err) {
       Logger.error('Error initializing CCA', err);
-      throw new GrpcInternalException('Error initializing CCA');
+      throw toGrpcError(err, 'Error initializing CCA');
     }
   }
 
@@ -270,7 +271,7 @@ export class PaymentService {
       await this.updateAllPaymentDetails(req, user, payment);
     } catch (ex) {
       Logger.error('Error processing after payment success', ex);
-      throw new GrpcInternalException('Error processing after payment success');
+      throw toGrpcError(ex, 'Error processing after payment success');
     }
   }
 
@@ -607,7 +608,7 @@ export class PaymentService {
       await this.sendEmailAlertPayment(req, user, payment, emailOptions);
     }
     catch (error) {
-      throw new InternalServerErrorException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1020,7 +1021,7 @@ export class PaymentService {
         return { payments: payments };
       }
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1031,7 +1032,7 @@ export class PaymentService {
 
       return { result: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1045,7 +1046,7 @@ export class PaymentService {
 
       return { result: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1061,7 +1062,7 @@ export class PaymentService {
 
       return { result: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1077,7 +1078,7 @@ export class PaymentService {
 
       return { result: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1162,7 +1163,7 @@ export class PaymentService {
 
       return { paymentDetails: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1184,7 +1185,7 @@ export class PaymentService {
 
       return { statusCode: 200, count: result };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1208,7 +1209,7 @@ export class PaymentService {
 
       return { statusCode: 200, payment: payment };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1233,7 +1234,7 @@ export class PaymentService {
 
       return { statusCode: 200, payment: payment };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1259,7 +1260,7 @@ export class PaymentService {
 
       return { statusCode: 200, response: paymentDetails };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1288,7 +1289,7 @@ export class PaymentService {
 
       return { statusCode: 200, count: count };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1322,7 +1323,7 @@ export class PaymentService {
 
       return { statusCode: 200, response: toReturn };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1343,7 +1344,7 @@ export class PaymentService {
 
       return { statusCode: 200, payment: payment };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1398,7 +1399,7 @@ export class PaymentService {
       };
     } catch (error) {
       Logger.error(error.message);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1443,7 +1444,7 @@ export class PaymentService {
       return { statusCode: 302, redirectUrl: `http://localhost/student/paymentStatus/${payment._id}` };
     } catch (error) {
       Logger.error(error.message);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1463,7 +1464,7 @@ export class PaymentService {
       return { statusCode: 302, redirectUrl: `http://localhost/student/paymentStatus/${payment._id}` };
     } catch (error) {
       Logger.error(error.message);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1567,7 +1568,7 @@ export class PaymentService {
       return { statusCode: 200, message: 'Subjects Added' };
     } catch (error) {
       Logger.error(error.message);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1738,7 +1739,7 @@ export class PaymentService {
       }
     } catch (error) {
       Logger.error(error.message);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1790,7 +1791,7 @@ export class PaymentService {
       }
     } catch (error) {
       Logger.error(error.message);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1819,7 +1820,7 @@ export class PaymentService {
       return { statusCode: 302, payment: result._id };
     } catch (error) {
       Logger.error(error.message);
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 

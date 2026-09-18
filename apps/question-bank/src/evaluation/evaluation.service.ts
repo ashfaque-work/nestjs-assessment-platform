@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { AttemptDetailRepository, AttemptRepository, ClassroomRepository, Constants, EvaluationRepository, NotificationRepository, PracticeSetRepository, RedisCaching, UsersRepository } from '@app/common';
 import { AssignEvaluatorsRequest, FindEvaluatorsRequest, GetAssignedTestsRequest, GetPendingTestsRequest, GetQuestionEvaluationsByTestRequest, GetQuestionsForEvaluationRequest, GetStudentsForEvaluationByTestRequest, GetTestEvaluationStatRequest, GetUnassignedTestsRequest, QuestionEvaluationRequest, RemoveEvaluatorsRequest, StartTestEvaluationRequest } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -132,7 +133,7 @@ export class EvaluationService {
             return result
         } catch (ex) {
             Logger.error('%o', ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
 
         }
     }
@@ -228,7 +229,7 @@ export class EvaluationService {
             return result
         } catch (ex) {
             Logger.error('%o', ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -272,7 +273,7 @@ export class EvaluationService {
             return { response: teachers }
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -380,7 +381,7 @@ export class EvaluationService {
         }
         catch (err) {
             Logger.error('%o', err);
-            throw new GrpcInternalException(err.message);
+            throw toGrpcError(err);
         }
     }
 
@@ -486,7 +487,7 @@ export class EvaluationService {
 
         } catch (ex) {
             Logger.error('%o', ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -655,7 +656,7 @@ export class EvaluationService {
 
         } catch (err) {
             Logger.error('%o', err)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(err, "Internal Server Error");
         }
     }
 
@@ -936,7 +937,7 @@ export class EvaluationService {
 
         } catch (err) {
             Logger.error('%o', err)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(err, "Internal Server Error");
         }
     }
 
@@ -1086,7 +1087,7 @@ export class EvaluationService {
             return test;
         } catch (ex) {
             Logger.error('%o', ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1146,7 +1147,7 @@ export class EvaluationService {
             return stats
         } catch (ex) {
             Logger.error('%o', ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1723,7 +1724,7 @@ export class EvaluationService {
 
         } catch (ex) {
             Logger.warn('validationError %j', ex)
-            throw new GrpcInternalException(ex.message);
+            throw toGrpcError(ex);
         }
     }
 
@@ -1804,7 +1805,7 @@ export class EvaluationService {
             return { status: 'ok' };
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1895,7 +1896,7 @@ export class EvaluationService {
             return { status: 'ok' }
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 }

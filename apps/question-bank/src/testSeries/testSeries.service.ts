@@ -338,7 +338,7 @@ export class TestSeriesService {
             }
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -440,7 +440,7 @@ export class TestSeriesService {
             if (ex instanceof NotFoundException) {
                 throw new GrpcNotFoundException(ex.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -463,7 +463,7 @@ export class TestSeriesService {
             return { attemptedTestIds: pIds }
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -500,7 +500,7 @@ export class TestSeriesService {
 
             return result;
         } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -573,7 +573,7 @@ export class TestSeriesService {
             }
             return packageObj;
         } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -629,7 +629,7 @@ export class TestSeriesService {
                 return results;
             }
         } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -689,7 +689,7 @@ export class TestSeriesService {
 
             return await this.packagesSummary(req, condition, filter, sort, limit, skip);
         } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -703,7 +703,7 @@ export class TestSeriesService {
             return { response: res };
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -749,7 +749,7 @@ export class TestSeriesService {
                 return filter
             }
         } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
     }
 
@@ -817,7 +817,7 @@ export class TestSeriesService {
                 count: count
             }
         } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw toGrpcError(error);
         }
 
     }
@@ -831,7 +831,7 @@ export class TestSeriesService {
             return { response: res, total: res[0]?.total };
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -884,7 +884,7 @@ export class TestSeriesService {
             return { response: tests }
         } catch (error) {
             Logger.error(error)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -915,7 +915,7 @@ export class TestSeriesService {
 
         } catch (error) {
             Logger.error(error)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -968,7 +968,7 @@ export class TestSeriesService {
             }
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1005,7 +1005,7 @@ export class TestSeriesService {
             return { response: authors };
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1028,7 +1028,7 @@ export class TestSeriesService {
             return { response: subjects }
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1075,7 +1075,7 @@ export class TestSeriesService {
             return { response: testseries }
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1150,7 +1150,7 @@ export class TestSeriesService {
             return { response: testseries }
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1265,7 +1265,7 @@ export class TestSeriesService {
             return series;
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1306,7 +1306,7 @@ export class TestSeriesService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -1332,7 +1332,7 @@ export class TestSeriesService {
             }
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -1360,7 +1360,7 @@ export class TestSeriesService {
 
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1733,7 +1733,7 @@ export class TestSeriesService {
             return result;
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -1817,7 +1817,7 @@ export class TestSeriesService {
             return { response: ts }
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1893,7 +1893,7 @@ export class TestSeriesService {
             return { response: testseries }
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1957,7 +1957,7 @@ export class TestSeriesService {
             if (ex instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(ex.getResponse());
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -1981,7 +1981,7 @@ export class TestSeriesService {
             return { _id: favorite._id };
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -2030,7 +2030,7 @@ export class TestSeriesService {
             if (e instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(e.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(e, "Internal Server Error");
         }
     }
 
@@ -2055,7 +2055,7 @@ export class TestSeriesService {
             }
         } catch (e) {
             Logger.error(e)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(e, "Internal Server Error");
         }
     }
 
@@ -2105,7 +2105,7 @@ export class TestSeriesService {
             } else if (ex instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(ex.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -2147,7 +2147,7 @@ export class TestSeriesService {
             return summary;
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -2216,7 +2216,7 @@ export class TestSeriesService {
             return { response: toReturn }
         } catch (e) {
             Logger.error(e)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(e, "Internal Server Error");
         }
     }
 
@@ -2231,7 +2231,7 @@ export class TestSeriesService {
             return { status: 'ok' };
         } catch (e) {
             Logger.error(e)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(e, "Internal Server Error");
         }
     }
 
@@ -2346,7 +2346,7 @@ export class TestSeriesService {
             } else if (e instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(e.getResponse());
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(e, "Internal Server Error");
         }
     }
 
@@ -2366,7 +2366,7 @@ export class TestSeriesService {
             if (ex instanceof NotFoundException) {
                 throw new GrpcNotFoundException(ex.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -2396,7 +2396,7 @@ export class TestSeriesService {
             if (e instanceof NotFoundException) {
                 throw new GrpcNotFoundException(e.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(e, "Internal Server Error");
         }
     };
 
@@ -2468,7 +2468,7 @@ export class TestSeriesService {
             return { response: students }
         } catch (e) {
             Logger.error(e)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(e, "Internal Server Error");
         }
     }
 
@@ -2573,7 +2573,7 @@ export class TestSeriesService {
             if (e instanceof NotFoundException) {
                 throw new GrpcNotFoundException(e.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(e, "Internal Server Error");
         }
     }
 
@@ -2672,7 +2672,7 @@ export class TestSeriesService {
 
         } catch (e) {
             Logger.error(e)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(e, "Internal Server Error");
         }
     }
 
@@ -2756,7 +2756,7 @@ export class TestSeriesService {
 
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -2894,7 +2894,7 @@ export class TestSeriesService {
             return toReturn
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -2988,7 +2988,7 @@ export class TestSeriesService {
             return { response: questions };
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -3123,7 +3123,7 @@ export class TestSeriesService {
             return toReturn
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -3228,7 +3228,7 @@ export class TestSeriesService {
             return { response: data }
         } catch (ex) {
             Logger.error(ex)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(ex, "Internal Server Error");
         }
     }
 
@@ -3320,7 +3320,7 @@ export class TestSeriesService {
 
         } catch (ex) {
             Logger.error(ex);
-            throw new GrpcInternalException(ex.message);
+            throw toGrpcError(ex);
         }
     }
 }

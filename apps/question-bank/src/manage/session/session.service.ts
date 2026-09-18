@@ -316,7 +316,7 @@ export class SessionService {
                 throw new GrpcInvalidArgumentException(error.message);
             }
 
-            throw new GrpcInternalException('Internal Server Error')
+            throw toGrpcError(error, 'Internal Server Error');
         }
     }
 
@@ -432,7 +432,7 @@ export class SessionService {
             return { response: aggregate };
         } catch (error) {
             Logger.error(error)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -585,7 +585,7 @@ export class SessionService {
             return { response: aggregate };
         } catch (error) {
             Logger.error(error)
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -722,7 +722,7 @@ export class SessionService {
             if (error instanceof NotFoundException) {
                 throw new GrpcNotFoundException(error.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -775,7 +775,7 @@ export class SessionService {
                 throw new GrpcInvalidArgumentException(error.message);
             }
 
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -796,7 +796,7 @@ export class SessionService {
             if (error instanceof BadRequestException) {
                 throw new GrpcInvalidArgumentException(error.message);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -876,9 +876,9 @@ export class SessionService {
         } catch (error) {
             Logger.error(error);
             if (error instanceof UnprocessableEntityException) {
-                throw new GrpcInternalException(error.message);
+                throw toGrpcError(error);
             }
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 
@@ -971,7 +971,7 @@ export class SessionService {
             return documents;
         } catch (error) {
             Logger.error(error);
-            throw new GrpcInternalException("Internal Server Error");
+            throw toGrpcError(error, "Internal Server Error");
         }
     }
 }

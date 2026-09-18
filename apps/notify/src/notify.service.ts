@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
@@ -93,7 +94,7 @@ export class NotifyService {
       );
       return { notifications: notifications };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -107,7 +108,7 @@ export class NotifyService {
       );
       return { count: count };
     } catch (error) {
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -151,7 +152,7 @@ export class NotifyService {
       } else if (error instanceof UnauthorizedException) {
         throw new GrpcPermissionDeniedException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -180,7 +181,7 @@ export class NotifyService {
       if (error instanceof NotFoundException) {
         throw new GrpcNotFoundException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -201,7 +202,7 @@ export class NotifyService {
       if (error instanceof BadRequestException) {
         throw new GrpcInvalidArgumentException(error.message);
       }
-      throw new GrpcInternalException(error.message);
+      throw toGrpcError(error);
     }
   }
 

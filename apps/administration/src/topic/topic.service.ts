@@ -1,3 +1,4 @@
+import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { Injectable } from '@nestjs/common';
 import { AttemptDetailRepository, QuestionRepository, TopicRepository, UnitRepository } from '@app/common';
 import {
@@ -55,7 +56,7 @@ export class TopicService {
 
       return createdTopic;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -80,7 +81,7 @@ export class TopicService {
 
       return { response: topics || [] };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -95,7 +96,7 @@ export class TopicService {
 
       return { response: topic };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -139,7 +140,7 @@ export class TopicService {
 
       return { response: updatedTopic };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -170,7 +171,7 @@ export class TopicService {
 
       return { response: updatedTopic };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -199,7 +200,7 @@ export class TopicService {
 
       return updatedTopic;
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -218,7 +219,7 @@ export class TopicService {
 
       return { response: topic };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -260,7 +261,7 @@ export class TopicService {
       );
       return { response: topics };
     } catch (error) {
-      throw new GrpcInternalException(error);
+      throw toGrpcError(error);
     }
   }
 
