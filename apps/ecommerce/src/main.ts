@@ -5,9 +5,12 @@ import { join } from 'path';
 import { tenantAwareGrpc } from '@app/common/database/tenant-context';
 import { protobufEcommercePackage } from '@app/common/grpc-clients/eCommerce/coupon';
 import { ConfigService } from '@nestjs/config';
+import { logUnhandledRejections } from '@app/common/helpers/process-guard';
+import { answerInvalidIdsWithBadRequest } from '@app/common/helpers/grpc-error';
 
 async function bootstrap() {
   const app = await NestFactory.create(EcommerceModule);
+  answerInvalidIdsWithBadRequest(app);
   const configService = app.get(ConfigService);
   app.connectMicroservice(tenantAwareGrpc({
     package: protobufEcommercePackage,
@@ -19,4 +22,5 @@ async function bootstrap() {
   await app.startAllMicroservices();
   console.log('Ecommerce Microservice connected');
 }
+logUnhandledRejections();
 bootstrap();

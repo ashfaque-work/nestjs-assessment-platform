@@ -5,9 +5,12 @@ import { protobufAttemptPackage } from '@app/common/grpc-clients/attempt';
 import { join } from 'path';
 import { tenantAwareGrpc } from '@app/common/database/tenant-context';
 import { ValidationPipe } from '@nestjs/common';
+import { logUnhandledRejections } from '@app/common/helpers/process-guard';
+import { answerInvalidIdsWithBadRequest } from '@app/common/helpers/grpc-error';
 
 async function bootstrap() {
   const app = await NestFactory.create(AttemptModule);
+  answerInvalidIdsWithBadRequest(app);
   const configService = app.get(ConfigService);
   app.connectMicroservice(tenantAwareGrpc({
     package: protobufAttemptPackage,
@@ -18,4 +21,5 @@ async function bootstrap() {
   await app.startAllMicroservices();
   console.log('Attempt Microservice connected');
 }
+logUnhandledRejections();
 bootstrap();

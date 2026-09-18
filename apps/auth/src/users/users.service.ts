@@ -1,7 +1,7 @@
 import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, AttemptDetailRepository, AttemptRepository, AttendanceRepository, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, ClassroomRepository, CloseUserAccountReq, CompetenciesRepository, CountTotalUsersReq, CouponRepository, CourseRepository, CreateUserDto, CreateUserResponse, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, EventBus, EventsRepository, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LocationRepository, LoginAfterOauthReq, LoginReqDto, ManageSessionReq, MarketingUtmRepository, NotificationRepository, NotificationTemplateRepository, PartnerUserReq, PracticeSetRepository, PsychoIndexReq, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReportedUserRepository, RequestEmailCodeReq, SendForReviewDossierReq, Setting, SettingRepository, SocialLoginReq, SocketClientService, StartOneOnOneWbSessionRequest, SubjectRepository, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUtmStatusReq, User, UserCourseRepository, UserLiveBoardRequest, UserRecentActivityReq, UserSuperCoinsRepository, UsersRepository, ValidateUserPictureRequest, VerifiedCodeReq, canOnlySeeHisOwnContents, canOnlySeeLocationContents, getRandomCode, isEmail } from "@app/common";
 import { NotifyGrpcClientService } from "@app/common/grpc-clients/notify";
 import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UnprocessableEntityException } from "@nestjs/common";
-import { GrpcInternalException, GrpcInvalidArgumentException, GrpcNotFoundException, GrpcPermissionDeniedException } from 'nestjs-grpc-exceptions';
+import { GrpcInternalException, GrpcInvalidArgumentException, GrpcNotFoundException, GrpcPermissionDeniedException, GrpcUnavailableException } from 'nestjs-grpc-exceptions';
 import { ObjectId } from 'mongodb';
 import * as geoip from 'geoip-lite';
 import { callingCodes } from 'countryjs';
@@ -3163,56 +3163,31 @@ export class UsersService {
   }
 
   async employabilityIndex(request: EmployabilityIndexReq) {
-    axios.get(config.config.reportApi + 'employbilityIndex', {
-      params: {
-        userId: request.user._id.toString()
-      },
-      headers: {
-        'instancekey': request.instancekey
-      }
-    })
-      .then(function (res) {
-        console.log("res");
-        console.log(res);
-        if (res.data) {
-          return {
-            response: res.data
-          }
-        } else {
-          return {
-            response: []
-          }
-        }
-      })
-      .catch(function (error) {
-        throw new GrpcInternalException(error);
-      });
+    const data = await this.getReport('employbilityIndex', request);
+    return { response: data || [] };
   }
 
   async psychoIndex(request: PsychoIndexReq) {
-    axios.get(config.config.reportApi + 'psychoIndustryIndex', {
-      params: {
-        userId: request.user._id.toString()
-      },
-      headers: {
-        'instancekey': request.instancekey
-      }
-    })
-      .then(res => {
-        if (res.data && res.data.data) {
-          return {
-            response: res.data.data
-          }
-        } else {
-          Logger.warn('No psychoIndex found');
-          return {
-            response: []
-          }
-        }
-      })
-      .catch((error) => {
-        throw new GrpcInternalException(error);
+    const data = await this.getReport('psychoIndustryIndex', request);
+    if (!data?.data) {
+      Logger.warn('No psychoIndex found');
+    }
+    return { response: data?.data || [] };
+  }
+
+  // Both indexes come from the external report API. The call used to run without being
+  // awaited, so the endpoint always returned nothing and a failed call crashed the service.
+  private async getReport(path: string, request: EmployabilityIndexReq | PsychoIndexReq) {
+    try {
+      const res = await axios.get(config.config.reportApi + path, {
+        params: { userId: request.user._id.toString() },
+        headers: { instancekey: request.instancekey },
       });
+      return res.data;
+    } catch (error) {
+      Logger.error(`report API ${path} failed: ${error.message}`);
+      throw new GrpcUnavailableException('The report service is not available');
+    }
   }
 
   async loginAfterOauth(request: LoginAfterOauthReq) {

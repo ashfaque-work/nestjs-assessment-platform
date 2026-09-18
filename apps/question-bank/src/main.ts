@@ -5,9 +5,12 @@ import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { tenantAwareGrpc } from '@app/common/database/tenant-context';
 import { protobufQuestionBankPackage } from '@app/common/grpc-clients/question-bank';
+import { logUnhandledRejections } from '@app/common/helpers/process-guard';
+import { answerInvalidIdsWithBadRequest } from '@app/common/helpers/grpc-error';
 
 async function bootstrap() {
   const app = await NestFactory.create(QuestionBankModule);
+  answerInvalidIdsWithBadRequest(app);
   const configService = app.get(ConfigService);
   app.connectMicroservice(tenantAwareGrpc({
     package: protobufQuestionBankPackage,
@@ -18,4 +21,5 @@ async function bootstrap() {
   await app.startAllMicroservices();
   console.log('Question Bank Microservice connected');
 }
+logUnhandledRejections();
 bootstrap();

@@ -5,9 +5,12 @@ import { NotifyModule } from './notify.module';
 import { join } from 'path';
 import { tenantAwareGrpc } from '@app/common/database/tenant-context';
 import { protobufNotifyPackage } from '@app/common/grpc-clients/notify';
+import { logUnhandledRejections } from '@app/common/helpers/process-guard';
+import { answerInvalidIdsWithBadRequest } from '@app/common/helpers/grpc-error';
 
 async function bootstrap() {
   const app = await NestFactory.create(NotifyModule);
+  answerInvalidIdsWithBadRequest(app);
   const configService = app.get(ConfigService);
   app.connectMicroservice(tenantAwareGrpc({
     protoPath: join(__dirname, '../../../proto/notify.proto'),
@@ -18,4 +21,5 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   await app.startAllMicroservices();
 }
+logUnhandledRejections();
 bootstrap();

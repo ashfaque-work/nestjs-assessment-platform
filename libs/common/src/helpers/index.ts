@@ -7,3 +7,4 @@ export * from './satScoreCalc';
 export * from './time-helper';
 export * from './grpc-error';
 export * from './user-secrets';
+export * from './process-guard';

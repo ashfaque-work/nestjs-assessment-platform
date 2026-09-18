@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from '@app/common/filters/global-exception.filter';
 import { RedisIoAdapter } from '@app/common';
+import { logUnhandledRejections } from '@app/common/helpers/process-guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(GatewayModule);
@@ -54,4 +55,5 @@ async function bootstrap() {
 
   await app.listen(configService.getOrThrow('APIGATEWAY_PORT'));
 }
+logUnhandledRejections();
 bootstrap();

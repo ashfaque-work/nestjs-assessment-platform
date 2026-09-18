@@ -2,6 +2,7 @@ import { NestFactory } from "@nestjs/core";
 import { VideoStreamingModule } from "./video-streaming.module";
 import expressWsApp from "./mediasoup-webrtc";
 import { Logger } from "@nestjs/common";
+import { logUnhandledRejections } from '@app/common/helpers/process-guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(VideoStreamingModule);
@@ -15,4 +16,5 @@ async function bootstrap() {
 
   await app.listen(7200);
 }
+logUnhandledRejections();
 bootstrap();

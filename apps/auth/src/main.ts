@@ -4,9 +4,12 @@ import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth.module';
 import { join } from 'path';
 import { tenantAwareGrpc } from '@app/common/database/tenant-context';
+import { logUnhandledRejections } from '@app/common/helpers/process-guard';
+import { answerInvalidIdsWithBadRequest } from '@app/common/helpers/grpc-error';
 
 async function bootstrap() {
   const app = await NestFactory.create(AuthModule);
+  answerInvalidIdsWithBadRequest(app);
   const configService = app.get(ConfigService);
   app.connectMicroservice(tenantAwareGrpc({
     package: 'auth',
@@ -17,4 +20,5 @@ async function bootstrap() {
   await app.startAllMicroservices();
   console.log('Microservice connected');
 }
+logUnhandledRejections();
 bootstrap();
