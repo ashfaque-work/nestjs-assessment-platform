@@ -1,5 +1,7 @@
 # NestJS Assessment Platform
 
+[![CI](https://github.com/ashfaque-work/nestjs-assessment-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/ashfaque-work/nestjs-assessment-platform/actions/workflows/ci.yml)
+
 Backend for an online assessment and learning platform (tests, question bank, classrooms, courses, proctoring, e-commerce), built as a **NestJS microservices monorepo**.
 
 ## Live demo
