@@ -420,6 +420,8 @@ export class StudentController {
     @ApiHeader({ name: "auth_token" })
     @ApiQuery({ name: "fileName", required: false })
     @ApiParam({ name: "attemptId", description: "attemptId" })
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     getRecordingsSignedUrl(@Headers("instancekey") instanceKey: string, @Param("attemptId") attemptId: string, @Query("fileName") fileName: string) {
         return this.studentService.getRecordingsSignedUrl({ instanceKey, query: { fileName }, attemptId })
     }

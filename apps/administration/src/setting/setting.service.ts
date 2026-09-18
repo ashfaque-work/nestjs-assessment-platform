@@ -503,11 +503,19 @@ export class SettingService {
       if (!foundData) {
         throw new Error("Setting not found!!");
       } else {
-        let toReturn = _.omit(foundData[0], '_id', 'facebookAuth', 'googleAuth', 'mail', 'mailer', 'plivo', '__v', 'slug', 'payment', 'powerBI', 'recaptcha', 'whiteboard');
+        let toReturn = _.omit(foundData[0], '_id', 'facebookAuth', 'googleAuth', 'mail', 'mailer', 'plivo', '__v', 'slug', 'payment', 'powerBI', 'recaptcha', 'whiteboard', 'mail_sms', 'secret', 'secrets', 'boardinfinity_secretKey', 'TURNserver', 'aws', 'adminCon');
         if (toReturn.recaptcha) {
           delete toReturn.recaptcha.privateKey
         }
-        toReturn.mailSms = toReturn.mail_sms
+        // This endpoint is public: report which channels are enabled, never their credentials.
+        const provider = ({ config, ...rest }: any = {}) => rest;
+        toReturn.mailSms = foundData[0].mail_sms ? {
+          ...foundData[0].mail_sms,
+          mail: (foundData[0].mail_sms.mail || []).map(provider),
+          sms: (foundData[0].mail_sms.sms || []).map(provider),
+        } : foundData[0].mail_sms;
+        // SSO clients are identified by id; the secret stays on the server
+        toReturn.ssoConfig = (foundData[0].ssoConfig || []).map((sso: any) => ({ clientID: sso?.clientID, name: sso?.name }));
         return {
           ...toReturn
         }

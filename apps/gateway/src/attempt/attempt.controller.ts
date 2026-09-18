@@ -141,6 +141,8 @@ export class AttemptController {
     }
 
     @Get('/getListavgSpeedByPractice/:practice')
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     getListAvgSpeedByPractice(@Headers('instancekey') instancekey: string, @Param('practice') practicesetId: string, @Query() query: GetListAvgSpeedByPracticeRequest) {
         return this.attemptService.getListAvgSpeedByPractice({ ...query, instancekey, practicesetId })
     }
@@ -633,11 +635,15 @@ export class AttemptController {
     }
 
     @Get("/student/:user/getSpeedRank/:practice")
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     getSpeedRankStudent(@Headers('instancekey') instancekey: string, @Param('practice') practicesetId: string, @Query() query: GetSpeedRankRequest, @Param('user') user: string) {
         return this.attemptService.getSpeedRank({ instancekey, practicesetId, ...query, user })
     }
 
     @Get("/student/:user/getAccuracyRank/:practice")
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     getAccuracyRankStudent(@Headers('instancekey') instancekey: string, @Param('practice') practicesetId: string, @Query() query: GetAccuracyRankRequest, @Param('user') user: string) {
         return this.attemptService.getAccuracyRank({ instancekey, practicesetId, ...query, user });
     }
@@ -718,6 +724,8 @@ export class AttemptController {
 
     @Get("/findAttempt/:id")
     @ApiParam({ name: "id", description: "Attempt Id" })
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     findOneAttempt(@Headers("instancekey") instancekey: string, @Param("id") attemptId: string) {
         return this.attemptService.findOneAttempt({ instancekey, attemptId })
     }
@@ -757,6 +765,8 @@ export class AttemptController {
     }
 
     @Get("/calculateTotalSatScore/:attempt")
+    @ApiHeader({ name: 'authtoken' })
+    @UseGuards(AuthenticationGuard)
     calculateSatTotalScore(@Param('attempt') attempt: string, @Headers('instancekey') instancekey: string) {
         return this.attemptService.calculateSatTotalScore({ instancekey, attempt })
     }

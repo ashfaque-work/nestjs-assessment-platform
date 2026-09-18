@@ -31,11 +31,15 @@ export class HostRateController {
 	}
 
 	@Get('/testSendMail')
+	@ApiHeader({ name: 'authtoken' })
+	@UseGuards(AuthenticationGuard)
 	testSendMail(@Headers('instancekey') instancekey: string) {
 		return this.hostRateService.testSendMail({ instancekey });
 	}
 
 	@Get('/test')
+	@ApiHeader({ name: 'authtoken' })
+	@UseGuards(AuthenticationGuard)
 	test() {
 		return this.hostRateService.test();
 	}
