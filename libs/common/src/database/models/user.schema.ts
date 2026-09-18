@@ -212,7 +212,7 @@ export class User extends AbstractDocument {
   designation?: string;
 
   @Prop({ type: Boolean, default: false })
-  onboarding?: Boolean;
+  onboarding?: boolean;
 
   @Prop({ type: Date })
   passwordResetExpired?: Date;
@@ -416,15 +416,15 @@ export class User extends AbstractDocument {
   }])
   trainingCertifications?: {
     type: String;
-    provider: String;
-    city: String;
-    state: String;
+    provider: string;
+    city: string;
+    state: string;
     startDate: Date;
     endDate: Date;
     expiredDate: Date;
-    certificate?: String;
-    url?: String;
-    description: String;
+    certificate?: string;
+    url?: string;
+    description: string;
     sysgen: boolean;
   }[];
 

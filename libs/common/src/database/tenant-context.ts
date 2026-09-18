@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from 'async_hooks';
 import { GrpcOptions, ServerGrpc } from '@nestjs/microservices';
-import { isObservable, Observable } from 'rxjs';
+import { isObservable, Observable, throwError } from 'rxjs';
+import { GrpcNotFoundException } from 'nestjs-grpc-exceptions';
 
 // Holds the instancekey (tenant) for the gRPC call currently being handled.
 // Every call gets its own store, so concurrent calls for different instances
@@ -60,12 +61,17 @@ export class TenantAwareServerGrpc extends ServerGrpc {
 
       const store = { instancekey: instancekeyFrom(data) };
       return tenantContext.run(store, () =>
-        Promise.resolve(methodHandler(data, metadata, call)).then((result) =>
+        Promise.resolve(methodHandler(data, metadata, call)).then((result) => {
+          // A gRPC reply cannot be null, so a handler returning null for a record it did not
+          // find failed while the response was serialized and reached the client as a 500.
+          if (result === null && !protoNativeHandler?.responseStream) {
+            return throwError(() => new GrpcNotFoundException('Not found').getError());
+          }
           // Handlers may return a lazy observable that is subscribed later; keep it in the same context
-          isObservable(result)
+          return isObservable(result)
             ? new Observable((subscriber) => tenantContext.run(store, () => result.subscribe(subscriber)))
-            : result,
-        ),
+            : result;
+        }),
       );
     };
     return super.createServiceMethod(wrapped, protoNativeHandler, streamType);

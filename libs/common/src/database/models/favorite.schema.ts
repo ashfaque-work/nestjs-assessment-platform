@@ -17,9 +17,9 @@ export class Favorite extends AbstractDocument {
     @Prop({ type: { _id: { type: Types.ObjectId, ref: 'Courses' }, title: String } })
     course?: { _id: Types.ObjectId, title: string };
     @Prop()
-    title?: String
+    title?: string
     @Prop()
-    description?: String
+    description?: string
     @Prop({
         type: {
             type: Types.ObjectId,

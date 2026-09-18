@@ -12,6 +12,7 @@ interface AudioFile {
 }
 
 interface Answers {
+    _id?: Types.ObjectId,
     answerText: string,
     answerTextArray: string[],
     isCorrectAnswer: boolean,
@@ -68,7 +69,7 @@ export class Question extends AbstractDocument {
         type: String,
         enum: ['student', 'support', 'teacher', 'mentor', 'publisher', 'admin', 'director', 'centerHead', 'operator']
     })
-    userRole?: String;
+    userRole?: string;
 
     @Prop({ type: [{ type: Types.ObjectId, ref: 'PracticeSet' }] })
     practiceSets: Types.ObjectId[];
@@ -107,28 +108,28 @@ export class Question extends AbstractDocument {
     };
 
     @Prop()
-    tags: String[];
+    tags: string[];
 
     @Prop({
         type: String,
         enum: ['easy', 'moderate', 'hard'],
         default: 'moderate'
     })
-    complexity: String;
+    complexity: string;
 
     @Prop({
         type: String,
         enum: ['single', 'multiple'],
         default: 'single'
     })
-    questionType: String;
+    questionType: string;
 
     @Prop({
         type: String,
         enum: ['global', 'self', 'none'],
         default: 'none'
     })
-    isAllowReuse: String;
+    isAllowReuse: string;
 
     @Prop({
         type: {
@@ -146,13 +147,13 @@ export class Question extends AbstractDocument {
         enum: ['mcq', 'fib', 'code', 'descriptive', 'mixmatch'],
         default: 'mcq'
     })
-    category: String;
+    category: string;
 
     @Prop({ type: String, default: '' })
-    questionText: String;
+    questionText: string;
 
     @Prop({ type: [String], default: [] })
-    questionTextArray: String[];
+    questionTextArray: string[];
 
     @Prop([{
         _id: { type: Types.ObjectId, default: new Types.ObjectId() },
@@ -163,10 +164,10 @@ export class Question extends AbstractDocument {
     audioFiles: AudioFile[];
 
     @Prop({ type: [String], default: [] })
-    answerExplainArr: String[];
+    answerExplainArr: string[];
 
     @Prop({ type: String, default: '' })
-    answerExplain: String;
+    answerExplain: string;
 
     @Prop([{
         _id: { type: Types.ObjectId, default: new Types.ObjectId() },
@@ -177,19 +178,19 @@ export class Question extends AbstractDocument {
     answerExplainAudioFiles: AudioFile[];
 
     @Prop({ type: [String], default: [] })
-    prefferedLanguage: String[];
+    prefferedLanguage: string[];
 
     @Prop({ type: String, default: '' })
-    questionHeader: String;
+    questionHeader: string;
 
     @Prop({ type: Number, default: 2 })
-    answerNumber: Number;
+    answerNumber: number;
 
     @Prop({ type: Number, default: 0 })
-    minusMark?: Number;
+    minusMark?: number;
 
     @Prop({ type: Number, default: 1 })
-    plusMark?: Number;
+    plusMark?: number;
 
     @Prop({ default: now() })
     createdAt?: Date;
@@ -198,20 +199,20 @@ export class Question extends AbstractDocument {
     updatedAt?: Date;
 
     @Prop({ type: Boolean, default: true })
-    isActive: Boolean;
+    isActive: boolean;
 
     @Prop({ type: Number, default: 1 })
-    wordLimit: Number;
+    wordLimit: number;
 
     @Prop({ type: Boolean, default: false })
-    partialMark: Boolean;
+    partialMark: boolean;
 
     @Prop({ type: String })
     // Base data for Psychometric quetion
-    domain: String;
+    domain: string;
 
     @Prop({ type: Number })
-    facet: Number;
+    facet: number;
 
     @Prop([{
         _id: { type: Types.ObjectId, default: new Types.ObjectId() },
@@ -233,22 +234,22 @@ export class Question extends AbstractDocument {
     answers: Answers[];
 
     @Prop({ type: String, default: '' })
-    userInputDescription: String;
+    userInputDescription: string;
 
     @Prop({ type: Boolean, default: false })
-    hasUserInput: Boolean;
+    hasUserInput: boolean;
 
     @Prop({ type: String, default: '' })
-    argumentDescription: String;
+    argumentDescription: string;
 
     @Prop({ type: Boolean, default: true })
-    hasArg: Boolean;
+    hasArg: boolean;
 
     @Prop({ type: Number })
-    modelId: Number;
+    modelId: number;
 
     @Prop({ type: Number })
-    tComplexity: Number;
+    tComplexity: number;
 
     @Prop([{
         _id: { type: Types.ObjectId, default: new Types.ObjectId() },
@@ -279,7 +280,7 @@ export class Question extends AbstractDocument {
     //*  'rejected': rejected by teacher
 
     @Prop({ type: String, default: '' })
-    approveStatus: String;
+    approveStatus: string;
 
     @Prop([{
         _id: { type: Types.ObjectId, default: new Types.ObjectId() },
@@ -302,7 +303,7 @@ export class Question extends AbstractDocument {
     // this uid is for content sync, it will have the same value across instances
 
     @Prop({ type: String })
-    uid: String;
+    uid: string;
 
     @Prop({
         type: [Types.ObjectId],

@@ -14,15 +14,15 @@ export class Feedback extends AbstractDocument {
     @Prop({ type: Types.ObjectId, ref: 'Courses' })
     courseId?: Types.ObjectId
     @Prop()
-    idOffline?: String
+    idOffline?: string
     @Prop({ type: Types.ObjectId, ref: 'User' })
     owner?: Types.ObjectId
     @Prop({ default: '' })
-    comment: String
+    comment: string
     @Prop({ default: 0 })
-    rating: Number
+    rating: number
     @Prop({ type: [{ name: String, value: Boolean }] })
-    feedbacks?: {name: String, value: Boolean}[]
+    feedbacks?: {name: string, value: boolean}[]
 }
 
 export const FeedbackSchema = SchemaFactory.createForClass(Feedback)

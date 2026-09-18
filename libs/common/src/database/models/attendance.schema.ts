@@ -41,9 +41,9 @@ export class Attendance extends AbstractDocument {
         createdAt: { type: Date, default: Date.now }
     }])
     notes?: {
-        name: String,
+        name: string,
         user: Types.ObjectId,
-        remark: String,
+        remark: string,
         createdAt: Date
     }[]
 }

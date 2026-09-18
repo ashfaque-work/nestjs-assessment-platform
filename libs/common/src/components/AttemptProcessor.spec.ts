@@ -182,6 +182,38 @@ describe('AttemptProcessor.process — grading a submitted attempt', () => {
     );
   });
 
+  // The gRPC contract (QuestionDataDto) sends the chosen options as plain id strings
+  const answeredById = (questionId: Types.ObjectId, ...chosen: Types.ObjectId[]) => ({
+    question: questionId.toString(),
+    answers: chosen.map((id) => id.toString()),
+    timeEslapse: 20000,
+  });
+
+  it('grades answers sent as id strings, as they arrive over gRPC', async () => {
+    const attempt: any = await finish([
+      answeredById(Q_RIGHT, ANSWER_A),
+      answeredById(Q_WRONG, ANSWER_B),
+    ]);
+
+    expect(answerFor(attempt, Q_RIGHT).status).toBe(Constants.CORRECT);
+    expect(answerFor(attempt, Q_WRONG).status).toBe(Constants.INCORRECT);
+    expect(attempt.plusMark).toBe(4);
+    expect(attempt.minusMark).toBe(-1);
+  });
+
+  it('keeps the questions the student marked for review', async () => {
+    const attempt: any = await finish([
+      { ...answeredById(Q_RIGHT, ANSWER_A), hasMarked: true },
+      answeredById(Q_WRONG, ANSWER_B),
+      { question: Q_SKIPPED.toString(), answers: [], timeEslapse: 0, hasMarked: true },
+    ]);
+
+    expect(answerFor(attempt, Q_RIGHT).hasMarked).toBe(true);
+    expect(answerFor(attempt, Q_WRONG).hasMarked).toBe(false);
+    expect(answerFor(attempt, Q_SKIPPED).hasMarked).toBe(true);
+    expect(attempt.totalMarkeds).toBe(2);
+  });
+
   it('scores an empty submission as all missed instead of failing', async () => {
     const attempt: any = await finish([]);
 

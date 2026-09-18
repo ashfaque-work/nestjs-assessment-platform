@@ -212,15 +212,15 @@ export class Attempt extends AbstractDocument {
     practiceSetInfo: {
         title: { type: String },
         titleLower: { type: String, lowercase: true },
-        units: [{ _id: { type: Types.ObjectId, ref: 'Unit' }, name: String }],
-        subjects: [{ _id: { type: Types.ObjectId, ref: 'Subject' }, name: String }],
+        units: [{ _id: { type: Types.ObjectId, ref: 'Unit' }, name: string }],
+        subjects: [{ _id: { type: Types.ObjectId, ref: 'Subject' }, name: string }],
         createdBy: { type: Types.ObjectId, ref: 'User' }, // not used
         accessMode: { type: String, enum: ['public', 'invitation', 'buy', 'internal'], default: 'public' },
         classRooms: [{ type: Types.ObjectId, ref: 'ClassRoom' }],
         isAdaptive: { type: Boolean },
         adaptiveTest: { type: Types.ObjectId, ref: 'AdaptiveTest' },
         level: { type: Number, default: 0 },
-        grades: [{ _id: { type: Types.ObjectId }, name: String }],
+        grades: [{ _id: { type: Types.ObjectId }, name: string }],
     };
 
     @Prop({ type: Number, default: 0 })

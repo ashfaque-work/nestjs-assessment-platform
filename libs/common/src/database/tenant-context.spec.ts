@@ -1,5 +1,5 @@
 import { AbstractRepository } from './abstract.repository';
-import { tenantContext } from './tenant-context';
+import { tenantContext, TenantAwareServerGrpc } from './tenant-context';
 
 // The instancekey selects which database a repository reads. Before it was stored per
 // request, two concurrent requests for different instances could overwrite each other's key.
@@ -46,5 +46,33 @@ describe('tenant context', () => {
 
   it('falls back to the default outside a request, for queues and cron jobs', () => {
     expect(typeof AbstractRepository.instancekey).toBe('string');
+  });
+});
+
+describe('TenantAwareServerGrpc replies', () => {
+  const server = new TenantAwareServerGrpc({ package: 'test', protoPath: 'test.proto' } as any);
+
+  // Calls a unary gRPC method the way grpc-js does and returns what reaches the client
+  const callUnary = (handlerResult: any) => {
+    const method: any = server.createServiceMethod(async () => handlerResult, { responseStream: false }, undefined);
+    return new Promise<{ err: any; reply: any }>((resolve) =>
+      method({ request: {}, metadata: {} }, (err: any, reply: any) => resolve({ err, reply })));
+  };
+
+  it('answers NOT_FOUND when a handler returns null for a missing record', async () => {
+    const { err } = await callUnary(null);
+    expect(err.code).toBe(5);
+  });
+
+  it('sends a normal reply unchanged', async () => {
+    const { err, reply } = await callUnary({ name: 'Algebra' });
+    expect(err).toBeNull();
+    expect(reply).toEqual({ name: 'Algebra' });
+  });
+
+  it('sends an empty object unchanged', async () => {
+    const { err, reply } = await callUnary({});
+    expect(err).toBeNull();
+    expect(reply).toEqual({});
   });
 });

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { AttemptDetail, AttemptDetailRepository, AttemptRepository, ClassroomRepository, Competencies, CompetenciesRepository, Content, CourseRepository, NotificationRepository, PracticeSetRepository, QuestionRepository, SubjectRepository, UserCourseRepository, UsersRepository } from "../database";
+import { AttemptDetail, AttemptDetailRepository, AttemptRepository, ClassroomRepository, Competencies, CompetenciesRepository, Content, CourseRepository, NotificationRepository, PracticeSetRepository, Question, QuestionRepository, SubjectRepository, UserCourseRepository, UsersRepository } from "../database";
 import { RedisCaching } from "../services";
 import { codingAnswerCompare, codingPartialMark, fibAnswerCompare, mixmatchAnswerCompare } from "../helpers/attempt";
 import { _ } from 'lodash'
@@ -13,6 +13,8 @@ import { S3Service } from "./aws/s3.service";
 import { SocketClientService } from "../socket";
 import { MessageCenter } from "./messageCenter";
 
+// A question of a practice set, with the fields the practice adds to it.
+type PracticeQuestion = Question & { order?: number; section?: string; codingAccuracy?: number };
 
 @Injectable()
 export class AttemptProcessor {
@@ -1199,7 +1201,7 @@ export class AttemptProcessor {
             });
         }
     }
-    async getQuestionByPractice(ik, practice) {
+    async getQuestionByPractice(ik, practice): Promise<PracticeQuestion[]> {
         this.questionRepository.setInstanceKey(ik)
 
         let data: any = await this.questionRepository.populate(
@@ -1211,7 +1213,7 @@ export class AttemptProcessor {
         )
 
         this.sortQuestion(data.questions)
-        let questions = []
+        let questions: PracticeQuestion[] = []
 
         data.questions.forEach(qp => {
             qp.question.createdAt = qp.createdAt;
@@ -1477,7 +1479,7 @@ export class AttemptProcessor {
                     if (question.category == 'descriptive') {
                         userAnswerLookup[qId].status = Constants.PENDING;
                         userAnswerLookup[qId].obtainMarks = 0;
-                        userAnswerLookup[qId].hasMarked = question.hasMarked;
+                        userAnswerLookup[qId].hasMarked = !!userAnswerLookup[qId].hasMarked;
                     } else if (hasWrongAnswer) {
                         if (practice.enableMarks) {
                             if (practice.isMarksLevel) {
@@ -1489,11 +1491,13 @@ export class AttemptProcessor {
                         }
                         userAnswerLookup[qId].status = Constants.INCORRECT;
                         userAnswerLookup[qId].obtainMarks = questionMinusMark;
-                        userAnswerLookup[qId].hasMarked = question.hasMarked;
+                        userAnswerLookup[qId].hasMarked = !!userAnswerLookup[qId].hasMarked;
                     } else {
                         if (practice.enableMarks) {
                             if (question.category == 'code' && settings.features.partialCodingMark && question.codingAccuracy) {
-                                questionplusMark = codingPartialMark(practice, question, userAnswerLookup[qId].answers[0].testcases, question.coding.timeLimit, question.coding.memLimit)
+                                // question.coding has one entry per language; use the limits of the one answered in
+                                const answeredCoding = _.find(question.coding, { language: userAnswerLookup[qId].answers[0].codeLanguage }) || {}
+                                questionplusMark = codingPartialMark(practice, question, userAnswerLookup[qId].answers[0].testcases, answeredCoding.timeLimit, answeredCoding.memLimit)
                                 questionplusMark = round(questionplusMark, 2);
                             } else {
                                 if (practice.isMarksLevel) {
@@ -1524,7 +1528,7 @@ export class AttemptProcessor {
                         }
                         userAnswerLookup[qId].status = Constants.CORRECT;
                         userAnswerLookup[qId].obtainMarks = questionplusMark;
-                        userAnswerLookup[qId].hasMarked = question.hasMarked;
+                        userAnswerLookup[qId].hasMarked = !!userAnswerLookup[qId].hasMarked;
                     }
                 } else {
                     if (userAnswerLookup[qId] == null) {
@@ -1543,7 +1547,7 @@ export class AttemptProcessor {
                     userAnswerLookup[qId].isMissed = true;
                     userAnswerLookup[qId].status = Constants.MISSED;
                     userAnswerLookup[qId].obtainMarks = 0;
-                    userAnswerLookup[qId].hasMarked = question.hasMarked;
+                    userAnswerLookup[qId].hasMarked = !!userAnswerLookup[qId].hasMarked;
 
                     totalMissed++;
                 }
@@ -1573,7 +1577,8 @@ export class AttemptProcessor {
                 userAnswerLookup[qId].category = question.category;
                 answerList.push(userAnswerLookup[qId]);
 
-                if (question.hasMarked) {
+                // "Marked for review" is set by the student on the answer, not on the question
+                if (userAnswerLookup[qId].hasMarked) {
                     totalMarkeds++;
                 }
 
