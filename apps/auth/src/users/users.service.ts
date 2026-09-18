@@ -3250,54 +3250,33 @@ export class UsersService {
   }
 
   async verifiedCode(request: VerifiedCodeReq) {
-    try {
-      await this.redisCaching.get(request, request.params.token, function (data) {
-        console.log("data from verified code ", data);
-        if (data && data.user) {
-          console.log("Data to hai aur user bhi hai")
-          return {
-            response: 'OK'
-          }
-        }
-
-        throw new GrpcNotFoundException('Your Code is invalid or has expired');
-      })
-    } catch (error) {
-      console.log(error)
-      throw new GrpcInternalException(error);
+    const data: any = await this.redisCaching.getAsync(request.instancekey, request.params.token);
+    if (data && data.user) {
+      return { response: 'OK' };
     }
+    throw new GrpcNotFoundException('Your Code is invalid or has expired');
   }
 
   async tempConfirmationCode(request: TempConfirmationCodeReq) {
-    try {
-      let userId = request.id;
-      let now = new Date();
-      console.log("user id >>>>>>>>>>", request)
-      this.redisCaching.get(request, 'user_' + userId, async (data) => {
-        if (!data) {
-          throw new Error('Sorry, we cannot find your information');
-        }
-
-        let user = data.user;
-        console.log(user);
-        user.emailVerifyExpired = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3);
-        user.emailVerifyToken = await this.getVerificationCode(request);
-
-        this.redisCaching.set(request, user.emailVerifyToken, { user: user._id.toString() }, 60 * 60 * 24)
-        this.redisCaching.del(request, 'user_' + user._id, async (data) => {
-          this.redisCaching.set(request, 'user_' + user._id, {
-            user: user,
-            isTempt: true,
-          }, 60 * 60 * 24 * 7);
-          this.sendResendCodeMail(request, user);
-          return {
-            response: "OK"
-          }
-        })
-      })
-    } catch (error) {
-      console.log(error);
+    const userId = request.id;
+    const now = new Date();
+    const data: any = await this.redisCaching.getAsync(request.instancekey, 'user_' + userId);
+    if (!data) {
+      throw new GrpcNotFoundException('Sorry, we cannot find your information');
     }
+
+    const user = data.user;
+    user.emailVerifyExpired = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3);
+    user.emailVerifyToken = await this.getVerificationCode(request);
+
+    await this.redisCaching.set(request, user.emailVerifyToken, { user: user._id.toString() }, 60 * 60 * 24);
+    await this.redisCaching.del(request, 'user_' + user._id);
+    await this.redisCaching.set(request, 'user_' + user._id, {
+      user: user,
+      isTempt: true,
+    }, 60 * 60 * 24 * 7);
+    this.sendResendCodeMail(request, user);
+    return { response: 'OK' };
   }
 
   async tempSignup(request: TempSignupReq) {
