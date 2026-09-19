@@ -31,12 +31,13 @@ export class QuestionBankService {
     return await this.questionBankGrpcServiceClientImpl.GetQuestion(combinedData);
   }
 
-  async updateQuestion(instancekey: string, id: string, request: UpdateQuestionRequest, userId: string): Promise<UpdateQuestionResponse> {
+  async updateQuestion(instancekey: string, id: string, request: UpdateQuestionRequest, userId: string, userRoles: string[] = []): Promise<UpdateQuestionResponse> {
     const combinedData = {
       ...{ _id: id },
       ...request,
       instancekey,
       userId,
+      userRoles,
     };
     return await this.questionBankGrpcServiceClientImpl.UpdateQuestion(combinedData);
   }

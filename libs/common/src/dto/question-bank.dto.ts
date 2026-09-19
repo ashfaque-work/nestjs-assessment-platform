@@ -380,6 +380,7 @@ export class GetQuestionResponse {
 export class UpdateQuestionRequest {
   instancekey: string;
   _id: string;
+  userRoles?: string[];
   @ApiProperty()
   questionText: string;
   @ApiProperty()

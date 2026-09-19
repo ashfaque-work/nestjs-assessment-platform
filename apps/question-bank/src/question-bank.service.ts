@@ -1,4 +1,4 @@
-import { canManageTest } from '@app/common/helpers/role-helper';
+import { canManageTest, canWriteContentsOfAllUsers } from '@app/common/helpers/role-helper';
 import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { ApproveStudentExplanationRequest, CountByPracticeRequest, CreateExplanationRequest, CreateQuestionRequest, CreateTestFormPoolRequest, DeleteQuestionRequest, ExecuteCodeRequest, FeedbackQuestionCountRequest, FeedbackQuestionRequest, GenerateRandomTestRequest, GetAllQuestionRequest, GetByAttemptRequest, GetLastInPracticeRequest, GetLastRequest, GetQuestionForOnlineTestRequest, GetQuestionRequest, GetQuestionTagsResquest, GetRandomQuestionsRequest, GetReusedCountRequest, InternalSearchDto, InternalSearchRequest, PersonalTopicAnalysisRequest, QuestionBankDto, QuestionCategoryDto, QuestionComplexityByTopicRequest, QuestionDistributionCategoryResponse, QuestionDistributionMarksResponse, QuestionDistributionRequest, QuestionIsAttemptRequest, QuestionPerformanceRequest, QuestionSummaryTopicRequest, QuestionUsedCountResponse, SummarySubjectPracticeRequest, SummaryTopicOfPracticeBySubjectRequest, SummaryTopicPracticeRequest, TestSeriesSummaryBySubjectRequest, UpdateQuestionRequest, UpdateStudentQuestionRequest, UpdateTagsRequest, UserDto } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
@@ -625,17 +625,32 @@ export class QuestionBankService {
   /* 
   TODO: markModified not working @ad
   */
+  // A question (and its answer key) may be changed by its author, by someone who manages a test
+  // that uses it, or by a role that writes every user's content.
+  private async checkCanEditQuestion(instancekey: string, question: any, userId: string, userRoles: string[] = []) {
+    const user = { _id: userId, roles: userRoles };
+    if (canWriteContentsOfAllUsers(([] as string[]).concat(userRoles)) || String(question.user) === String(userId)) return;
+    this.practiceSetRepository.setInstanceKey(instancekey);
+    const tests = await this.practiceSetRepository.find({ 'questions.question': question._id }, { user: 1, instructors: 1 }, { lean: true });
+    if (!tests.some((test) => canManageTest(user, test))) {
+      throw new ForbiddenException('You can only change your own questions');
+    }
+  }
+
   async updateQuestion(updateQuestionRequest: UpdateQuestionRequest) {
     try {
       const instancekey = updateQuestionRequest.instancekey;
       const qId = updateQuestionRequest._id;
-      let data = _.omit(updateQuestionRequest, '_id', 'createdAt', 'updatedAt')
+      // user/userRole would change the question's owner, and the rest are request details, not
+      // question fields: none of them come from the body
+      let data = _.omit(updateQuestionRequest, '_id', 'createdAt', 'updatedAt', 'user', 'userRole', 'userId', 'userRoles', 'instancekey')
 
       await this.validateSubjectUnitTopic(instancekey, data);
       if (!config.allowEdit) {
         await this.checkAttemptedTest(instancekey, qId);
       }
       const question = await this.checkQuestionExists(instancekey, qId);
+      await this.checkCanEditQuestion(instancekey, question, updateQuestionRequest.userId, updateQuestionRequest.userRoles);
 
       if (question.questionTextArray.length > 0) {
         question.questionTextArray.forEach(function (questionText: string, index: number) {

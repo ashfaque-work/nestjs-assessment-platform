@@ -478,6 +478,8 @@ message UpdateQuestionRequest {
   string userId = 48;
   string notUpdatetag = 49;
   string section = 50;
+  // set by the gateway from the signed-in user
+  repeated string userRoles = 51;
 }
 
 message UpdateQuestionResponse {

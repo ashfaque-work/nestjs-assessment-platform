@@ -46,10 +46,11 @@ export class QuestionBankController {
   // update question
   @Put('/:id')
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   updateQuestion(@Headers('instancekey') instancekey: string, @Param('id') id: string, @Body() request: UpdateQuestionRequest, @Req() req: any) {
     const userId = req.user._id;
-    return this.questionBankService.updateQuestion(instancekey, id, request, userId)
+    return this.questionBankService.updateQuestion(instancekey, id, request, userId, req.user.roles)
   }
 
   // delete question
