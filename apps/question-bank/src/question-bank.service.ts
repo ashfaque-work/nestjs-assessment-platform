@@ -2192,6 +2192,18 @@ export class QuestionBankService {
         return { response: attemptObj }
       }
 
+      // The review shows the correct answers: a student may see it only for their own attempt,
+      // and only when the test allows students to review their attempts
+      const isStaff = (request.userRoles || []).some((role) => role !== 'student');
+      if (!isStaff) {
+        if (String(attemptObj.user) !== String(request.userId)) {
+          throw new ForbiddenException();
+        }
+        if (attemptObj.isShowAttempt === false) {
+          throw new ForbiddenException('Reviewing attempts is not allowed for this test');
+        }
+      }
+
       if (attemptObj.attemptdetails) {
         attemptObj.QA = attemptObj.attemptdetails.QA
       }

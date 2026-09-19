@@ -1053,6 +1053,7 @@ message GetByAttemptRequest {
   string instancekey = 1;
   string attempt = 2;
   repeated string userRoles = 3;
+  string userId = 4;
 }
 
 message GetByAttemptResponse {

@@ -269,7 +269,7 @@ export class QuestionBankController {
   @UseGuards(AuthenticationGuard)
   async getByAttempt(@Headers('instancekey') instancekey: string, @Param('attempt') attempt: string, @Req() req: any) {
     const userRoles = req.user.roles;
-    return this.questionBankService.getByAttempt({ instancekey, attempt, userRoles })
+    return this.questionBankService.getByAttempt({ instancekey, attempt, userRoles, userId: req.user._id?.toString() })
   }
 
   // how many times a particular question used in practice set

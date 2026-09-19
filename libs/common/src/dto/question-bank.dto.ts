@@ -1017,6 +1017,7 @@ export class GetByAttemptRequest {
   instancekey: string;
   attempt: string;
   userRoles: string[];
+  userId?: string;
 }
 
 export class GetByAttemptResponse {
