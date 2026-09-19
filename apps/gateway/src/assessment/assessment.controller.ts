@@ -795,7 +795,7 @@ export class AssessmentController {
   }
   
   @Post("/teacher/find")
-  @UseGuards(AuthenticationGuard)
+  @UseGuards(AuthenticationGuard, RolesGuard)
   @ApiHeader({ required: true, name: 'authtoken' })
   @Roles(['teacher', 'mentor', 'publisher', 'support', 'admin', 'operator', 'centerHead', 'director'])
   findForTeacher(@Headers('instancekey') instancekey: string, @Body() body: FindForTeacherBody, @Req() req: any) {

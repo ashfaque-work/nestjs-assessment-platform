@@ -1082,8 +1082,10 @@ export class AssessmentService {
           newDataToSave.units = unitData;
 
         }
-        newDataToSave.user = data.user;
-        newDataToSave.userInfo = data.userInfo
+        // The owner does not change on an edit (see changeOwnership). Taking it from the request
+        // body saved whatever the client sent, often the id as a string, which no owner query matches
+        newDataToSave.user = practiceSet.user;
+        newDataToSave.userInfo = practiceSet.userInfo
         // Added to remove classroom email id
         var classroomEmail = newDataToSave.studentEmails
         newDataToSave.studentEmails = ''
