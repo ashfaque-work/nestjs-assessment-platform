@@ -118,3 +118,58 @@ export interface SubmittedAnswer {
   timeEslapse: number;
   hasMarked: boolean;
 }
+
+// ---- Teacher side ----
+
+export type TestStatus = 'draft' | 'published' | 'revoked' | 'expired' | string;
+
+export interface TeacherTest extends TestSummary {
+  status: TestStatus;
+  units: NamedRef[];
+  totalAttempt?: number;
+  totalJoinedStudent?: number;
+  accessMode?: string;
+  updatedAt?: string;
+  user?: string;
+}
+
+export interface UnitOption {
+  _id: string;
+  unitName: string;
+}
+
+export interface TopicOption {
+  _id: string;
+  topicName: string;
+}
+
+/** A question as its author sees it: with the answer key */
+export interface BankQuestion {
+  _id: string;
+  questionText: string;
+  category: string;
+  questionType: string;
+  answers: { _id: string; answerText: string; isCorrectAnswer?: boolean }[];
+  answerExplain?: string;
+  subject?: NamedRef;
+  unit?: NamedRef;
+  topic?: NamedRef;
+  plusMark?: number;
+  minusMark?: number;
+  order?: number;
+}
+
+/** What the teacher's question form edits */
+export interface QuestionDraft {
+  questionText: string;
+  unit: NamedRef | null;
+  topic: NamedRef | null;
+  options: { answerText: string; isCorrectAnswer: boolean }[];
+  answerExplain: string;
+}
+
+/** One student's attempt at a test, as the teacher sees it */
+export interface ResultAttempt extends Attempt {
+  studentName?: string;
+  email?: string;
+}

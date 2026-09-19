@@ -7,8 +7,11 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { Button, Wordmark } from '../components/ui';
 import { letter } from '../lib/format';
 
-// The demo account from the project README; the data behind it is sample data
-const DEMO = { userId: 'demo-student@example.com', password: 'DmnTAiBaXDSPM4#7a' };
+// The demo accounts; the data behind them is sample data, put back every night
+const DEMO = {
+  student: { userId: 'demo-student@example.com', password: 'DmnTAiBaXDSPM4#7a' },
+  teacher: { userId: 'demo-teacher@example.com', password: "DmvYOo2D-9ZyV-#7a" },
+};
 
 export function Login() {
   const { signIn, signedIn } = useAuth();
@@ -39,9 +42,9 @@ export function Login() {
     }
   };
 
-  const useDemo = () => {
-    setUserId(DEMO.userId);
-    setPassword(DEMO.password);
+  const useDemo = (who: keyof typeof DEMO) => {
+    setUserId(DEMO[who].userId);
+    setPassword(DEMO[who].password);
     setError('');
   };
 
@@ -54,9 +57,9 @@ export function Login() {
         </div>
 
         <div className="my-auto w-full max-w-sm py-12">
-          <h1 className="text-[28px] font-bold leading-tight tracking-tight">Sign in to take your tests</h1>
+          <h1 className="text-[28px] font-bold leading-tight tracking-tight">Sign in to your tests</h1>
           <p className="mt-3 text-graphite-soft">
-            A working demo of the assessment platform. Tests, the timer, grading and the answer review all run on the live API, with sample data.
+            A working demo of the assessment platform. Students take timed tests and review every answer; teachers write tests and see how the class did. It all runs on the live API, with sample data.
           </p>
 
           <form onSubmit={submit} className="mt-8 space-y-4" noValidate>
@@ -68,9 +71,17 @@ export function Login() {
             </Button>
           </form>
 
-          <button type="button" onClick={useDemo} className="mt-5 text-sm font-semibold text-form underline-offset-4 hover:underline">
-            Fill in the demo student account
-          </button>
+          <p className="mt-6 text-sm text-graphite-soft">
+            Try it as{' '}
+            <button type="button" onClick={() => useDemo('student')} className="font-semibold text-form underline-offset-4 hover:underline">
+              the demo student
+            </button>{' '}
+            or{' '}
+            <button type="button" onClick={() => useDemo('teacher')} className="font-semibold text-form underline-offset-4 hover:underline">
+              the demo teacher
+            </button>
+            .
+          </p>
         </div>
       </div>
 

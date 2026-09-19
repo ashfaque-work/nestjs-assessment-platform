@@ -41,6 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// Anyone who is not only a student uses the teaching side
+export const isStaff = (user: Me | undefined) => !!user && user.roles.some((role) => role !== 'student');
+
 export function useAuth() {
   const auth = useContext(AuthContext);
   if (!auth) throw new Error('useAuth must be used inside AuthProvider');

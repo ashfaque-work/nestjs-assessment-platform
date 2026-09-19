@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../auth/auth';
+import { isStaff, useAuth } from '../auth/auth';
 import { ThemeToggle } from './ThemeToggle';
 import { Button, Spinner, Wordmark } from './ui';
 
@@ -37,6 +37,13 @@ export function RequireAuth() {
       </div>
     );
   }
+  return <Outlet />;
+}
+
+// Pages for teachers and other staff; students are sent to their own start page
+export function RequireStaff() {
+  const { user } = useAuth();
+  if (!isStaff(user)) return <Navigate to="/" replace />;
   return <Outlet />;
 }
 

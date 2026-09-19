@@ -41,10 +41,14 @@ export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler;
 }
 
-// The gateway answers errors as { message } where message may be a string or a list
-function messageFrom(body: unknown, status: number): string {
+// The gateway answers errors as { message }, where message is a string, a list of strings, or a
+// list of { message } objects
+const textOf = (item: unknown): string =>
+  typeof item === 'string' ? item : typeof (item as { message?: unknown })?.message === 'string' ? (item as { message: string }).message : '';
+
+export function messageFrom(body: unknown, status: number): string {
   const raw = (body as { message?: unknown } | null)?.message;
-  const message = Array.isArray(raw) ? raw.join(', ') : typeof raw === 'string' ? raw : '';
+  const message = (Array.isArray(raw) ? raw.map(textOf) : [textOf(raw)]).filter(Boolean).join(', ');
   if (message && !/internal server error/i.test(message)) return message;
   if (status === 0) return 'Could not reach the server. Check your connection and try again.';
   if (status >= 500) return 'The server could not complete this. Try again in a moment.';
