@@ -2272,6 +2272,7 @@ export class RemoveQuestionBody {
 export class RemoveQuestionRequest {
   instancekey: string;
   body: RemoveQuestionBody;
+  user?: any;
 }
 
 export class RemoveQuestionResponse {

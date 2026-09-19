@@ -596,8 +596,8 @@ export class AssessmentController {
   @ApiHeader({ required: true, name: 'authtoken' })
   @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
   @UseGuards(AuthenticationGuard, RolesGuard)
-  removeQuestion(@Headers('instancekey') instancekey: string, @Body() body: RemoveQuestionBody) {
-    return this.assessmentService.removeQuestion({ instancekey, body })
+  removeQuestion(@Headers('instancekey') instancekey: string, @Body() body: RemoveQuestionBody, @Req() req: any) {
+    return this.assessmentService.removeQuestion({ instancekey, body, user: req.user })
   }
 
 

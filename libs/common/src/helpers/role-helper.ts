@@ -23,3 +23,14 @@ export function canOnlySeeLocationContents(roles: string[]): boolean {
 export function canSeeGlobalContents(roles: string[]): boolean {
   return roles.some(role => GLOBAL_CONTENT_ROLES.includes(role));
 }
+
+// Who may change a test (its settings, its questions): its owner, a teacher listed as one of its
+// instructors, or a role that writes every user's content.
+export function canManageTest(user: { _id?: unknown; roles?: string[] | string } | undefined, test: { user?: unknown; instructors?: unknown[] } | undefined): boolean {
+  if (!user || !test) return false;
+  const roles = ([] as string[]).concat(user.roles ?? []);
+  if (canWriteContentsOfAllUsers(roles)) return true;
+  const me = String(user._id);
+  const idOf = (x: any) => String(x?._id ?? x);
+  return idOf(test.user) === me || (test.instructors ?? []).some((i) => idOf(i) === me);
+}

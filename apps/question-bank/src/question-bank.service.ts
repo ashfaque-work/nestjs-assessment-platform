@@ -1,3 +1,4 @@
+import { canManageTest } from '@app/common/helpers/role-helper';
 import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { ApproveStudentExplanationRequest, CountByPracticeRequest, CreateExplanationRequest, CreateQuestionRequest, CreateTestFormPoolRequest, DeleteQuestionRequest, ExecuteCodeRequest, FeedbackQuestionCountRequest, FeedbackQuestionRequest, GenerateRandomTestRequest, GetAllQuestionRequest, GetByAttemptRequest, GetLastInPracticeRequest, GetLastRequest, GetQuestionForOnlineTestRequest, GetQuestionRequest, GetQuestionTagsResquest, GetRandomQuestionsRequest, GetReusedCountRequest, InternalSearchDto, InternalSearchRequest, PersonalTopicAnalysisRequest, QuestionBankDto, QuestionCategoryDto, QuestionComplexityByTopicRequest, QuestionDistributionCategoryResponse, QuestionDistributionMarksResponse, QuestionDistributionRequest, QuestionIsAttemptRequest, QuestionPerformanceRequest, QuestionSummaryTopicRequest, QuestionUsedCountResponse, SummarySubjectPracticeRequest, SummaryTopicOfPracticeBySubjectRequest, SummaryTopicPracticeRequest, TestSeriesSummaryBySubjectRequest, UpdateQuestionRequest, UpdateStudentQuestionRequest, UpdateTagsRequest, UserDto } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
@@ -151,6 +152,9 @@ export class QuestionBankService {
       // Students may suggest questions (they are saved as pending), but not put them into a test
       if (practice && ([] as string[]).concat(user?.roles || []).every((role) => role === config.roles.student)) {
         throw new ForbiddenException('Students cannot add questions to a test');
+      }
+      if (practice && !canManageTest(user, practice)) {
+        throw new ForbiddenException('You can only add questions to your own tests');
       }
       const instancekey = createQuestionRequest.instancekey;
       delete createQuestionRequest.instancekey;

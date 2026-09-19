@@ -1,3 +1,4 @@
+import { canManageTest } from '@app/common/helpers/role-helper';
 import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import {
@@ -992,6 +993,9 @@ export class AssessmentService {
         const practiceSet = await this.practiceSetRepository.findOne(filter);
         if (!practiceSet) {
           throw new NotFoundException('Practice Not Found');
+        }
+        if (!canManageTest(request.user, practiceSet)) {
+          throw new ForbiddenException('You can only change your own tests');
         }
 
         // Not allow to update revoked or expired test
@@ -6399,6 +6403,13 @@ export class AssessmentService {
 
     try {
       this.practiceSetRepository.setInstanceKey(req.instancekey)
+      const test = await this.practiceSetRepository.findOne({ _id: new ObjectId(req.body.practice) }, { user: 1, instructors: 1 }, { lean: true })
+      if (!test) {
+        throw new NotFoundException();
+      }
+      if (!canManageTest(req.user, test)) {
+        throw new ForbiddenException('You can only change your own tests');
+      }
       const data = await this.practiceSetRepository.findOneAndUpdate(
         { _id: new ObjectId(req.body.practice), 'questions.question': new ObjectId(req.body.question) },
         {

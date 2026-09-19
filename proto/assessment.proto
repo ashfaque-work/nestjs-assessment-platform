@@ -2472,6 +2472,7 @@ message RemoveQuestionBody {
 message RemoveQuestionRequest {
   string instancekey = 1;
   RemoveQuestionBody body = 2;
+  User user = 3;
 }
 
 message RemoveQuestionResponse {
