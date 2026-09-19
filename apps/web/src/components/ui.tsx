@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
 type Variant = 'primary' | 'secondary' | 'quiet';
@@ -49,6 +49,8 @@ export function ErrorNote({ message, action }: { message: string; action?: React
 // A modal dialog built on <dialog>, so focus and Escape behave natively
 export function Dialog({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // each dialog needs its own title id: a page can hold several, and a shared id names them all alike
+  const titleId = useId();
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -60,10 +62,10 @@ export function Dialog({ open, onClose, title, children }: { open: boolean; onCl
     <dialog
       ref={ref}
       onClose={onClose}
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
       className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-lg border border-rule bg-sheet p-6 text-graphite shadow-[0_24px_60px_-20px_rgb(0_0_0/0.35)] backdrop:bg-black/50"
     >
-      <h2 id="dialog-title" className="text-lg font-bold">{title}</h2>
+      <h2 id={titleId} className="text-lg font-bold">{title}</h2>
       <div className="mt-3">{children}</div>
     </dialog>
   );
