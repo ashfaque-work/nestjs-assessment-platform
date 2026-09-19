@@ -8152,9 +8152,8 @@ export class AssessmentService {
         if (!practiceSet) {
           throw new NotFoundException();
         }
-        var oPractice = practiceSet
-        oPractice.questions = []
-        oPractice.serverTime = new Date()
+        // A copy: practiceSet still needs its question references to load the questions
+        var oPractice = { ...practiceSet, questions: [], serverTime: new Date() }
         const [subject, user, questions] = await Promise.all([
           await this.subjectRepository.findById(oPractice.subjects[0]._id, {}, { lean: true }),
           await this.usersRepository.findById(oPractice.user, {}, { lean: true }),
@@ -8162,9 +8161,9 @@ export class AssessmentService {
         ]);
 
         // practiceSet.view = subject.view;
-        practiceSet.user = user;
-        practiceSet.teacher = user;
-        practiceSet.questions = questions;
+        oPractice.user = user;
+        oPractice.teacher = user;
+        oPractice.questions = questions;
 
         return { ...oPractice };
       }

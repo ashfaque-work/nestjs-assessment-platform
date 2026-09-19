@@ -119,10 +119,12 @@ export class QuestionBankController {
     return this.questionBankService.practiceSummaryBySubject({ practice: practice, instancekey })
   }
 
-  // get quetions by practiceSet id
+  // get quetions by practiceSet id, with their correct answers: for the people who build tests.
+  // Students get a test's questions from /assessment/findOneWithQuestions, without the answer key.
   @Get('/getByPractice/:practiceId')
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   async getByPractice(@Headers('instancekey') instancekey: string, @Param('practiceId', ObjectIdPipe) practiceId: string) {
     return this.questionBankService.getByPractice({ practiceId: practiceId, instancekey })
   }

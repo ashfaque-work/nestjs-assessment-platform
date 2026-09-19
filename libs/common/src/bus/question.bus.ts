@@ -5,6 +5,34 @@ import * as CryptoJS from 'crypto-js';
 import { GrpcInternalException } from "nestjs-grpc-exceptions";
 import async from "async"
 
+// Removes what would give the answer away from a question sent to a student taking a test.
+export function hideAnswerKey(question: any) {
+  if (!question || !Array.isArray(question.answers)) return question;
+  for (const answer of question.answers) {
+    delete answer.isCorrectAnswer;
+    // the correct options are the ones that carry marks
+    delete answer.marks;
+    delete answer.score;
+    if (question.category === 'fib') {
+      // for fill in the blanks the answer text is the expected answer
+      delete answer.answerText;
+      delete answer.answerTextArray;
+    }
+  }
+  if (question.category === 'mixmatch') {
+    // keep the right-hand options for display, but not which option each left item matches
+    const options = question.answers.map((a) => a.correctMatch);
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+    question.answers.forEach((a, i) => { a.correctMatch = options[i]; });
+  } else {
+    for (const answer of question.answers) delete answer.correctMatch;
+  }
+  return question;
+}
+
 @Injectable()
 export class QuestionBus {
   constructor(private readonly questionTagRepository: QuestionTagRepository,
@@ -209,8 +237,12 @@ export class QuestionBus {
   }
 
   // For test, we need to hide/encrypt correct answer or explaination
+  // Questions as a student sees them while taking a test.
   async getQuestionsForTest(req, practice, hasCorrectAnswer) {
     var qSelect = '-__v -answerExplain -answerExplainArr';
+    // The encrypted answer meta can be decrypted by the client (the key is the answer id), so it
+    // is only sent for learning-mode tests, which show whether each answer is right as you go.
+    const withAnswerMeta = !!hasCorrectAnswer && practice.testMode === 'learning';
 
     this.questionRepository.setInstanceKey(req.instancekey);
     const data: any = await this.questionRepository.populate(practice, {
@@ -229,9 +261,12 @@ export class QuestionBus {
       question.section = item.section;
       question.order = item.order;
 
-      this.encryptQuestionAnswer(question, hasCorrectAnswer);
+      this.encryptQuestionAnswer(question, withAnswerMeta);
+      if (!withAnswerMeta) {
+        hideAnswerKey(question);
+      }
 
-      return question; 
+      return question;
     });
 
     return transformedQuestions;
