@@ -105,16 +105,20 @@ export class AttemptController {
         return this.attemptService.countAll({ ...query, instancekey })
     }
 
+    // Every student's attempts at a test, with names and emails: for the people who run it
     @Get('/results/:practicesetId')
     @ApiHeader({ name: 'authtoken' })
-    @UseGuards(AuthenticationGuard)
+    @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
+    @UseGuards(AuthenticationGuard, RolesGuard)
     findAllByPractice(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string) {
         return this.attemptService.findAllByPractice({ instancekey, practicesetId })
     }
 
+    // Every student's attempts at a test, with names and emails: for the people who run it
     @Get('/practiceset/:practicesetId')
     @ApiHeader({ name: 'authtoken' })
-    @UseGuards(AuthenticationGuard)
+    @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
+    @UseGuards(AuthenticationGuard, RolesGuard)
     findAllByPracticeSet(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string) {
         return this.attemptService.findAllByPractice({ instancekey, practicesetId })
     }

@@ -148,6 +148,10 @@ export class QuestionBankService {
         }
       }
       const user = createQuestionRequest.userData;
+      // Students may suggest questions (they are saved as pending), but not put them into a test
+      if (practice && ([] as string[]).concat(user?.roles || []).every((role) => role === config.roles.student)) {
+        throw new ForbiddenException('Students cannot add questions to a test');
+      }
       const instancekey = createQuestionRequest.instancekey;
       delete createQuestionRequest.instancekey;
       delete createQuestionRequest.userData;
@@ -287,7 +291,6 @@ export class QuestionBankService {
         test.sections.push(allQuestionSections[s])
       }
     }
-    console.log(test);
     try {
       const updatedTest = await this.practiceSetRepository.findByIdAndUpdate(test._id, test);
     } catch (error) {

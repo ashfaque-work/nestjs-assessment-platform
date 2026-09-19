@@ -1046,7 +1046,7 @@ export class AttemptProcessor {
                 }
                 attemptReturn.attemptdetails = adAftersave._id
 
-                if (practice.demographicData.identityVerification) {
+                if (practice.demographicData?.identityVerification) {
                     // if (user.identityInfo) {
                     //     attemptReturn.identityInfo = user.identityInfo;
 

@@ -1000,7 +1000,7 @@ export class AssessmentService {
         }
 
         // unverified user cannot publish public/buy mode test
-        if (data.accessMode != 'invitation' && data.status == 'published' && practiceSet.stauts != 'published' && (request.user.roles.includes('teacher') || request.user.roles.includes('mentor')) && !request.user.isVerified) {
+        if (data.accessMode != 'invitation' && data.status == 'published' && practiceSet.status != 'published' && (request.user.roles.includes('teacher') || request.user.roles.includes('mentor')) && !request.user.isVerified) {
           throw new ForbiddenException({ param: 'status', message: 'You are not allowed to publish this test. Please contact admin to verify your account.' })
         }
 
@@ -7737,7 +7737,9 @@ export class AssessmentService {
 
       let limitData = null
       
-      const practiceSet = await this.practiceSetRepository.findOne({ _id: req.id }, null, { $and: filter, lean: true })
+      // The filter (published, not expired, and the student may access it) is part of the query;
+      // it used to be passed as query options, where it was ignored
+      const practiceSet = await this.practiceSetRepository.findOne({ _id: req.id, $and: filter }, null, { lean: true })
       
       if (!practiceSet) {
         throw new NotFoundException();
