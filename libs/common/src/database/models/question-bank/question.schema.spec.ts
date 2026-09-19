@@ -24,4 +24,11 @@ describe('question schema ids', () => {
     const second = make().answers.map((a: any) => String(a._id));
     expect(first.filter((id) => second.includes(id))).toEqual([]);
   });
+
+  it('stamps each question with the time it was made, not the time the service started', async () => {
+    const first = make();
+    await new Promise((r) => setTimeout(r, 5));
+    const second = make();
+    expect((second as any).createdAt.getTime()).toBeGreaterThan((first as any).createdAt.getTime());
+  });
 });

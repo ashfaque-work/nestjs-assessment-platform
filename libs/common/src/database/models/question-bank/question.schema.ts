@@ -192,10 +192,10 @@ export class Question extends AbstractDocument {
     @Prop({ type: Number, default: 1 })
     plusMark?: number;
 
-    @Prop({ default: now() })
+    @Prop({ default: now })
     createdAt?: Date;
 
-    @Prop({ default: now() })
+    @Prop({ default: now })
     updatedAt?: Date;
 
     @Prop({ type: Boolean, default: true })

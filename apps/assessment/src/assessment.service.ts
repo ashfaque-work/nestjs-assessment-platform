@@ -1086,10 +1086,12 @@ export class AssessmentService {
           newDataToSave.units = unitData;
 
         }
-        // The owner does not change on an edit (see changeOwnership). Taking it from the request
-        // body saved whatever the client sent, often the id as a string, which no owner query matches
-        newDataToSave.user = practiceSet.user;
-        newDataToSave.userInfo = practiceSet.userInfo
+        // The owner does not change on an edit (see changeOwnership). It is set as an ObjectId: saved
+        // as a string (as the loaded test carries it), no owner query matches it and the teacher
+        // loses access to the test
+        const ownerId = new Types.ObjectId(String(practiceSet.user));
+        newDataToSave.user = ownerId;
+        newDataToSave.userInfo = practiceSet.userInfo ? { ...practiceSet.userInfo, _id: ownerId } : practiceSet.userInfo
         // Added to remove classroom email id
         var classroomEmail = newDataToSave.studentEmails
         newDataToSave.studentEmails = ''
@@ -1160,7 +1162,6 @@ export class AssessmentService {
         }
 
         try {
-          newDataToSave.user=newDataToSave.userInfo._id;
           const result = await this.practiceSetRepository.findByIdAndSave(newDataToSave._id, newDataToSave);
 
           newDataToSave.studentEmails = classroomEmail
