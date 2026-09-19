@@ -6855,8 +6855,12 @@ export class AttemptService {
         }
       )
 
-      log.takingPracticeSet = test._id;
-      log.ip = request.ip;
+      // The login log is missing when the session predates a data reset; the attempt is already
+      // created, so do not fail the request over it. (These fields are set but never saved.)
+      if (log) {
+        log.takingPracticeSet = test._id;
+        log.ip = request.ip;
+      }
       return { attempt: newAttempt._id }
 
     } catch (err) {
