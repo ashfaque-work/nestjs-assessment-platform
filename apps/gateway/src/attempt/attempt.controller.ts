@@ -19,7 +19,7 @@ import {
     SummarySubjectSpeedMeRequest, SummarySubjectSpeedStudentRequest, SummaryTopicCorrectMeRequest, SummaryTopicCorrectStudentRequest,
     SummaryTopicSpeedMeRequest, UpdateAbandonStatusRequest, UpdateSuspiciousRequest
 } from "@app/common/dto/attempt.dto";
-import { Body, Controller, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
 import { ApiHeader, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { AttemptService } from "./attempt.service";
 
@@ -901,7 +901,12 @@ export class AttemptController {
     @ApiParam({ name: "id", description: "attemptId" })
     @ApiHeader({ name: "authtoken" })
     @UseGuards(AuthenticationGuard)
-    updateAbandonStatus(@Headers("instancekey") instancekey: string, @Body() body: UpdateAbandonStatusRequest, @Param('id') attemptId: string) {
+    updateAbandonStatus(@Headers("instancekey") instancekey: string, @Body() body: UpdateAbandonStatusRequest, @Param('id') attemptId: string, @Req() req) {
+        // liveboard sets markedSuspicious, the proctor's flag on an attempt: not for students
+        const staff = ['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'];
+        if (body.liveboard && !(req.user?.roles || []).some((role) => staff.includes(role))) {
+            throw new ForbiddenException();
+        }
         return this.attemptService.updateAbandonStatus({ instancekey, ...body, attemptId })
     }
 

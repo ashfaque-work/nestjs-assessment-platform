@@ -898,7 +898,7 @@ export class AttemptProcessor {
                     question.minusMark = 0
 
                 if (question.obtainMarks != undefined && question.actualMarks != undefined) {
-                    subject.marks += question.obtainMarks
+                    subject.mark += question.obtainMarks
                     subject.accuracy += question.actualMarks
 
                     unit.mark += question.obtainMarks
@@ -1075,7 +1075,7 @@ export class AttemptProcessor {
             '_id', 'user', 'studentName', 'isEvaluated', 'isAbandoned', 'email', 'QA', 'plusMark', 'minusMark',
             'totalTime', 'totalCorrects', 'totalErrors', 'pending', 'terminated',
             'practicesetId', 'totalMissed', 'idOffline', 'attemptType', 'referenceId', 'referenceType',
-            'totalQuestions', 'totalMarkeds', 'isCratedOffline', 'isAnsync', 'fraudDetected', 'isFraudulent');
+            'totalQuestions', 'totalMarkeds', 'isCratedOffline', 'isAnsync', 'fraudDetected', 'isFraudulent', 'ongoing');
 
         attemptData.subjects = practice.subjects;
         if (typeof practice.isShowAttempt != 'undefined') {
@@ -1635,7 +1635,9 @@ export class AttemptProcessor {
                 totalMissed: totalMissed,
                 totalQuestions: totalQuestions,
                 totalMarkeds: totalMarkeds,
-                isEvaluated: isEvaluated
+                isEvaluated: isEvaluated,
+                // graded: the student can no longer resume it
+                ongoing: false
             };
             if (isAbandoned) {
                 attempt.isAbandoned = isAbandoned;

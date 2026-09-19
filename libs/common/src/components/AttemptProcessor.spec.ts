@@ -214,11 +214,53 @@ describe('AttemptProcessor.process — grading a submitted attempt', () => {
     expect(attempt.totalMarkeds).toBe(2);
   });
 
+  it('marks the graded attempt as no longer ongoing, so it cannot be resumed', async () => {
+    const attempt: any = await finish([answered(Q_RIGHT, ANSWER_A)]);
+    expect(attempt.ongoing).toBe(false);
+  });
+
   it('scores an empty submission as all missed instead of failing', async () => {
     const attempt: any = await finish([]);
 
     expect(attempt.totalMissed).toBe(3);
     expect(attempt.totalCorrects).toBe(0);
     expect(attempt.plusMark).toBe(0);
+  });
+});
+
+describe('AttemptProcessor.createAttemptAndAttemptDetails — subject, unit and topic totals', () => {
+  it('adds up marks for the subject the same way as for its units and topics', async () => {
+    const saved: any[] = [];
+    const processor: AttemptProcessor = new (AttemptProcessor as any)(
+      {
+        setInstanceKey: jest.fn(),
+        findOneAndUpdate: jest.fn(async (_filter: any, update: any) => { saved.push(update); return { ...update, _id: update._id }; }),
+      },
+      {},
+      { setInstanceKey: jest.fn(), findOne: jest.fn().mockResolvedValue(null) },
+      ...Array(12).fill({}),
+    );
+    const place = { subject: { _id: oid('c1'), name: 'Maths' }, unit: { _id: oid('c2'), name: 'Algebra' }, topic: { _id: oid('c3'), name: 'Equations' } };
+
+    await processor.createAttemptAndAttemptDetails('staging', {
+      _id: oid('e1'),
+      practiceSetInfo: { accessMode: 'public' },
+      plusMark: 4,
+      minusMark: -1,
+      QA: [
+        { ...place, status: Constants.CORRECT, obtainMarks: 4, actualMarks: 4, timeEslapse: 1000 },
+        { ...place, status: Constants.INCORRECT, obtainMarks: -1, actualMarks: 4, timeEslapse: 3000 },
+      ],
+    });
+
+    const [subject] = saved[0].subjects;
+    const [unit] = subject.units;
+    const [topic] = unit.topics;
+    for (const level of [subject, unit, topic]) {
+      expect(level.mark).toBe(3);
+      expect(level.maxMarks).toBe(8);
+      expect(level.accuracy).toBeCloseTo(3 / 8);
+    }
+    expect(saved[0].totalMark).toBe(3);
   });
 });
