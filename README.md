@@ -18,7 +18,7 @@ To call a protected endpoint from Swagger or curl:
    `{ "userId": "demo-student@example.com", "password": "DmnTAiBaXDSPM4#7a" }`
 2. Send the returned token as the `authtoken` header, together with `instancekey: staging`.
 
-The demo holds sample data only, and is reset from time to time.
+The demo holds sample data only. Everyone shares the demo accounts, so the data is put back to its starting state every night (21:30 UTC).
 
 ## Architecture
 
