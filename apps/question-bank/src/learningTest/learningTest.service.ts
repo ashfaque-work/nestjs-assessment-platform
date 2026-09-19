@@ -1,7 +1,7 @@
 import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { QuestionRepository, AttemptDetailRepository, AttemptRepository, PracticeSetRepository, SubjectRepository, UnitRepository, AttendanceRepository, RedisCaching, TestSeriesRepository, UsersRepository, UserCourseRepository, ClassroomRepository, Constants, AttemptDetail, CourseRepository } from '@app/common';
 import { AttemptProcessor } from '@app/common/components/AttemptProcessor';
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException, PreconditionFailedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException, PreconditionFailedException, ForbiddenException } from '@nestjs/common';
 import * as util from '@app/common/Utils';
 import { ObjectId } from 'mongodb';
 import { GrpcInternalException } from 'nestjs-grpc-exceptions';
@@ -269,6 +269,10 @@ export class LearningTestService {
 
             if (!practiceSet) {
                 throw new NotFoundException();
+            }
+            // Learning mode shows the correct answers as the student goes; other tests must not
+            if (practiceSet.testMode !== 'learning') {
+                throw new ForbiddenException('This test is not a learning test');
             }
 
             this.attemptRepository.setInstanceKey(req.instancekey)

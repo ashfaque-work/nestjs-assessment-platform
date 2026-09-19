@@ -34,10 +34,11 @@ export class QuestionBankController {
     return this.questionBankService.createQuestion(instancekey, request, req.user);
   }
 
-  // get all question
+  // get all question (with their answers): for the people who build tests
   @Get()
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   getAllQuestion(@Headers('instancekey') instancekey: string, @Query() request: GetAllQuestionRequest) {
     return this.questionBankService.getAllQuestion({ ...request, instancekey });
   }
@@ -214,11 +215,13 @@ export class QuestionBankController {
     return this.questionBankService.questionSummaryTopic(instancekey, id, isAllowReuse, userId)
   }
 
-  // get online test questin with encryption
+  // get online test questin with encryption. The client can decrypt the answer meta (the key is
+  // the answer id) and the explanation is included, so this is not for students.
   @Get('/:id/onlineTest')
   @ApiParam({ name: 'id', description: 'question id' })
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   async getQuestionForOnlineTest(@Headers('instancekey') instancekey: string, @Param('id') id: string) {
     return this.questionBankService.getQuestionForOnlineTest(instancekey, id)
   }
@@ -356,7 +359,8 @@ export class QuestionBankController {
   @Get('/:id/show')
   @ApiQuery({ name: 'relatedTopic', required: false })
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   getQuestion(@Headers('instancekey') instancekey: string, @Param('id') id: string, @Query('relatedTopic') relatedTopic?: boolean) {
     return this.questionBankService.getQuestion(instancekey, id, relatedTopic);
   }
