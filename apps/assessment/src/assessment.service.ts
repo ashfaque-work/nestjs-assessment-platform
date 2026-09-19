@@ -7882,7 +7882,8 @@ export class AssessmentService {
 
           if (refItems.length) {
             this.userEnrollmentRepository.setInstanceKey(req.instancekey);
-            const result = this.userEnrollmentRepository.findOne({
+            // awaited: an unresolved promise is always truthy, which let anyone take a paid test
+            const result = await this.userEnrollmentRepository.findOne({
               item: refItems,
               user: new ObjectId(req.user._id as string),
               // accessMode: 'buy',
@@ -7906,11 +7907,16 @@ export class AssessmentService {
       }
 
       if (practiceSet.camera && practiceSet.testMode == 'proctored' && settings.features.fraudDetect) {
-        // Call report api to get random camera time
-        let url = config.reportApi + 'createImageInterval?duration=' + practiceSet.totalTime
-        const response = await axios.get(url, { headers: { 'instancekey': req.instancekey } });
-        if (response.status == 200 && response.data) {
-          practiceSet.cameraTime = response.data.intervals
+        // Call report api to get random camera time. The test can still be taken without it,
+        // so a report service that is down or not deployed must not stop the student.
+        try {
+          let url = config.reportApi + 'createImageInterval?duration=' + practiceSet.totalTime
+          const response = await axios.get(url, { headers: { 'instancekey': req.instancekey } });
+          if (response.status == 200 && response.data) {
+            practiceSet.cameraTime = response.data.intervals
+          }
+        } catch (error) {
+          Logger.warn(`camera intervals unavailable for test ${practiceSet._id}: ${error.message || error.code || error}`)
         }
       }
 
@@ -8144,7 +8150,11 @@ export class AssessmentService {
 
       if (req.query.hasAccessMode) {
         const practiceSet = await this.findOneWithQuestionsAccessMode(req);
-        practiceSet.questions.map(q => q.question)
+        // When the student may not take the test (attempt limit, not started yet, not in their
+        // grade...) the check returns { status, message } instead of the test
+        if (practiceSet && !practiceSet.questions && practiceSet.message) {
+          throw new ForbiddenException(practiceSet.message);
+        }
         return practiceSet;
       } else {
         this.practiceSetRepository.setInstanceKey(req.instancekey);
