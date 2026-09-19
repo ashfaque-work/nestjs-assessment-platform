@@ -1,4 +1,7 @@
 node_modules
+**/node_modules
+# the service images do not need the web app
+apps/web
 dist
 dist-local
 coverage

@@ -2,15 +2,17 @@
 
 [![CI](https://github.com/ashfaque-work/nestjs-assessment-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/ashfaque-work/nestjs-assessment-platform/actions/workflows/ci.yml)
 
-Backend for an online assessment and learning platform (tests, question bank, classrooms, courses, proctoring, e-commerce), built as a **NestJS microservices monorepo**.
+An online assessment and learning platform (tests, question bank, classrooms, courses, proctoring, e-commerce): a **NestJS microservices** backend and a **React** student app, in one monorepo.
 
 ## Live demo
 
-**[assess.ashfaqueahmad.com/api](https://assess.ashfaqueahmad.com/api)** — Swagger UI for the running API.
+- **[assess.ashfaqueahmad.com](https://assess.ashfaqueahmad.com)**: the student app. Sign in with the demo student
+  account (the sign-in page fills it in for you), take a timed test and review every answer.
+- **[assess.ashfaqueahmad.com/api](https://assess.ashfaqueahmad.com/api)**: Swagger UI for the API.
 
-All 10 services, MongoDB and Redis run in Docker on a single 2-core ARM VM.
+All 10 services, MongoDB, Redis and the web app run in Docker on a single 2-core ARM VM.
 
-To call a protected endpoint:
+To call a protected endpoint from Swagger or curl:
 
 1. `POST /auth/login` with the header `instancekey: staging` and body
    `{ "userId": "demo-student@example.com", "password": "DmnTAiBaXDSPM4#7a" }`
@@ -25,8 +27,9 @@ the internet; the services talk to each other over gRPC on a private Docker netw
 
 ```mermaid
 flowchart LR
-    client["Browser / mobile client"]
+    client["Browser"]
     caddy["Caddy<br/>TLS termination"]
+    web["apps/web<br/>React student app<br/>(static files)"]
     gw["gateway<br/>REST + Swagger<br/>JWT, roles, rate limit"]
 
     subgraph services["gRPC services (apps/)"]
@@ -46,7 +49,9 @@ flowchart LR
     redis[("Redis<br/>cache + Bull queues")]
     s3["AWS S3<br/>media, recordings"]
 
-    client -->|HTTPS| caddy --> gw
+    client -->|HTTPS| caddy
+    caddy -->|app pages| web
+    caddy -->|API| gw
     gw -->|gRPC| services
     services --> mongo
     gw --> redis
@@ -79,6 +84,7 @@ share the key.
 
 | Path | What it is |
 |---|---|
+| `apps/web` | Student web app: React, TypeScript, Vite, TanStack Query, Tailwind |
 | `apps/gateway` | Public HTTP API. Validates the JWT, checks roles, forwards calls to services over gRPC |
 | `apps/<service>` | gRPC microservices, one per domain |
 | `apps/video-streaming` | Experimental mediasoup WebRTC server |
@@ -138,8 +144,27 @@ Configuration is passed as environment variables; no `.env` file is copied into 
 - `AuthenticationGuard` verifies the token and loads the user; `RolesGuard` checks the user's roles from the database.
 - `GET /auth/refreshToken` issues a new token only for a validly signed token that belongs to an existing session.
 
+## Web app
+
+`apps/web` is the student side: sign in, see open tests and past results, take a timed test (answer sheet
+navigator, mark for review, keyboard shortcuts, answers kept if the page reloads), then review the marked answer
+sheet with explanations and a breakdown by topic. It has its own `package.json`.
+
+```bash
+cd apps/web
+npm install
+npm run dev     # http://localhost:5173, API calls proxied to the live gateway
+API_TARGET=http://localhost:8000 npm run dev   # or to a local gateway
+npm test
+npm run build   # static files in apps/web/dist
+```
+
+In production the built files are served by the same Caddy that fronts the gateway: `/`, `/login`, `/tests/*`,
+`/results/*` and `/assets/*` are the app, everything else goes to the API, so the app needs no CORS setup.
+
 ## Tests
 
 ```bash
-npm test
+npm test                    # backend (Jest)
+npm --prefix apps/web test  # web app (Vitest)
 ```

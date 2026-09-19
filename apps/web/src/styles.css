@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/* Dark mode follows the `dark` class on <html> (set from the saved or system theme) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  The look borrows from an OMR answer sheet: cool photocopy paper, graphite pencil for what the
+  student writes, and the rose "form ink" that sheets are printed in for everything structural.
+*/
+:root {
+  --paper: #f6f7f9;
+  --sheet: #ffffff;
+  --graphite: #2b2f36;
+  --graphite-soft: #5d636d;
+  --form: #c8375f;
+  --form-faint: #f3d6de;
+  --rule: #dfe2e7;
+  --correct: #1f7a4d;
+  --wrong: #b3261e;
+  --review: #b7791f;
+}
+
+.dark {
+  --paper: #16181d;
+  --sheet: #1d2027;
+  --graphite: #e6e8ec;
+  --graphite-soft: #a3a9b3;
+  --form: #f06a8f;
+  --form-faint: #4a2331;
+  --rule: #2e323b;
+  --correct: #4cc38a;
+  --wrong: #f2766b;
+  --review: #e3b04b;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-graphite: var(--graphite);
+  --color-graphite-soft: var(--graphite-soft);
+  --color-form: var(--form);
+  --color-form-faint: var(--form-faint);
+  --color-rule: var(--rule);
+  --color-correct: var(--correct);
+  --color-wrong: var(--wrong);
+  --color-review: var(--review);
+
+  --font-sans: "Archivo Variable", "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
+}
+
+html {
+  background: var(--paper);
+  color: var(--graphite);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Timers and scores line up digit for digit */
+.figures {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--form);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
