@@ -6,8 +6,9 @@ An online assessment and learning platform (tests, question bank, classrooms, co
 
 ## Live demo
 
-- **[assess.ashfaqueahmad.com](https://assess.ashfaqueahmad.com)**: the student app. Sign in with the demo student
-  account (the sign-in page fills it in for you), take a timed test and review every answer.
+- **[assess.ashfaqueahmad.com](https://assess.ashfaqueahmad.com)**: the web app. The sign-in page fills in either demo
+  account: as the **student**, take a timed test and review every answer; as the **teacher**, write and publish a
+  test and see a sample class's results.
 - **[assess.ashfaqueahmad.com/api](https://assess.ashfaqueahmad.com/api)**: Swagger UI for the API.
 
 All 10 services, MongoDB, Redis and the web app run in Docker on a single 2-core ARM VM.
@@ -84,7 +85,7 @@ share the key.
 
 | Path | What it is |
 |---|---|
-| `apps/web` | Student web app: React, TypeScript, Vite, TanStack Query, Tailwind |
+| `apps/web` | Web app for students and teachers: React, TypeScript, Vite, TanStack Query, Tailwind |
 | `apps/gateway` | Public HTTP API. Validates the JWT, checks roles, forwards calls to services over gRPC |
 | `apps/<service>` | gRPC microservices, one per domain |
 | `apps/video-streaming` | Experimental mediasoup WebRTC server |
@@ -146,9 +147,14 @@ Configuration is passed as environment variables; no `.env` file is copied into 
 
 ## Web app
 
-`apps/web` is the student side: sign in, see open tests and past results, take a timed test (answer sheet
-navigator, mark for review, keyboard shortcuts, answers kept if the page reloads), then review the marked answer
-sheet with explanations and a breakdown by topic. It has its own `package.json`.
+`apps/web` has its own `package.json`.
+
+- **Students** see open tests and past results, take a timed test (answer sheet navigator, mark for review,
+  keyboard shortcuts, answers kept if the page reloads), then review the marked answer sheet with explanations and a
+  breakdown by topic.
+- **Teachers** write tests (questions with an answer key and explanations, time, marking), publish them, and read
+  the class answer sheet: every student's answers to every question, the share of the class that got each one right,
+  and the hardest question.
 
 ```bash
 cd apps/web
@@ -160,7 +166,7 @@ npm run build   # static files in apps/web/dist
 ```
 
 In production the built files are served by the same Caddy that fronts the gateway: `/`, `/login`, `/tests/*`,
-`/results/*` and `/assets/*` are the app, everything else goes to the API, so the app needs no CORS setup.
+`/results/*`, `/teach/*` and `/assets/*` are the app, everything else goes to the API, so the app needs no CORS setup.
 
 ## Tests
 
