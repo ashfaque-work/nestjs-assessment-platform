@@ -156,7 +156,7 @@ export class Question extends AbstractDocument {
     questionTextArray: string[];
 
     @Prop([{
-        _id: { type: Types.ObjectId, default: new Types.ObjectId() },
+        _id: { type: Types.ObjectId, default: () => new Types.ObjectId() },
         url: { type: String, default: '' },
         name: { type: String, default: '' },
         duration: { type: Number, default: 0 }
@@ -170,7 +170,7 @@ export class Question extends AbstractDocument {
     answerExplain: string;
 
     @Prop([{
-        _id: { type: Types.ObjectId, default: new Types.ObjectId() },
+        _id: { type: Types.ObjectId, default: () => new Types.ObjectId() },
         url: { type: String, default: '' },
         name: { type: String, default: '' },
         duration: { type: Number, default: 0 }
@@ -215,7 +215,7 @@ export class Question extends AbstractDocument {
     facet: number;
 
     @Prop([{
-        _id: { type: Types.ObjectId, default: new Types.ObjectId() },
+        _id: { type: Types.ObjectId, default: () => new Types.ObjectId() },
         answerText: { type: String, trim: true },
         answerTextArray: { type: [String], default: [] },
         isCorrectAnswer: { type: Boolean, default: false },
@@ -225,7 +225,7 @@ export class Question extends AbstractDocument {
         userText: { type: String },
         correctMatch: { type: String },
         audioFiles: [{
-            _id: { type: Types.ObjectId, default: new Types.ObjectId() },
+            _id: { type: Types.ObjectId, default: () => new Types.ObjectId() },
             url: { type: String, default: '' },
             name: { type: String, default: '' },
             duration: { type: Number, default: 0 }
@@ -252,7 +252,7 @@ export class Question extends AbstractDocument {
     tComplexity: number;
 
     @Prop([{
-        _id: { type: Types.ObjectId, default: new Types.ObjectId() },
+        _id: { type: Types.ObjectId, default: () => new Types.ObjectId() },
         isSample: { type: Boolean, default: false },
         args: { type: String, default: '' },
         input: { type: String, default: '' },
@@ -261,7 +261,7 @@ export class Question extends AbstractDocument {
     testcases: TestCases[];
 
     @Prop([{
-        _id: { type: Types.ObjectId, default: new Types.ObjectId() },
+        _id: { type: Types.ObjectId, default: () => new Types.ObjectId() },
         language: { type: String, default: '' },
         // time limit in seconds
         timeLimit: { type: Number },
@@ -283,7 +283,7 @@ export class Question extends AbstractDocument {
     approveStatus: string;
 
     @Prop([{
-        _id: { type: Types.ObjectId, default: new Types.ObjectId() },
+        _id: { type: Types.ObjectId, default: () => new Types.ObjectId() },
         type: {
             user: {
                 _id: { type: Types.ObjectId, ref: 'User' },

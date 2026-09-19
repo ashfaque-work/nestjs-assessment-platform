@@ -327,7 +327,7 @@ export class Setting extends AbstractDocument {
     @Prop({ default: false })
     allowMarksChange: boolean;
 
-    @Prop({ default: new Date() })
+    @Prop({ default: Date.now })
     updatedAt: Date;
 
     @Prop({ type: Object })

@@ -24,9 +24,9 @@ export class Attendance extends AbstractDocument {
     admitted?: boolean
     @Prop({ type: Boolean, default: true })
     active?: boolean
-    @Prop({ type: Date, default: Date.now() })
+    @Prop({ type: Date, default: Date.now })
     createdAt?: Date
-    @Prop({ type: Date, default: Date.now() })
+    @Prop({ type: Date, default: Date.now })
     updatedAt?: Date
     @Prop({ type: String, enum: ['test', 'classroom'], default: 'test' })
     type?: string

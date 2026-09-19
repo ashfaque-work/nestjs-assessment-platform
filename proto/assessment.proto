@@ -296,6 +296,8 @@ message User {
   string phoneNumber = 13;
   repeated LevelHistory levelHistory = 14;
   string createdAt = 15;
+  // publishing a public test needs a verified account
+  bool isVerified = 16;
 }
 
 message CreateAssessmentRequest {
