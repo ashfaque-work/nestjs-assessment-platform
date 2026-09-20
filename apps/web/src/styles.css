@@ -4,46 +4,75 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  The look borrows from an OMR answer sheet: cool photocopy paper, graphite pencil for what the
-  student writes, and the rose "form ink" that sheets are printed in for everything structural.
+  A calm, modern product surface: near-white/near-black neutrals with one vivid violet accent,
+  soft elevation and generous rounding. Token names are semantic so components stay agnostic:
+  paper = app background, sheet = a card, graphite = text, form = the accent.
 */
 :root {
-  --paper: #f6f7f9;
+  --paper: #f7f7f9;
   --sheet: #ffffff;
-  --graphite: #2b2f36;
-  --graphite-soft: #5d636d;
-  --form: #c8375f;
-  --form-faint: #f3d6de;
-  --rule: #dfe2e7;
-  --correct: #1f7a4d;
-  --wrong: #b3261e;
-  --review: #b7791f;
+  --sheet-2: #f3f3f6;
+  --graphite: #18181b;
+  --graphite-soft: #6b7280;
+  --form: #6d5efc;
+  --form-2: #a855f7;
+  --form-strong: #5b4de0;
+  --form-faint: #eef0ff;
+  --rule: #e6e7eb;
+  --rule-strong: #d3d5db;
+  --correct: #0f9d58;
+  --wrong: #dc2626;
+  --review: #d97706;
+  --ring: rgb(109 94 252 / 0.5);
+  --shadow-sm: 0 1px 2px 0 rgb(16 18 27 / 0.04), 0 1px 3px 0 rgb(16 18 27 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(16 18 27 / 0.08), 0 2px 6px -2px rgb(16 18 27 / 0.06);
+  --shadow-lg: 0 24px 60px -20px rgb(16 18 27 / 0.28);
+  --glass: rgb(255 255 255 / 0.72);
 }
 
 .dark {
-  --paper: #16181d;
-  --sheet: #1d2027;
-  --graphite: #e6e8ec;
-  --graphite-soft: #a3a9b3;
-  --form: #f06a8f;
-  --form-faint: #4a2331;
-  --rule: #2e323b;
-  --correct: #4cc38a;
-  --wrong: #f2766b;
-  --review: #e3b04b;
+  --paper: #09090b;
+  --sheet: #141417;
+  --sheet-2: #1c1c21;
+  --graphite: #f4f4f5;
+  --graphite-soft: #9ca3af;
+  --form: #8b7dff;
+  --form-2: #c084fc;
+  --form-strong: #a394ff;
+  --form-faint: #1c1a2e;
+  --rule: #26262c;
+  --rule-strong: #34343c;
+  --correct: #34d399;
+  --wrong: #f87171;
+  --review: #fbbf24;
+  --ring: rgb(139 125 255 / 0.55);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 14px -2px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 24px 60px -20px rgb(0 0 0 / 0.7);
+  --glass: rgb(20 20 23 / 0.72);
 }
 
 @theme inline {
   --color-paper: var(--paper);
   --color-sheet: var(--sheet);
+  --color-sheet-2: var(--sheet-2);
   --color-graphite: var(--graphite);
   --color-graphite-soft: var(--graphite-soft);
   --color-form: var(--form);
+  --color-form-2: var(--form-2);
+  --color-form-strong: var(--form-strong);
   --color-form-faint: var(--form-faint);
   --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
   --color-correct: var(--correct);
   --color-wrong: var(--wrong);
   --color-review: var(--review);
+
+  --shadow-card: var(--shadow-sm);
+  --shadow-pop: var(--shadow-md);
+  --shadow-float: var(--shadow-lg);
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
 
   --font-sans: "Archivo Variable", "Archivo", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
@@ -54,6 +83,7 @@ html {
   color: var(--graphite);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   color-scheme: light;
 }
 
@@ -61,14 +91,51 @@ html {
   color-scheme: dark;
 }
 
+/* A soft accent aura behind the app, so flat pages still have depth */
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(60rem 40rem at 50% -12rem, color-mix(in srgb, var(--form) 12%, transparent), transparent 70%),
+    var(--paper);
+  background-attachment: fixed;
+}
+
 /* Timers and scores line up digit for digit */
 .figures {
   font-variant-numeric: tabular-nums;
 }
 
+/* The accent, as a gradient — used on primary actions and highlights */
+.accent-gradient {
+  background-image: linear-gradient(135deg, var(--form) 0%, var(--form-2) 100%);
+}
+.accent-text {
+  background-image: linear-gradient(135deg, var(--form) 0%, var(--form-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* A frosted bar for the sticky header */
+.glass {
+  background: var(--glass);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+}
+
 :focus-visible {
   outline: 2px solid var(--form);
   outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Cards and rows lift a little on hover */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.rise {
+  animation: rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

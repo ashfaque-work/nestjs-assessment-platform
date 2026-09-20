@@ -2,10 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/auth';
 import { ApiError } from '../api/client';
-import { Bubble } from '../components/Bubble';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Button, Wordmark } from '../components/ui';
-import { letter } from '../lib/format';
 
 // The demo accounts; the data behind them is sample data, put back every night
 const DEMO = {
@@ -71,21 +69,19 @@ export function Login() {
             </Button>
           </form>
 
-          <p className="mt-6 text-sm text-graphite-soft">
-            Try it as{' '}
-            <button type="button" onClick={() => useDemo('student')} className="font-semibold text-form underline-offset-4 hover:underline">
-              the demo student
-            </button>{' '}
-            or{' '}
-            <button type="button" onClick={() => useDemo('teacher')} className="font-semibold text-form underline-offset-4 hover:underline">
-              the demo teacher
+          <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-graphite-soft">
+            <span>Try it as</span>
+            <button type="button" onClick={() => useDemo('student')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form">
+              Demo student
             </button>
-            .
-          </p>
+            <button type="button" onClick={() => useDemo('teacher')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form">
+              Demo teacher
+            </button>
+          </div>
         </div>
       </div>
 
-      <SampleSheet />
+      <Showcase />
     </div>
   );
 }
@@ -100,32 +96,41 @@ function Field({ label, type, autoComplete, value, onChange }: { label: string; 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
-        className="mt-1.5 block h-11 w-full rounded-md border border-rule bg-sheet px-3 text-base outline-none transition-colors focus:border-graphite"
+        className="mt-1.5 block h-11 w-full rounded-lg border border-rule bg-sheet px-3.5 text-base outline-none transition-shadow placeholder:text-graphite-soft focus:border-form focus:ring-4 focus:ring-[var(--ring)]/20"
       />
     </label>
   );
 }
 
-// A few rows of a filled-in answer sheet, printed in form ink
-function SampleSheet() {
-  const rows = [1, 3, 0, 2, 1, -1, 3, 0, 2, 2, 1, 0];
+// A modern gradient panel with a floating "result" card — the premium product feel
+function Showcase() {
   return (
-    <aside aria-hidden="true" className="hidden items-center justify-center border-l border-rule bg-sheet lg:flex">
-      <div className="rotate-[-3deg] rounded-sm border border-form/40 bg-paper px-8 py-7 shadow-[0_30px_60px_-30px_rgb(0_0_0/0.35)]">
-        <div className="mb-4 flex items-baseline justify-between gap-10 border-b border-form/40 pb-2 text-form">
-          <span className="text-sm font-bold">Answer sheet</span>
-          <span className="figures text-xs">Roll no. 0 4 2 7</span>
+    <aside aria-hidden="true" className="relative hidden items-center justify-center overflow-hidden lg:flex">
+      <div className="accent-gradient absolute inset-0 opacity-95" />
+      <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(255,255,255,0.5), transparent 40%)' }} />
+      <div className="relative w-[min(24rem,80%)] rotate-[-2deg] rounded-2xl border border-white/20 bg-white/95 p-6 text-graphite shadow-[0_40px_80px_-30px_rgb(0_0_0/0.5)] backdrop-blur">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-graphite-soft">Linear &amp; quadratic equations</p>
+          <span className="rounded-full bg-correct/10 px-2.5 py-0.5 text-xs font-semibold text-correct">Passed</span>
         </div>
-        <ol className="space-y-2.5">
-          {rows.map((filled, i) => (
-            <li key={i} className="flex items-center gap-3">
-              <span className="figures w-5 text-right text-xs text-form">{i + 1}</span>
-              {[0, 1, 2, 3].map((o) => (
-                <Bubble key={o} size="sm" label={letter(o)} state={o === filled ? 'filled' : 'empty'} />
-              ))}
-            </li>
+        <p className="figures mt-4 text-5xl font-bold tracking-tight">
+          92<span className="text-2xl text-graphite-soft">%</span>
+        </p>
+        <p className="text-sm text-graphite-soft">11 of 12 correct · 8 min</p>
+        <div className="mt-5 space-y-2.5">
+          {[
+            { label: 'Algebra', v: 100 },
+            { label: 'Graphs', v: 83 },
+            { label: 'Word problems', v: 90 },
+          ].map((s) => (
+            <div key={s.label} className="flex items-center gap-3">
+              <span className="w-24 shrink-0 text-xs font-medium text-graphite-soft">{s.label}</span>
+              <span className="h-2 flex-1 overflow-hidden rounded-full bg-sheet-2">
+                <span className="accent-gradient block h-full rounded-full" style={{ width: `${s.v}%` }} />
+              </span>
+            </div>
           ))}
-        </ol>
+        </div>
       </div>
     </aside>
   );

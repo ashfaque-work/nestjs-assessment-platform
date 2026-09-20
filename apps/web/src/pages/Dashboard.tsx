@@ -3,7 +3,7 @@ import { useMyAttempts, useOpenTests } from '../api/hooks';
 import type { Attempt, TestSummary } from '../api/types';
 import { useAuth } from '../auth/auth';
 import { Page } from '../components/Layout';
-import { buttonClass, ErrorNote, Spinner } from '../components/ui';
+import { Badge, buttonClass, Card, ErrorNote, Spinner } from '../components/ui';
 import { day, marks, percent, plural } from '../lib/format';
 
 // Only attempts the student finished: started-and-left ones are not results
@@ -21,67 +21,93 @@ export function Dashboard() {
 
   const answered = done.reduce((n, a) => n + a.totalQuestions, 0);
   const correct = done.reduce((n, a) => n + a.totalCorrects, 0);
+  const accuracy = answered ? percent(correct, answered) : null;
 
   return (
     <Page>
-      <h1 className="text-[32px] font-bold leading-tight tracking-tight">{firstName ? `Hello, ${firstName}` : 'Your tests'}</h1>
-      <p className="mt-2 max-w-prose text-graphite-soft">
+      <h1 className="text-[34px] font-bold leading-tight tracking-tight">{firstName ? `Hello, ${firstName}` : 'Your tests'}</h1>
+      <p className="mt-2 max-w-prose text-[15px] text-graphite-soft">
         {tests.data
           ? tests.data.length
             ? `${plural(tests.data.length, 'test is', 'tests are')} open to you.`
             : 'No tests are open to you right now.'
           : 'Loading your tests.'}
-        {done.length > 0 && ` Across ${plural(done.length, 'attempt')} you answered ${percent(correct, answered)}% of questions correctly.`}
       </p>
 
-      <section aria-labelledby="open-tests" className="mt-10">
-        <h2 id="open-tests" className="text-sm font-semibold text-graphite-soft">Open tests</h2>
+      {done.length > 0 && (
+        <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4">
+          <Stat label="Tests taken" value={String(done.length)} />
+          <Stat label="Questions answered" value={String(answered)} />
+          <Stat label="Accuracy" value={accuracy === null ? '—' : `${accuracy}%`} accent />
+        </div>
+      )}
+
+      <section aria-labelledby="open-tests" className="mt-12">
+        <h2 id="open-tests" className="text-xs font-semibold uppercase tracking-wider text-graphite-soft">Open tests</h2>
         {tests.isPending && <Spinner label="Loading tests" />}
         {tests.isError && <ErrorNote message={tests.error.message} />}
+        {tests.data && tests.data.length === 0 && (
+          <Card className="mt-3 px-5 py-8 text-center text-sm text-graphite-soft">No tests are open to you right now.</Card>
+        )}
         {tests.data && tests.data.length > 0 && (
-          <ul className="mt-3 border-t border-rule">
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
             {tests.data.map((test) => (
-              <TestRow key={test._id} test={test} last={lastByTest.get(test._id)} />
+              <TestCard key={test._id} test={test} last={lastByTest.get(test._id)} />
             ))}
           </ul>
         )}
       </section>
 
-      <section aria-labelledby="results" className="mt-14">
-        <h2 id="results" className="text-sm font-semibold text-graphite-soft">Your results</h2>
+      <section aria-labelledby="results" className="mt-12">
+        <h2 id="results" className="text-xs font-semibold uppercase tracking-wider text-graphite-soft">Your results</h2>
         {attempts.isPending && <Spinner label="Loading results" />}
         {attempts.isError && <ErrorNote message={attempts.error.message} />}
         {attempts.data && done.length === 0 && (
-          <p className="mt-3 border-t border-rule pt-4 text-graphite-soft">Your results will show here after you finish a test.</p>
+          <Card className="mt-3 px-5 py-8 text-center text-sm text-graphite-soft">Your results will show here after you finish a test.</Card>
         )}
         {done.length > 0 && (
-          <ul className="mt-3 border-t border-rule">
+          <Card className="mt-3 divide-y divide-rule overflow-hidden">
             {done.map((a, i) => (
               <ResultRow key={a._id ?? i} attempt={a} />
             ))}
-          </ul>
+          </Card>
         )}
       </section>
     </Page>
   );
 }
 
-function TestRow({ test, last }: { test: TestSummary; last?: Attempt }) {
+function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <Card className="px-4 py-4 sm:px-5">
+      <p className="text-xs font-medium text-graphite-soft">{label}</p>
+      <p className={`figures mt-1 text-2xl font-bold tracking-tight sm:text-3xl ${accent ? 'accent-text' : ''}`}>{value}</p>
+    </Card>
+  );
+}
+
+function TestCard({ test, last }: { test: TestSummary; last?: Attempt }) {
   const questions = test.totalQuestion || test.questions?.length || 0;
   return (
-    <li className="grid gap-x-6 gap-y-3 border-b border-rule py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-form">{test.subjects.map((s) => s.name).join(', ')}</p>
-        <h3 className="mt-0.5 text-lg font-bold leading-snug">{test.title}</h3>
-        <p className="figures mt-1 text-sm text-graphite-soft">
-          {questions ? `${plural(questions, 'question')}, ` : ''}
-          {test.totalTime} minutes
-          {last && `. Last score ${marks(last.totalMark)} of ${marks(last.maximumMarks)}`}
-        </p>
-      </div>
-      <Link to={`/tests/${test._id}`} className={`${buttonClass(last ? 'secondary' : 'primary')} justify-self-start sm:justify-self-end`}>
-        {last ? 'Take again' : 'Start'}
-      </Link>
+    <li>
+      <Card className="flex h-full flex-col gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-rule-strong hover:shadow-pop">
+        <div className="flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {test.subjects.map((s) => (
+              <Badge key={s._id ?? s.name} tone="accent">{s.name}</Badge>
+            ))}
+          </div>
+          <h3 className="mt-3 text-lg font-bold leading-snug">{test.title}</h3>
+          <p className="figures mt-1.5 text-sm text-graphite-soft">
+            {questions ? `${plural(questions, 'question')} · ` : ''}
+            {test.totalTime} min
+            {last && ` · last ${marks(last.totalMark)}/${marks(last.maximumMarks)}`}
+          </p>
+        </div>
+        <Link to={`/tests/${test._id}`} className={`${buttonClass(last ? 'secondary' : 'primary')} w-full`}>
+          {last ? 'Take again' : 'Start test'}
+        </Link>
+      </Card>
     </li>
   );
 }
@@ -89,25 +115,23 @@ function TestRow({ test, last }: { test: TestSummary; last?: Attempt }) {
 function ResultRow({ attempt }: { attempt: Attempt }) {
   const score = percent(attempt.totalMark, attempt.maximumMarks);
   return (
-    <li className="border-b border-rule">
-      <Link
-        to={`/results/${attempt._id}`}
-        className="grid gap-x-6 gap-y-2 py-4 hover:bg-sheet sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-center sm:px-2"
-      >
-        <div className="min-w-0">
-          <p className="truncate font-semibold">{attempt.practiceSetInfo?.title ?? 'Test'}</p>
-          <p className="text-sm text-graphite-soft">{day(attempt.createdAt)}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-form-faint" aria-hidden="true">
-            <span className="block h-full rounded-full bg-graphite" style={{ width: `${Math.max(0, score)}%` }} />
-          </span>
-          <span className="figures w-16 text-right text-sm font-semibold">
-            {marks(attempt.totalMark)} / {marks(attempt.maximumMarks)}
-          </span>
-        </div>
-        <span className="text-sm font-semibold text-form">See answers</span>
-      </Link>
-    </li>
+    <Link
+      to={`/results/${attempt._id}`}
+      className="grid items-center gap-x-6 gap-y-2 px-5 py-4 transition-colors hover:bg-sheet-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto]"
+    >
+      <div className="min-w-0">
+        <p className="truncate font-semibold">{attempt.practiceSetInfo?.title ?? 'Test'}</p>
+        <p className="text-sm text-graphite-soft">{day(attempt.createdAt)}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="h-2 flex-1 overflow-hidden rounded-full bg-sheet-2" aria-hidden="true">
+          <span className="accent-gradient block h-full rounded-full" style={{ width: `${Math.max(4, score)}%` }} />
+        </span>
+        <span className="figures w-16 text-right text-sm font-semibold">
+          {marks(attempt.totalMark)}/{marks(attempt.maximumMarks)}
+        </span>
+      </div>
+      <span className="text-sm font-semibold text-form">See answers →</span>
+    </Link>
   );
 }

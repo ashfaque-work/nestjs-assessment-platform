@@ -4,11 +4,11 @@ import { expect, test, type Page } from '@playwright/test';
 const openTest = (page: Page, title: string) =>
   page.locator('section', { has: page.getByRole('heading', { name: 'Open tests' }) })
     .getByRole('listitem').filter({ hasText: title })
-    .getByRole('link', { name: /^(Start|Take again)$/ });
+    .getByRole('link', { name: /^(Start test|Take again)$/ });
 
 async function signInAs(page: Page, who: 'student' | 'teacher') {
   await page.goto('/login');
-  await page.getByRole('button', { name: `the demo ${who}` }).click();
+  await page.getByRole('button', { name: `Demo ${who}` }).click();
   await page.getByRole('button', { name: 'Sign in' }).click();
 }
 

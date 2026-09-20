@@ -7,15 +7,15 @@ import { Button, Spinner, Wordmark } from './ui';
 export function Header({ children }: { children?: ReactNode }) {
   const { user, signOut } = useAuth();
   return (
-    <header className="border-b border-rule bg-sheet">
-      <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:px-6">
+    <header className="glass sticky top-0 z-40 border-b border-rule/70">
+      <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4 sm:px-6">
         <Wordmark />
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-1.5">
           {children}
           <ThemeToggle />
           {user && (
             <>
-              <span className="hidden px-2 text-sm text-graphite-soft sm:inline">{user.name}</span>
+              <span className="hidden px-2 text-sm font-medium text-graphite-soft sm:inline">{user.name}</span>
               <Button variant="quiet" onClick={signOut}>Sign out</Button>
             </>
           )}
@@ -51,7 +51,7 @@ export function Page({ children }: { children: ReactNode }) {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-5xl px-4 pb-20 pt-8 sm:px-6 sm:pt-12">{children}</main>
+      <main className="rise mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6 sm:pt-12">{children}</main>
     </>
   );
 }
