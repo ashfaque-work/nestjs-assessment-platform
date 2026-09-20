@@ -1,0 +1,27 @@
+# Server overrides on top of docker-compose.local.yml: HTTPS via Caddy, the gateway stays
+# internal, and MongoDB's cache is capped so the stack fits a 12 GB VM.
+#   docker compose -f docker-compose.local.yml -f deploy/docker-compose.server.yml up -d
+# Paths are relative to the repository root (the directory of the first compose file).
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./apps/web/dist:/srv/web:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - gateway
+  gateway:
+    ports: !override []
+  mongo:
+    command: ["mongod", "--wiredTigerCacheSizeGB", "1"]
+
+volumes:
+  caddy-data:
+  caddy-config:

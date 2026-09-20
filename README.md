@@ -140,6 +140,8 @@ docker compose -f docker-compose.local.yml up --build
 
 Configuration is passed as environment variables; no `.env` file is copied into the images.
 
+The live demo's server setup (Caddy, the compose overrides, build, backup, health-check and nightly reset scripts) is in [`deploy/`](deploy/README.md).
+
 ## Authentication
 - `POST /auth/login` returns a JWT. Send it as the `authtoken` header together with `instancekey`.
 - `AuthenticationGuard` verifies the token and loads the user; `RolesGuard` checks the user's roles from the database.

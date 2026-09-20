@@ -1,0 +1,30 @@
+# Automatic HTTPS (Let's Encrypt) for the web app and the API gateway on one origin.
+# The root domain ashfaqueahmad.com is served by Netlify (portfolio), not here.
+assess.ashfaqueahmad.com {
+	encode gzip
+
+	# The web app's built files: named by content hash, so cached for good; missing ones are 404s
+	handle /assets/* {
+		root * /srv/web
+		@exists file
+		header @exists Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# The web app's pages. No API route uses these paths.
+	@pages {
+		method GET HEAD
+		path / /login /tests /tests/* /results/* /teach /teach/* /favicon.svg
+	}
+	handle @pages {
+		root * /srv/web
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Everything else is the API (REST, Swagger at /api)
+	handle {
+		reverse_proxy gateway:8000
+	}
+}
