@@ -9,6 +9,7 @@ import { Button, Wordmark } from '../components/ui';
 const DEMO = {
   student: { userId: 'demo-student@example.com', password: 'DmnTAiBaXDSPM4#7a' },
   teacher: { userId: 'demo-teacher@example.com', password: "DmvYOo2D-9ZyV-#7a" },
+  admin: { userId: 'demo-admin@example.com', password: 'DmblBUpCozLEXX#7a' },
 };
 
 export function Login() {
@@ -57,7 +58,7 @@ export function Login() {
         <div className="my-auto w-full max-w-sm py-12">
           <h1 className="text-[28px] font-bold leading-tight tracking-tight">Sign in to your tests</h1>
           <p className="mt-3 text-graphite-soft">
-            A working demo of the assessment platform. Students take timed tests and review every answer; teachers write tests and see how the class did. It all runs on the live API, with sample data.
+            A working demo of the assessment platform. Students take timed tests and review every answer; teachers write tests and see how the class did; admins manage people and settings. It all runs on the live API, with sample data.
           </p>
 
           <form onSubmit={submit} className="mt-8 space-y-4" noValidate>
@@ -76,6 +77,9 @@ export function Login() {
             </button>
             <button type="button" onClick={() => useDemo('teacher')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form">
               Demo teacher
+            </button>
+            <button type="button" onClick={() => useDemo('admin')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form">
+              Demo admin
             </button>
           </div>
         </div>

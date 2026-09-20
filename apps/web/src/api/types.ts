@@ -173,3 +173,31 @@ export interface ResultAttempt extends Attempt {
   studentName?: string;
   email?: string;
 }
+
+// A user as the admin user list returns them
+export interface AdminUser {
+  _id: string;
+  name?: string;
+  userId?: string;
+  email?: string;
+  roles: string[];
+  isActive?: boolean;
+  createdAt?: string;
+  activeLocation?: string;
+}
+
+// The platform's white-label settings (a large document; these are the fields the admin edits)
+export interface WhiteLabel {
+  productName?: string;
+  pageTitle?: string;
+  supportEmail?: string;
+  adminName?: string;
+  themeColor?: string;
+  copyRight?: string;
+  signupType?: string;
+  signupMsg?: string;
+  isWhiteLabelled?: boolean;
+  detectFraud?: boolean;
+  allowMarksChange?: boolean;
+  [key: string]: unknown;
+}

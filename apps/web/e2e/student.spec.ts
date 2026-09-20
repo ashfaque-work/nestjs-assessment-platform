@@ -6,7 +6,7 @@ const openTest = (page: Page, title: string) =>
     .getByRole('listitem').filter({ hasText: title })
     .getByRole('link', { name: /^(Start test|Take again)$/ });
 
-async function signInAs(page: Page, who: 'student' | 'teacher') {
+async function signInAs(page: Page, who: 'student' | 'teacher' | 'admin') {
   await page.goto('/login');
   await page.getByRole('button', { name: `Demo ${who}` }).click();
   await page.getByRole('button', { name: 'Sign in' }).click();
@@ -79,5 +79,35 @@ test.describe('teacher', () => {
     const rows = page.locator('table tbody tr');
     expect(await rows.count()).toBeGreaterThanOrEqual(6);
     await expect(page.locator('table tfoot')).toContainText('Got it right');
+  });
+});
+
+test.describe('admin', () => {
+  // read only: no user is activated/deactivated and no setting is saved
+  test('lands on the admin area and can browse people and settings', async ({ page }) => {
+    await signInAs(page, 'admin');
+    await expect(page).toHaveURL(/\/admin$/);
+    await expect(page.getByRole('heading', { name: /Hello|Admin/ })).toBeVisible();
+
+    // the People screen lists accounts with role filters
+    await page.getByRole('link', { name: 'Admin' }).click(); // stay in the area via the header
+    await page.goto('/admin/users');
+    await expect(page.getByRole('heading', { name: 'People' })).toBeVisible();
+    await expect(page.getByText('demo-teacher@example.com')).toBeVisible();
+    await page.getByRole('button', { name: 'teacher', exact: true }).click(); // filter pill (CSS-capitalised)
+    await expect(page.getByText('demo-teacher@example.com')).toBeVisible();
+
+    // platform settings load the real white-label values
+    await page.goto('/admin/settings');
+    await expect(page.getByRole('heading', { name: 'Platform settings' })).toBeVisible();
+    await expect(page.getByLabel('Product name')).toHaveValue(/.+/);
+  });
+
+  test('a student cannot reach the admin area', async ({ page }) => {
+    await signInAs(page, 'student');
+    await expect(page.getByRole('heading', { name: /Hello/ })).toBeVisible(); // wait for sign-in to settle
+    await page.goto('/admin');
+    await expect(page).toHaveURL(/\/$/); // bounced back to their own tests
+    await expect(page.getByText('Open tests')).toBeVisible();
   });
 });

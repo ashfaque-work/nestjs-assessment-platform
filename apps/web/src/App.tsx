@@ -1,6 +1,6 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom';
-import { isStaff, useAuth } from './auth/auth';
-import { Page, RequireAuth, RequireStaff } from './components/Layout';
+import { canManageUsers, isStaff, useAuth } from './auth/auth';
+import { Page, RequireAdmin, RequireAuth, RequireManagement, RequireStaff } from './components/Layout';
 import { buttonClass } from './components/ui';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
@@ -11,6 +11,9 @@ import { NewTest } from './pages/teach/NewTest';
 import { TeachHome } from './pages/teach/TeachHome';
 import { TestEditor } from './pages/teach/TestEditor';
 import { TestResults } from './pages/teach/TestResults';
+import { AdminHome } from './pages/admin/AdminHome';
+import { AdminUsers } from './pages/admin/Users';
+import { AdminSettings } from './pages/admin/Settings';
 
 export function App() {
   return (
@@ -27,16 +30,26 @@ export function App() {
           <Route path="/teach/tests/:testId" element={<TestEditor />} />
           <Route path="/teach/tests/:testId/results" element={<TestResults />} />
         </Route>
+        <Route element={<RequireManagement />}>
+          <Route path="/admin" element={<AdminHome />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route element={<RequireAdmin />}>
+            <Route path="/admin/settings" element={<AdminSettings />} />
+          </Route>
+        </Route>
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
 
-// Students start at their tests, teachers at the tests they run
+// Each role lands where it works: management on the admin area, other staff on the tests they run,
+// students on their own tests.
 function Home() {
   const { user } = useAuth();
-  return isStaff(user) ? <Navigate to="/teach" replace /> : <Dashboard />;
+  if (canManageUsers(user)) return <Navigate to="/admin" replace />;
+  if (isStaff(user)) return <Navigate to="/teach" replace />;
+  return <Dashboard />;
 }
 
 function NotFound() {

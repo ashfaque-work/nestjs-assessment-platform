@@ -428,7 +428,8 @@ export class AuthController {
 
   @Put('updateUserStatus/:id')
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  @Roles(['admin', 'director', 'operator', 'centerHead', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   async updateUserStatus(@Param('id') id: string, @Body() request: UpdateUserStatusReq) {
     return this.authService.updateUserStatus(id, request);
   }
@@ -443,7 +444,8 @@ export class AuthController {
   @Post('blockuser')
   @ApiHeader({ name: 'authtoken' })
   @ApiHeader({ name: 'instancekey' })
-  @UseGuards(AuthenticationGuard)
+  @Roles(['admin', 'director', 'operator', 'centerHead', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   async blockuser(@Body() request: BlockuserReq) {
     return this.authService.blockuser(request);
   }
@@ -451,7 +453,8 @@ export class AuthController {
   @Post('unblockUser')
   @ApiHeader({ name: 'authtoken' })
   @ApiHeader({ name: 'instancekey' })
-  @UseGuards(AuthenticationGuard)
+  @Roles(['admin', 'director', 'operator', 'centerHead', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   async unblockUser(@Body() request: UnblockUserReq, @Req() req: any) {
     const combinedData = {
       ...request,

@@ -1,8 +1,34 @@
 import type { ReactNode } from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { isStaff, useAuth } from '../auth/auth';
+import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { canManageUsers, canTeach, isAdmin, isStaff, useAuth } from '../auth/auth';
 import { ThemeToggle } from './ThemeToggle';
 import { Button, Spinner, Wordmark } from './ui';
+
+// The workspaces the signed-in user can switch between, in the header
+function NavLinks() {
+  const { user } = useAuth();
+  const links: { to: string; label: string }[] = [];
+  if (canTeach(user)) links.push({ to: '/teach', label: 'Tests' });
+  if (canManageUsers(user)) links.push({ to: '/admin', label: 'Admin' });
+  if (links.length < 2) return null;
+  return (
+    <nav className="mr-1 hidden items-center gap-1 sm:flex">
+      {links.map((l) => (
+        <NavLink
+          key={l.to}
+          to={l.to}
+          className={({ isActive }) =>
+            `rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
+              isActive ? 'bg-sheet-2 text-graphite' : 'text-graphite-soft hover:text-graphite'
+            }`
+          }
+        >
+          {l.label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
 
 export function Header({ children }: { children?: ReactNode }) {
   const { user, signOut } = useAuth();
@@ -12,6 +38,7 @@ export function Header({ children }: { children?: ReactNode }) {
         <Wordmark />
         <div className="ml-auto flex items-center gap-1.5">
           {children}
+          <NavLinks />
           <ThemeToggle />
           {user && (
             <>
@@ -44,6 +71,20 @@ export function RequireAuth() {
 export function RequireStaff() {
   const { user } = useAuth();
   if (!isStaff(user)) return <Navigate to="/" replace />;
+  return <Outlet />;
+}
+
+// The admin area: only the platform-management roles reach it
+export function RequireManagement() {
+  const { user } = useAuth();
+  if (!canManageUsers(user)) return <Navigate to="/" replace />;
+  return <Outlet />;
+}
+
+// Platform settings are admin-only, tighter than the rest of the admin area
+export function RequireAdmin() {
+  const { user } = useAuth();
+  if (!isAdmin(user)) return <Navigate to="/admin" replace />;
   return <Outlet />;
 }
 

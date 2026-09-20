@@ -12,9 +12,11 @@ assess.ashfaqueahmad.com {
 	}
 
 	# The web app's pages. No API route uses these paths.
+	# The web app's own pages. These exact paths never overlap the API namespaces (e.g. the API's
+	# /admin/reports still reverse-proxies, only /admin, /admin/users, /admin/settings are the app).
 	@pages {
 		method GET HEAD
-		path / /login /tests /tests/* /results/* /teach /teach/* /favicon.svg
+		path / /login /tests /tests/* /results/* /teach /teach/* /admin /admin/users /admin/settings /favicon.svg
 	}
 	handle @pages {
 		root * /srv/web
