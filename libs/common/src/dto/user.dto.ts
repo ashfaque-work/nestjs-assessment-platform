@@ -673,6 +673,8 @@ export class ChangeNewPasswordBody {
   newPassword: string;
   @ApiProperty()
   refresh: boolean;
+  @ApiProperty({ required: false, description: 'Password-reset token from the emailed link (required unless signed in)' })
+  token: string;
 }
 
 export class ChangeNewPasswordQuery {

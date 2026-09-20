@@ -88,6 +88,7 @@ export class SettingController {
 
     @Post('/convertCurrency')
     @ApiHeader({ name: 'authtoken', required: true })
+    @UseGuards(AuthenticationGuard)
     convertCurrency(@Req() req: any, @Body() request: GetConvertCurrencyReq, @Headers('instancekey') instancekey: string) {
         const combinedData = {
             ...request,
@@ -115,14 +116,16 @@ export class SettingController {
 
     @Put('addAdvertismentImage')
     @ApiHeader({ name: 'authtoken' })
-    @UseGuards(AuthenticationGuard)
+    @Roles(['admin'])
+    @UseGuards(AuthenticationGuard, RolesGuard)
     addAdvertismentImage(@Body() request: AddAdvertismentImageReq) {
         return this.settingService.addAdvertismentImage(request)
     }
 
     @Put('update')
     @ApiHeader({ name: 'authtoken' })
-    @UseGuards(AuthenticationGuard)
+    @Roles(['admin'])
+    @UseGuards(AuthenticationGuard, RolesGuard)
     update(@Body() request: GetUpdateRequest, @Headers('instancekey') instancekey: string) {
         const combinedData = {
             ...request,
@@ -133,7 +136,8 @@ export class SettingController {
 
     @Delete('/deleteAdvertismentImage/:id')
     @ApiHeader({ name: 'authtoken' })
-    @UseGuards(AuthenticationGuard)
+    @Roles(['admin'])
+    @UseGuards(AuthenticationGuard, RolesGuard)
     deleteAdvertismentImage(@Param('id') id: string) {
         return this.settingService.deleteAdvertismentImage({ _id: id })
     }

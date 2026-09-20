@@ -363,6 +363,7 @@ message ChangePasswordRes {
 message ChangeNewPasswordBody {
   string newPassword = 1;
   bool refresh = 2;
+  string token = 3;
 }
 
 message ChangeNewPasswordQuery {

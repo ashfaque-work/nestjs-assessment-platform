@@ -5399,7 +5399,32 @@ export class UsersService {
       var userId = req.id;
       var newPass = req.body.newPassword;
       this.usersRepository.setInstanceKey(req.instancekey)
-      var user = await this.usersRepository.findById(userId);
+
+      // This route has no auth guard (a logged-out user must be able to finish a reset), so it
+      // has to prove the caller may change THIS user's password. Two ways in, nothing else:
+      //  - the reset token emailed to them (?token / body.token), unexpired and matching the id;
+      //  - a valid auth token whose own user id is this id (the force-password-reset flow).
+      const now = new Date();
+      let user = await this.usersRepository.findById(userId);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const resetToken = req.body.token || (req.query as any)?.token;
+      let allowed = false;
+      if (resetToken && user.passwordResetToken && user.passwordResetToken === resetToken
+        && user.passwordResetExpired && new Date(user.passwordResetExpired) >= now) {
+        allowed = true;
+      } else if (req.token) {
+        try {
+          const payload = await this.authservice.validateJwtToken(req.token);
+          if (payload && String(payload.userId) === String(user._id)) allowed = true;
+        } catch { /* invalid token: not this path */ }
+      }
+      if (!allowed) {
+        throw new UnauthorizedException('A valid password-reset token is required.');
+      }
+
       let oldHashedPass = user.hashedPassword;
 
       const newHashedPass = await this.generatedHashedPassword(newPass, user.salt)
