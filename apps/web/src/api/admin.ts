@@ -37,6 +37,33 @@ export function useOnlineUsers() {
   });
 }
 
+// Change a user's roles (admin only). Replaces the whole set.
+export function useUpdateUserRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, roles }: { id: string; roles: string[] }) => api('PUT', `/auth/${id}/role`, { newRoles: roles }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  });
+}
+
+// Create an account (admin/director/support). The API wants the login on both userId and email,
+// and the role on both roles and userRoles.
+export function useAddUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; email: string; password: string; role: string }) =>
+      api('POST', '/auth/addUser', {
+        name: input.name,
+        userId: input.email,
+        email: input.email,
+        password: input.password,
+        roles: [input.role],
+        userRoles: [input.role],
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  });
+}
+
 export function useWhiteLabel() {
   return useQuery({
     queryKey: ['admin', 'whiteLabel'],

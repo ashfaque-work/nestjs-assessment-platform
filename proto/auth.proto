@@ -17,6 +17,7 @@ service AuthGrpcService {
   rpc DossierStatusUpdate(DossierStatusUpdateReq) returns (DossierStatusUpdateRes) {}
   rpc UpdateDossierComments(UpdateDossierCommentsReq) returns (UpdateDossierCommentsRes) {}
   rpc UpdateUserStatus(UpdateUserStatusReq) returns (UpdateUserStatusRes) {}
+  rpc UpdateUserRole(UpdateUserRoleReq) returns (UpdateUserStatusRes) {}
   rpc SendForReviewDossier(SendForReviewDossierReq) returns (SendForReviewDossierRes) {}
   rpc Blockuser(BlockUserReq) returns (BlockUserRes){}
   rpc AddLocation(AddLocationReq) returns (AddLocationRes) {}
@@ -989,6 +990,11 @@ message UpdateUserStatusReq{
 
 message UpdateUserStatusRes{
   string response = 1;
+}
+
+message UpdateUserRoleReq{
+  string _id = 1;
+  repeated string roles = 2;
 }
 
 message SendForReviewDossierReq{

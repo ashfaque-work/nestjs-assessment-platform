@@ -148,6 +148,7 @@ import {
   UpdateUserResponse,
   UpdateUserStatusReq,
   UpdateUserStatusRes,
+  UpdateUserRoleReq,
   UpdateUtmStatusReq,
   UpdateUtmStatusRes,
   UserLiveBoardRequest,
@@ -210,6 +211,7 @@ export interface AuthGrpcInterface {
   UpdateUserCountry(request: UpdateUserCountryReq): Promise<UpdateUserCountryRes>
   DossierStatusUpdate(request: DossierStatusUpdateReqDto): Promise<DossierStatusUpdateResDto>
   UpdateDossierComments(request: UpdateDossierCommentsReqDto): Promise<UpdateDossierCommentsResDto>
+  UpdateUserRole(request: UpdateUserRoleReq): Promise<UpdateUserStatusRes>;
   UpdateUserStatus(request: UpdateUserStatusReq): Promise<UpdateUserStatusRes>
   SendForReviewDossier(request: SendForReviewDossierReq): Promise<SendForReviewDossierRes>
   Blockuser(request: BlockuserReq): Promise<BlockuserRes>
@@ -446,6 +448,10 @@ export class AuthGrpcService {
 
   async UpdateUserStatus(request: UpdateUserStatusReq): Promise<UpdateUserStatusRes> {
     return await this.authGrpcService.UpdateUserStatus(request);
+  }
+
+  async UpdateUserRole(request: UpdateUserRoleReq): Promise<UpdateUserStatusRes> {
+    return await this.authGrpcService.UpdateUserRole(request);
   }
 
   async SendForReviewDossier(request: SendForReviewDossierReq): Promise<SendForReviewDossierRes> {

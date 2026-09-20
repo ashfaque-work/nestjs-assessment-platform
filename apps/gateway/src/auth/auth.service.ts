@@ -10,6 +10,7 @@ import {
   DossierStatusUpdateReqDto,
   UpdateDossierCommentsReqDto,
   UpdateUserStatusReq,
+  UpdateUserRoleReq,
   SendForReviewDossierReq,
   BlockuserReq,
   AddLocationReq,
@@ -138,6 +139,10 @@ export class AuthGatewayService {
       _id: id
     }
     return this.authGrpcService.UpdateUserStatus(combinedData);
+  }
+
+  async updateUserRole(id: string, roles: string[]) {
+    return this.authGrpcService.UpdateUserRole({ _id: id, roles });
   }
 
   async sendForReviewDossier(id: string, request: SendForReviewDossierReq) {

@@ -94,7 +94,7 @@ test.describe('admin', () => {
     await page.goto('/admin/users');
     await expect(page.getByRole('heading', { name: 'People' })).toBeVisible();
     await expect(page.getByText('demo-teacher@example.com')).toBeVisible();
-    await page.getByRole('button', { name: 'teacher', exact: true }).click(); // filter pill (CSS-capitalised)
+    await page.getByRole('button', { name: 'teacher', exact: true }).first().click(); // filter pill (comes before row role badges)
     await expect(page.getByText('demo-teacher@example.com')).toBeVisible();
 
     // platform settings load the real white-label values

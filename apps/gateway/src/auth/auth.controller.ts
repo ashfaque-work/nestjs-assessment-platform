@@ -1,4 +1,4 @@
-import { AddEventsReq, AddExperienceReq, AddLocationReq, AddSubjectsReq, AddUtmVisitorReq, BlockuserReq, ChangeNewPasswordBody, ChangeNewPasswordQuery, ChangePasswordBody, CreateUserDto, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, ExportUsersReq, FindOnlineUsersQuery, FindQuery, GetEventsQuery, GetStudentEventsQuery, InviteUsersReq, JoinOneOnOneWbSessionQuery, LoginAfterOauthReq, LoginReqDto, ManageSessionBody, ManageSessionReq, ObjectIdPipe, PartnerUserBody, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReqUser, SendForReviewDossierReq, SocialLoginBody, StartOneOnOneWbSessionQuery, TempSignupReq, TotalUserQuery, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataBody, UpdateAmbassadorReq, UpdateConnectionBody, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageBody, UpdateIdentityImageParam, UpdateMentorPreferencesReq, UpdateOptionsDataBody, UpdateRequest, UpdateRoleBody, UpdateSubjectsReq, UpdateTempUserBody, UpdateUserBody, UpdateUserCountryReq, UpdateUserStatusReq, UpdateUtmStatusReq, UserLiveBoardQuery, ValidateUserPictureRequest, VoiceServiceRequest } from '@app/common';
+import { AddEventsReq, AddExperienceReq, AddLocationReq, AddSubjectsReq, AddUtmVisitorReq, BlockuserReq, ChangeNewPasswordBody, ChangeNewPasswordQuery, ChangePasswordBody, CreateUserDto, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, ExportUsersReq, FindOnlineUsersQuery, FindQuery, GetEventsQuery, GetStudentEventsQuery, InviteUsersReq, JoinOneOnOneWbSessionQuery, LoginAfterOauthReq, LoginReqDto, ManageSessionBody, ManageSessionReq, ObjectIdPipe, PartnerUserBody, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReqUser, SendForReviewDossierReq, SocialLoginBody, StartOneOnOneWbSessionQuery, TempSignupReq, TotalUserQuery, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataBody, UpdateAmbassadorReq, UpdateConnectionBody, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageBody, UpdateIdentityImageParam, UpdateMentorPreferencesReq, UpdateOptionsDataBody, UpdateRequest, UpdateRoleBody, UpdateSubjectsReq, UpdateTempUserBody, UpdateUserBody, UpdateUserCountryReq, UpdateUserStatusReq, UpdateUserRoleBody, UpdateUtmStatusReq, UserLiveBoardQuery, ValidateUserPictureRequest, VoiceServiceRequest } from '@app/common';
 import { Body, Controller, Delete, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGatewayService } from './auth.service';
 import { ApiTags, ApiHeader, ApiQuery, ApiParam } from '@nestjs/swagger';
@@ -432,6 +432,15 @@ export class AuthController {
   @UseGuards(AuthenticationGuard, RolesGuard)
   async updateUserStatus(@Param('id') id: string, @Body() request: UpdateUserStatusReq) {
     return this.authService.updateUserStatus(id, request);
+  }
+
+  // Change a user's roles. The only path that sets another user's roles, so it is admin-only.
+  @Put(':id/role')
+  @ApiHeader({ name: 'authtoken' })
+  @Roles(['admin', 'director', 'operator'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
+  async updateUserRole(@Param('id') id: string, @Body() body: UpdateUserRoleBody) {
+    return this.authService.updateUserRole(id, body.newRoles);
   }
 
   @Put('sendForReviewDossier/:id')

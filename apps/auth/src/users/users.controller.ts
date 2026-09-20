@@ -2,7 +2,7 @@ import { Body, Controller, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { GrpcMethod } from '@nestjs/microservices';
 import { AUTH_SERVICE_NAME } from '@app/common/grpc-clients/auth/auth';
-import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, CloseUserAccountReq, CountTotalUsersReq, CreateUserDto, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, ExportLevelReportRes, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LoginAfterOauthReq, ManageSessionReq, PartnerUserReq, PsychoIndexReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, RequestEmailCodeReq, SendForReviewDossierReq, SocialLoginReq, StartOneOnOneWbSessionRequest, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUtmStatusReq, UserLiveBoardRequest, UserRecentActivityReq, ValidateUserPictureRequest, VerifiedCodeReq } from '@app/common';
+import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, CloseUserAccountReq, CountTotalUsersReq, CreateUserDto, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, ExportLevelReportRes, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LoginAfterOauthReq, ManageSessionReq, PartnerUserReq, PsychoIndexReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, RequestEmailCodeReq, SendForReviewDossierReq, SocialLoginReq, StartOneOnOneWbSessionRequest, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUserRoleReq, UpdateUtmStatusReq, UserLiveBoardRequest, UserRecentActivityReq, ValidateUserPictureRequest, VerifiedCodeReq } from '@app/common';
 import { GrpcToHttpInterceptor } from 'nestjs-grpc-exceptions';
 
 @Controller('users')
@@ -42,6 +42,11 @@ export class UsersController {
   @GrpcMethod(AUTH_SERVICE_NAME, 'UpdateUserStatus')
   async updateUserStatus(request: UpdateUserStatusReq) {
     return this.usersService.updateUserStatus(request);
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'UpdateUserRole')
+  async updateUserRole(request: UpdateUserRoleReq) {
+    return this.usersService.updateUserRole(request);
   }
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'SendForReviewDossier')

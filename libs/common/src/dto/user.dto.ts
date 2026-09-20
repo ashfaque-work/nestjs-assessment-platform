@@ -735,6 +735,19 @@ export class UpdateUserStatusReq {
   isActive: boolean;
 }
 
+export class UpdateUserRoleReq {
+  _id: string;
+  @ApiProperty({ type: [String] })
+  roles: string[];
+}
+
+export class UpdateUserRoleBody {
+  // Not `roles`: AuthenticationGuard overwrites body.roles with the caller's own roles to stop
+  // role-spoofing, which would clobber the target roles. `newRoles` is left untouched.
+  @ApiProperty({ type: [String] })
+  newRoles: string[];
+}
+
 export class UpdateUserStatusRes {
   response: string;
 }

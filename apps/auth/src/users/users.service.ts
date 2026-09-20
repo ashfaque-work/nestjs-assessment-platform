@@ -1,5 +1,5 @@
 import { notImplemented, toGrpcError } from '@app/common/helpers/grpc-error';
-import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, AttemptDetailRepository, AttemptRepository, AttendanceRepository, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, ClassroomRepository, CloseUserAccountReq, CompetenciesRepository, CountTotalUsersReq, CouponRepository, CourseRepository, CreateUserDto, CreateUserResponse, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, EventBus, EventsRepository, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LocationRepository, LoginAfterOauthReq, LoginReqDto, ManageSessionReq, MarketingUtmRepository, NotificationRepository, NotificationTemplateRepository, PartnerUserReq, PracticeSetRepository, PsychoIndexReq, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReportedUserRepository, RequestEmailCodeReq, SendForReviewDossierReq, Setting, SettingRepository, SocialLoginReq, SocketClientService, StartOneOnOneWbSessionRequest, SubjectRepository, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUtmStatusReq, User, UserCourseRepository, UserLiveBoardRequest, UserRecentActivityReq, UserSuperCoinsRepository, UsersRepository, ValidateUserPictureRequest, VerifiedCodeReq, canOnlySeeHisOwnContents, canOnlySeeLocationContents, getRandomCode, isEmail } from "@app/common";
+import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, AttemptDetailRepository, AttemptRepository, AttendanceRepository, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, ClassroomRepository, CloseUserAccountReq, CompetenciesRepository, CountTotalUsersReq, CouponRepository, CourseRepository, CreateUserDto, CreateUserResponse, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, EventBus, EventsRepository, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LocationRepository, LoginAfterOauthReq, LoginReqDto, ManageSessionReq, MarketingUtmRepository, NotificationRepository, NotificationTemplateRepository, PartnerUserReq, PracticeSetRepository, PsychoIndexReq, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReportedUserRepository, RequestEmailCodeReq, SendForReviewDossierReq, Setting, SettingRepository, SocialLoginReq, SocketClientService, StartOneOnOneWbSessionRequest, SubjectRepository, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUserRoleReq, UpdateUtmStatusReq, User, UserCourseRepository, UserLiveBoardRequest, UserRecentActivityReq, UserSuperCoinsRepository, UsersRepository, ValidateUserPictureRequest, VerifiedCodeReq, canOnlySeeHisOwnContents, canOnlySeeLocationContents, getRandomCode, isEmail } from "@app/common";
 import { NotifyGrpcClientService } from "@app/common/grpc-clients/notify";
 import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UnprocessableEntityException } from "@nestjs/common";
 import { GrpcInternalException, GrpcInvalidArgumentException, GrpcNotFoundException, GrpcPermissionDeniedException, GrpcUnavailableException } from 'nestjs-grpc-exceptions';
@@ -709,6 +709,28 @@ export class UsersService {
       }
 
       return { response: 'Status updated' };
+    } catch (error) {
+      throw toGrpcError(error);
+    }
+  }
+
+  // Set a user's roles (an admin action). Roles must be from the known set and non-empty; this is
+  // the only path that changes another user's roles, so it validates rather than trusting input.
+  async updateUserRole(request: UpdateUserRoleReq) {
+    try {
+      const allowed = ['student', 'teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support', 'agent', 'manager'];
+      const roles = Array.isArray(request.roles) ? [...new Set(request.roles)] : [];
+      if (roles.length === 0 || roles.some((r) => !allowed.includes(r))) {
+        throw new BadRequestException('Provide a valid, non-empty set of roles.');
+      }
+      const user = await this.usersRepository.findOne({ _id: new ObjectId(request._id) });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const updateQuery: any = { $set: { roles } };
+      if (roles.includes('teacher') || roles.includes('mentor')) updateQuery.$set.isMentor = true;
+      await this.usersRepository.findOneAndUpdate({ _id: new ObjectId(request._id) }, updateQuery);
+      return { response: 'Roles updated' };
     } catch (error) {
       throw toGrpcError(error);
     }
