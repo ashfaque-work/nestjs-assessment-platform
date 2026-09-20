@@ -22,6 +22,11 @@ cd nestjs-assessment-platform
 # service settings: apps/<service>/.env, from the .env.example files
 mkdir -p ~/backups ~/demo-baseline
 deploy/build-all.sh
+# create the query indexes on each instance database (autoIndex is off, so this is explicit)
+for db in stagingdb newstagingdb; do
+  docker compose -f docker-compose.local.yml -f deploy/docker-compose.server.yml \
+    exec -T mongo mongosh "$db" --quiet < scripts/create-indexes.mongosh.js
+done
 # once the demo data is in place
 deploy/save-demo-baseline.sh
 ```

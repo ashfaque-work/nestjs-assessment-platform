@@ -971,3 +971,8 @@ UserSchema.virtual('token').get(function () {
 // Ensure virtual fields are serialised
 UserSchema.set('toJSON', { virtuals: true });
 UserSchema.set('toObject', { virtuals: true });
+
+// Sign-in looks a user up by their login (userId) or email on every attempt, so both are indexed.
+// Sparse, because not every user has both. Built by scripts/create-indexes.mongosh.js (autoIndex off).
+UserSchema.index({ userId: 1 }, { sparse: true });
+UserSchema.index({ email: 1 }, { sparse: true });

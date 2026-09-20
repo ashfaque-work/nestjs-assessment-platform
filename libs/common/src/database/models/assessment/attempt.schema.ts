@@ -296,6 +296,14 @@ export class Attempt extends AbstractDocument {
 
 export const AttemptSchema = SchemaFactory.createForClass(Attempt);
 
+// The schemas set autoIndex: false, so these are built by scripts/create-indexes.mongosh.js
+// rather than at startup. They cover the hot paths: a student's own attempts and results
+// ({ user }, sorted by createdAt), how many times a student took a test ({ user, practicesetId }),
+// and a test's leaderboard/summary over everyone ({ practicesetId, isAbandoned }).
+AttemptSchema.index({ user: 1, practicesetId: 1 });
+AttemptSchema.index({ user: 1, createdAt: -1 });
+AttemptSchema.index({ practicesetId: 1, isAbandoned: 1 });
+
 AttemptSchema.virtual('speed')
     .get(function () {
         var totalDoQuestions = this.totalCorrects + this.totalErrors + this.pending + this.partial

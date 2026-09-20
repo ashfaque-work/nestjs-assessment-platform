@@ -140,3 +140,7 @@ export class AttemptDetail extends AbstractDocument {
 }
 
 export const AttemptDetailSchema = SchemaFactory.createForClass(AttemptDetail);
+
+// Details are joined back from their attempt (the summary/result aggregations look them up by
+// `attempt`); built by scripts/create-indexes.mongosh.js since autoIndex is off.
+AttemptDetailSchema.index({ attempt: 1 });

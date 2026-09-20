@@ -170,3 +170,9 @@ export class Classroom extends AbstractDocument {
 }
 
 export const ClassroomSchema = SchemaFactory.createForClass(Classroom);
+
+// Invitation-access checks find the classrooms a user teaches by `user` or `owners`, and by
+// `location` for a centre head; built by scripts/create-indexes.mongosh.js (autoIndex off).
+ClassroomSchema.index({ user: 1 });
+ClassroomSchema.index({ owners: 1 });
+ClassroomSchema.index({ location: 1 });
