@@ -921,7 +921,8 @@ export class AttemptController {
 
     @Put("/updateSuspicious/:id")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
+    @UseGuards(AuthenticationGuard, RolesGuard)
     updateSuspicious(@Headers('instancekey') instancekey: string, @Param('id') attemptId: string, @Body() body: UpdateSuspiciousRequest) {
         return this.attemptService.updateSuspicious({ instancekey, attemptId, ...body })
     }

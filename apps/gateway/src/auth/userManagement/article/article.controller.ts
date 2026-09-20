@@ -133,9 +133,11 @@ export class ArticleController {
     @ApiHeader({name: 'instancekey'})
     @Roles(['student', 'teacher', 'support', 'mentor', 'centerHead', 'director', 'admin'])
     @UseGuards(AuthenticationGuard, RolesGuard)
-    async destroy(@Param('id') id: string) {
+    async destroy(@Param('id') id: string, @Req() req: any) {
         const combinedData = {
-            id
+            id,
+            userId: req.user?._id,
+            userRoles: req.user?.roles,
         }
         return await this.articleService.destroy(combinedData);
     }

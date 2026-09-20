@@ -137,6 +137,8 @@ export class UpdateArticleRes {
 
 export class DestroyArticleReq {
     id: string;
+    userId?: string;
+    userRoles?: string[];
 }
 
 export class DestroyArticleRes {

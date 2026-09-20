@@ -2069,6 +2069,8 @@ message UpdateArticleRes {
 
 message DestroyArticleReq {
   string id = 1;
+  string userId = 2;
+  repeated string userRoles = 3;
 }
 
 message DestroyArticleRes {

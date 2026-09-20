@@ -1,7 +1,7 @@
 import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { ArticlesRepository } from "@app/common";
 import { CreateArticleReq, DestroyArticleReq, FindOneReq, IndexReq, NotvoteReq, UndoNotvoteReq, UnvoteReq, UpdateArticleReq, UpdateCountReq, VoteReq } from "@app/common/dto/userManagement/article.dto";
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { response } from "express";
 import { ObjectId } from "mongodb";
 import { GrpcInternalException } from "nestjs-grpc-exceptions";
@@ -424,6 +424,19 @@ export class ArticleService {
             let id = request.id
             let query = {
                 _id: id
+            }
+
+            // Only the author or a staff member may delete an article; without this any student
+            // could soft-delete anyone's by id.
+            const existing = await this.articlesRepository.findOne(query, { user: 1 })
+            if (!existing) {
+                throw new NotFoundException('Article not found')
+            }
+            const writeAll = ['admin', 'director', 'operator', 'publisher', 'support', 'centerHead']
+            const isOwner = request.userId && String(existing.user) === String(request.userId)
+            const isStaff = (request.userRoles || []).some((r) => writeAll.includes(r))
+            if (!isOwner && !isStaff) {
+                throw new ForbiddenException('You can only delete your own articles')
             }
 
             const article = await this.articlesRepository.updateOne(query, {
