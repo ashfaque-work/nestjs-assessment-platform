@@ -35,7 +35,7 @@ import {
   SaveScreenRecordingRequest,
   SaveQrUploadRequest
 } from '@app/common/dto/attempt.dto';
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { Types } from 'mongoose';
 import async from 'async'
 import { QuestionBus } from '@app/common/bus/question.bus';
@@ -2510,7 +2510,7 @@ export class AttemptService {
           { _id: new Types.ObjectId(request.user) },
           { subjects: 1 }
         )
-        var Objectsubjects = sub[0].subjects.map((id) => new Types.ObjectId(id))
+        var Objectsubjects = (sub[0]?.subjects || []).map((id) => new Types.ObjectId(id))
       } else {
         Objectsubjects = (request.userSubjects || []).map(id => new Types.ObjectId(id))
       }
@@ -4031,18 +4031,23 @@ export class AttemptService {
 
   async getResultPractice(request: GetResultPracticeRequest) {
     try {
+      // the caller's own attempt: without the user filter this returned whoever attempted first
       var condition: {
         practicesetId: Types.ObjectId,
+        user: Types.ObjectId,
         _id?: Types.ObjectId
-
       } = {
-        practicesetId: new Types.ObjectId(request.practicesetId)
+        practicesetId: new Types.ObjectId(request.practicesetId),
+        user: new Types.ObjectId(request.userId)
       }
       if (request.attemptId) {
         condition._id = new Types.ObjectId(request.attemptId)
       }
       this.attemptRepository.setInstanceKey(request.instancekey)
       let attempt = await this.attemptRepository.findOne(condition)
+      if (!attempt) {
+        throw new Error('Attempt not found')
+      }
       attempt = this.removeAttemptDetails(attempt)
       return { attempt }
     } catch (err) {
@@ -4553,7 +4558,7 @@ export class AttemptService {
           { _id: request.user },
           { subjects: 1 }
         )
-        Objectsubjects = sub[0].subjects.map((id) => new Types.ObjectId(id))
+        Objectsubjects = (sub[0]?.subjects || []).map((id) => new Types.ObjectId(id))
       } else {
         Objectsubjects = (request.userSubjects || []).map((id) => new Types.ObjectId(id))
       }
@@ -7455,6 +7460,7 @@ export class AttemptService {
     try {
       this.psychoResultRepository.setInstanceKey(request.instancekey)
       let result: any = await this.psychoResultRepository.findById(new Types.ObjectId(request.psychoResultId))
+      if (!result) throw new NotFoundException('Result not found')
       result = await this.psychoResultRepository.populate(result,
         {
           path: "practiceset",

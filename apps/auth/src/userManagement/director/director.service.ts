@@ -569,7 +569,7 @@ export class DirectorService {
             let result = await this.usersRepository.aggregate([
                 {
                     "$match": {
-                        role: "student",
+                        roles: "student",
                         passingYear: request.passingYear,
                         "locations": new ObjectId(request.id),
                         "createdAt": {
@@ -585,11 +585,11 @@ export class DirectorService {
                         neverLogin: { $sum: { $cond: [{ $lte: ["$lastLogin", date] }, 1, 0] } }
                     }
                 },
-                { $group: { _id: "$_id", loginCount: { $sum: "$login" }, attemptCount: { $sum: "$login" }, neverLoginCount: { $sum: "$neverLogin" } } }
+                { $group: { _id: "$_id", loginCount: { $sum: "$login" }, attemptCount: { $sum: "$attempt" }, neverLoginCount: { $sum: "$neverLogin" } } }
             ])
 
             return {
-                response: 'Ok'
+                response: result
             }
         } catch (error) {
             throw toGrpcError(error);

@@ -448,6 +448,9 @@ export class TestSeriesService {
         try {
             this.testSeriesRepository.setInstanceKey(req.instancekey)
             let series = await this.testSeriesRepository.findById(new ObjectId(req.id), 'practiceIds', { lean: true })
+            if (!series) {
+                throw new NotFoundException('Test series not found')
+            }
 
             var cond = {
                 isAbandoned: false,
@@ -1314,6 +1317,9 @@ export class TestSeriesService {
         try {
             this.testSeriesRepository.setInstanceKey(req.instancekey);
             var packageInfo = await this.testSeriesRepository.findOne({ _id: new ObjectId(req.id) }, { gradeIds: 1 })
+            if (!packageInfo) {
+                throw new NotFoundException('Test series not found')
+            }
 
             if (packageInfo.gradeIds && packageInfo.gradeIds.length > 0) {
                 this.subjectRepository.setInstanceKey(req.instancekey);
@@ -1343,7 +1349,7 @@ export class TestSeriesService {
                 { _id: 1, classrooms: 1 }, { lean: true })
 
             if (!series) {
-                return []
+                return { response: [] }
             }
             let condition = { _id: { $in: series.classrooms } }
             if (!req.user.roles.includes('publisher')) {

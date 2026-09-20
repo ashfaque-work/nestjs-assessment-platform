@@ -3001,8 +3001,9 @@ export class ClassroomService {
       this.classroomRepository.setInstanceKey(instancekey);
       const assignments = await this.classroomRepository.find({ _id: _id }, '_id assignments');
 
-      if (!assignments) {
-        throw new InternalServerErrorException ('Assignments not found');
+      // find() returns a list: no classroom with this id is an empty one
+      if (!assignments?.length) {
+        throw new NotFoundException('Classroom not found');
       }
 
       const data = assignments[0].assignments.filter(assignment => assignment.status === 'published');

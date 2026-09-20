@@ -2,7 +2,7 @@ import { AddEventsReq, AddExperienceReq, AddLocationReq, AddSubjectsReq, AddUtmV
 import { Body, Controller, Delete, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGatewayService } from './auth.service';
 import { ApiTags, ApiHeader, ApiQuery, ApiParam } from '@nestjs/swagger';
-import { AuthenticationGuard, RequestAuthenticationGuard, RolesGuard, UserIdConversion } from '@app/common/auth';
+import { AuthenticationGuard, RequestAuthenticationGuard, RolesGuard, UserIdConversion, SelfOrStaffGuard, HideOthersContactInterceptor } from '@app/common/auth';
 import { Roles } from '@app/common/decorators';
 import { Throttle } from '@nestjs/throttler';
 
@@ -50,6 +50,7 @@ export class AuthController {
   }
 
   @Get('publicProfile/:userId')
+  @UseInterceptors(HideOthersContactInterceptor)
   async getUserPublicProfile(@Param('userId') userId: string) {
     return this.authService.getUserPublicProfile({ userId });
   }
@@ -141,7 +142,7 @@ export class AuthController {
 
   @Get('userRecentActivity/:studentId')
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  @UseGuards(AuthenticationGuard, SelfOrStaffGuard('studentId'))
   async userRecentActivity(@Param('studentId') studentId: string) {
     return this.authService.userRecentActivity({ studentId });
   }
@@ -810,7 +811,7 @@ export class AuthController {
 
   @Get(':id')
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  @UseGuards(AuthenticationGuard, SelfOrStaffGuard('id'))
   async getUser(@Param('id') id: string, @Headers('instancekey') instancekey: string) {
     console.log(`id....${id}`)
     return this.authService.getUser({ instancekey, _id: id });

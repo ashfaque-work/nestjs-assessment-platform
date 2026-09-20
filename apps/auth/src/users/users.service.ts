@@ -1,4 +1,4 @@
-import { toGrpcError } from '@app/common/helpers/grpc-error';
+import { notImplemented, toGrpcError } from '@app/common/helpers/grpc-error';
 import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, AttemptDetailRepository, AttemptRepository, AttendanceRepository, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, ClassroomRepository, CloseUserAccountReq, CompetenciesRepository, CountTotalUsersReq, CouponRepository, CourseRepository, CreateUserDto, CreateUserResponse, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, EventBus, EventsRepository, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LocationRepository, LoginAfterOauthReq, LoginReqDto, ManageSessionReq, MarketingUtmRepository, NotificationRepository, NotificationTemplateRepository, PartnerUserReq, PracticeSetRepository, PsychoIndexReq, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReportedUserRepository, RequestEmailCodeReq, SendForReviewDossierReq, Setting, SettingRepository, SocialLoginReq, SocketClientService, StartOneOnOneWbSessionRequest, SubjectRepository, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUtmStatusReq, User, UserCourseRepository, UserLiveBoardRequest, UserRecentActivityReq, UserSuperCoinsRepository, UsersRepository, ValidateUserPictureRequest, VerifiedCodeReq, canOnlySeeHisOwnContents, canOnlySeeLocationContents, getRandomCode, isEmail } from "@app/common";
 import { NotifyGrpcClientService } from "@app/common/grpc-clients/notify";
 import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UnprocessableEntityException } from "@nestjs/common";
@@ -655,7 +655,7 @@ export class UsersService {
 
       return updatedUser;
     } catch (error) {
-      throw new Error('Failed to update user dossier');
+      throw toGrpcError(error, 'Failed to update user dossier');
     }
   }
 
@@ -934,7 +934,7 @@ export class UsersService {
         response: levelReport
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -945,7 +945,7 @@ export class UsersService {
       // const com = await this.competenciesRepository.findOne({_id: new ObjectId('5f746360792dd5098956cef5')});
       if (!com) {
         console.log("error")
-        throw new Error("Unable to fetch certification. Check your certCode!");
+        throw new NotFoundException("Certification not found. Check your certCode!");
       }
 
       console.log(com);
@@ -1234,7 +1234,7 @@ export class UsersService {
       })
 
     } catch (error) {
-      throw new Error(error.message);
+      throw toGrpcError(error);
     }
   }
 
@@ -1594,7 +1594,7 @@ export class UsersService {
         ...response
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1644,7 +1644,7 @@ export class UsersService {
         attempts
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1666,7 +1666,7 @@ export class UsersService {
         response: data
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1726,7 +1726,7 @@ export class UsersService {
         response: "OK"
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1760,7 +1760,7 @@ export class UsersService {
         response: event
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1895,7 +1895,7 @@ export class UsersService {
       }
 
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -1954,7 +1954,7 @@ export class UsersService {
         response: activities
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -2170,7 +2170,7 @@ export class UsersService {
         response: event
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -2194,7 +2194,7 @@ export class UsersService {
         response: val
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -2279,7 +2279,7 @@ export class UsersService {
         response: val
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -2337,7 +2337,7 @@ export class UsersService {
         response: "OK"
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -2396,7 +2396,7 @@ export class UsersService {
         response: "OK"
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -2665,7 +2665,7 @@ export class UsersService {
         response: "Ok"
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -2683,7 +2683,7 @@ export class UsersService {
         response: "ok"
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -2817,7 +2817,7 @@ export class UsersService {
         response: 'ok'
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -3012,7 +3012,7 @@ export class UsersService {
 
       return result;
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -3280,61 +3280,14 @@ export class UsersService {
     return { response: 'OK' };
   }
 
+  // The original temporary sign-up never created the user (its create call was commented out),
+  // so it always failed. Accounts are created with POST /auth/users; this answers that clearly.
   async tempSignup(request: TempSignupReq) {
-    try {
-
-      let data = _.pick(request.body, 'userId', 'phoneNumber', 'email', 'country', 'password')
-      let user = await this.usersRepository.findOne({
-        userId: data.userId
-      })
-
-      if (user) {
-        throw new Error('Email or phone number is already registered.')
-      }
-
-
-      // user = await this.usersRepository.create(data);
-      const emailVerify = await this.getVerificationCode(request);
-      user = await this.usersRepository.findByIdAndUpdate(user._id, {
-        $set: {
-          emailVerifyToken: emailVerify
-        }
-      })
-
-      // console.log(user);
-      await this.redisCaching.set(request, user.emailVerifyToken, { user: user._id.toString() }, 60 * 60 * 24)
-
-      let settings = await this.redisCaching.getSettingAsync(request.instancekey);
-
-      await this.setDefaultDataForUser(request, user, settings);
-
-      this.sendConfirmationLinkAndCode(request, user, async (err, result) => {
-        if (err) {
-          throw new Error("Validation Error" + err)
-        }
-
-        // User will be saved to db after entering role ,grade info 
-        // We will save data to session temporarily
-        //   req.session.user = user;
-        Logger.debug('set signup user to redis');
-        // keep in redis in 7 days
-        Logger.debug('save tempt user: ' + 'user_' + user._id)
-        console.log(this.redisCaching)
-        this.redisCaching.set(request, 'user_' + user._id, {
-          user: user,
-          isTempt: true
-        }, 60 * 60 * 24 * 7);
-      })
-
-      console.log("user before return", user);
-
-      return {
-        response: user
-      }
-
-    } catch (error) {
-      console.log(error)
+    const userId = request.body?.userId
+    if (userId && await this.usersRepository.findOne({ userId })) {
+      throw toGrpcError(new BadRequestException('Email or phone number is already registered.'))
     }
+    throw notImplemented('Temporary sign-up is not available. Sign up with POST /auth/users.')
   }
 
   async updateIdentityImage(request: UpdateIdentityImageReq) {

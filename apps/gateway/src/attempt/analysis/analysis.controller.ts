@@ -1,7 +1,7 @@
 import { Controller, Get, Headers, Param, Query, Req, UseGuards } from "@nestjs/common";
 import { ApiHeader, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { AnalysisService } from "./analysis.service";
-import { AuthenticationGuard, RolesGuard } from "@app/common/auth";
+import { AuthenticationGuard, RolesGuard, SelfOrStaffGuard } from "@app/common/auth";
 import { Roles } from "@app/common/decorators";
 
 @ApiTags("Analysis")
@@ -20,7 +20,7 @@ export class AnalysisController {
     @Get('/getAllFirstQuestionsDetail')
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     allFirstQuestionsDetail(@Headers('instancekey') instancekey: string, @Query('user') user: string, @Req() req) {
         return this.analysisService.allFirstQuestionsDetail({ instancekey, query: { user }, user: req.user })
     }
@@ -29,7 +29,7 @@ export class AnalysisController {
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiQuery({ name: "subject", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     averagePeakTimeAndDuration(@Headers('instancekey') instancekey: string, @Query('user') user: string, @Query('subject') subject: string, @Req() req) {
         return this.analysisService.averagePeakTimeAndDuration({ instancekey, query: { user, subject }, user: req.user })
     }
@@ -63,7 +63,7 @@ export class AnalysisController {
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiQuery({ name: "subject", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     topicsUserExceedAvgTime(@Headers('instancekey') instancekey: string, @Query('user') user: string, @Query('subject') subject: string, @Req() req) {
         return this.analysisService.topicsUserExceedAvgTime({ instancekey, query: { user, subject }, user: req.user })
     }
@@ -89,7 +89,7 @@ export class AnalysisController {
     @ApiQuery({ name: "subject", required: false, type: String })
     @ApiQuery({ name: "attemptId", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     avoidTopicsOfUser(
         @Headers('instancekey') instancekey: string, @Query('user') user: string,
         @Query('subject') subject: string, @Query('attemptId') attemptId: string, @Req() req
@@ -108,7 +108,7 @@ export class AnalysisController {
     @Get('/timeWasted/:subjectId')
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     getTimeWasted(@Param("subjectId") subjectId: string, @Headers('instancekey') instancekey: string, @Query('user') user: string, @Req() req) {
         return this.analysisService.getTimeWasted({ subjectId, instancekey, query: { user }, user: req.user })
     }
@@ -116,7 +116,7 @@ export class AnalysisController {
     @Get('/strengthAndWeekness/:subjectId')
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     getStrengthAndWeekness(@Param("subjectId") subjectId: string, @Headers('instancekey') instancekey: string, @Query('user') user: string, @Req() req) {
         return this.analysisService.getStrengthAndWeekness({ subjectId, instancekey, query: { user }, user: req.user })
     }
@@ -125,7 +125,7 @@ export class AnalysisController {
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiQuery({ name: "weakness", required: false, type: Boolean })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     getTopStrengthAndWeakness(@Headers('instancekey') instancekey: string, @Query('user') user: string, @Query('weakness') weakness: string, @Req() req) {
         return this.analysisService.getTopStrengthAndWeakness({ instancekey, query: { user, weakness: weakness === 'true' }, user: req.user })
     }
@@ -133,7 +133,7 @@ export class AnalysisController {
     @Get('/courseProgress')
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     getCourseProgress(@Headers('instancekey') instancekey: string, @Query('user') user: string, @Req() req) {
         return this.analysisService.getCourseProgress({ instancekey, query: { user }, user: req.user })
     }
@@ -141,7 +141,7 @@ export class AnalysisController {
     @Get('/testseriesProgress')
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     getTestseriesProgress(@Headers('instancekey') instancekey: string, @Query('user') user: string, @Req() req) {
         return this.analysisService.getTestseriesProgress({ instancekey, query: { user }, user: req.user })
     }
@@ -150,7 +150,7 @@ export class AnalysisController {
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiQuery({ name: "subject", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     getPracticeEffort(
         @Headers('instancekey') instancekey: string, @Req() req,
         @Query('user') user: string, @Query('subject') subject: string,

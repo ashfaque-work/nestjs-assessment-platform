@@ -171,6 +171,9 @@ export class ArticleService {
             if (request.id) {
                 condition._id = request.id
                 const article = await this.articlesRepository.findById(condition);
+                if (!article) {
+                    throw new Error('Article not found');
+                }
                 (article as any).slugfly = slug(article.title, {
                     lower: true
                 })

@@ -192,7 +192,7 @@ export class SettingService {
         response: settingModelInstance
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -240,7 +240,7 @@ export class SettingService {
         throw new Error('Setting not found');
       }
     } catch (error) {
-      throw new Error('Failed to update setting');
+      throw toGrpcError(error, 'Failed to update setting');
     }
   }
 
@@ -267,7 +267,7 @@ export class SettingService {
         }
       }
     } catch (error) {
-      throw new Error(error)
+      throw toGrpcError(error);
     }
   }
 
@@ -335,7 +335,7 @@ export class SettingService {
         throw new Error('Setting not found');
       }
     } catch (error) {
-      throw new Error('Failed to delete setting');
+      throw toGrpcError(error, 'Failed to delete setting');
     }
   }
 
@@ -355,7 +355,7 @@ export class SettingService {
         response: result, ...result
       }
     } catch (error) {
-      throw new Error('Failed to find one setting!')
+      throw toGrpcError(error, 'Failed to find one setting!');
     }
   }
 
@@ -414,7 +414,7 @@ export class SettingService {
         response: foundSetting
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 
@@ -522,7 +522,7 @@ export class SettingService {
         }
       }
     } catch (error) {
-      throw new Error(error);
+      throw toGrpcError(error);
     }
   }
 

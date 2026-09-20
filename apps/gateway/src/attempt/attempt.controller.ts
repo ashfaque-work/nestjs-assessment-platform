@@ -1,4 +1,4 @@
-import { AuthenticationGuard, RolesGuard } from "@app/common/auth";
+import { AuthenticationGuard, RolesGuard, SelfOrStaffGuard, OwnRecordInterceptor, HideOthersContactInterceptor } from "@app/common/auth";
 import { Roles } from "@app/common/decorators";
 import {
     ClassroomListSubjectStudentDoRequest, CountAllByTeacherRequest, CountAllRequest, CountMeRequest, CreateRequest,
@@ -19,7 +19,7 @@ import {
     SummarySubjectSpeedMeRequest, SummarySubjectSpeedStudentRequest, SummaryTopicCorrectMeRequest, SummaryTopicCorrectStudentRequest,
     SummaryTopicSpeedMeRequest, UpdateAbandonStatusRequest, UpdateSuspiciousRequest
 } from "@app/common/dto/attempt.dto";
-import { Body, Controller, ForbiddenException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { ApiHeader, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { AttemptService } from "./attempt.service";
 
@@ -47,6 +47,7 @@ export class AttemptController {
     @Get('/me/findOne/:id')
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
+    @UseInterceptors(OwnRecordInterceptor)
     findOneByMe(@Headers('instancekey') instancekey: string, @Param('id') attemptId: string) {
         return this.attemptService.findOneByMe({ instancekey, attemptId });
     }
@@ -126,8 +127,8 @@ export class AttemptController {
     @Get('/getResultPractice/:id')
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
-    getResultPractice(@Headers('instancekey') instancekey: string, @Param('id') practicesetId: string, @Query() query: GetResultPracticeRequest) {
-        return this.attemptService.getResultPractice({ instancekey, ...query, practicesetId })
+    getResultPractice(@Headers('instancekey') instancekey: string, @Param('id') practicesetId: string, @Query() query: GetResultPracticeRequest, @Req() req) {
+        return this.attemptService.getResultPractice({ instancekey, attemptId: query.attemptId, practicesetId, userId: req.user._id })
     }
 
     @Get('/getLastByMe')
@@ -139,7 +140,7 @@ export class AttemptController {
 
     @Get('/getLastByStudent/:id')
     @ApiHeader({ name: 'authtoken' })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('id'))
     getLastByStudent(@Headers('instancekey') instancekey: string, @Param('id') userId: string) {
         return this.attemptService.getLastByStudent({ instancekey, userId })
     }
@@ -506,7 +507,7 @@ export class AttemptController {
 
     @Get("/student/:user/getListSubjects")
     @ApiHeader({ name: 'authtoken' })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     getListSubjectsStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: GetListSubjectsStudentRequest) {
         return this.attemptService.getListSubjectsStudent({ instancekey, user, ...query })
     }
@@ -520,84 +521,84 @@ export class AttemptController {
 
     @Get("/student/:user/getTotalQuestionBySubject")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     getTotalQuestionBySubjectStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: GetTotalQuestionBySubjectStudentRequest) {
         return this.attemptService.getTotalQuestionBySubjectStudent({ instancekey, user, ...query })
     }
 
     @Get("/student/:user/getListTopics")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     getListTopicsStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: GetListTopicsStudentRequest) {
         return this.attemptService.getListTopicsStudent({ instancekey, user, ...query })
     }
 
     @Get("/student/:user/summaryTopicSpeed")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summaryTopicSpeedStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummaryTopicSpeedMeRequest, @Req() req) {
         return this.attemptService.summaryTopicSpeedStudent({ instancekey, user, ...query });
     }
 
     @Get("/student/:user/summaryTopicCorrect")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summaryTopicCorrectStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummaryTopicCorrectStudentRequest) {
         return this.attemptService.summaryTopicCorrectStudent({ instancekey, user, ...query });
     }
 
     @Get("/student/:user/summarySubjectCorrect")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summarySubjectCorrectStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummarySubjectCorrectStudentRequest) {
         return this.attemptService.summarySubjectCorrectStudent({ instancekey, user, ...query });
     }
 
     @Get("/student/:user/summarySubjectCorrectByDate")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summarySubjectCorrectByDateStudent(@Headers('instancekey') instancekey: string, @Headers('timezoneoffset') timezoneoffset: number, @Param('user') user: string, @Query() query: SummarySubjectCorrectByDateMeRequest) {
         return this.attemptService.summarySubjectCorrectByDateStudent({ instancekey, timezoneoffset, user, ...query })
     }
 
     @Get("/student/:user/summarySubjectSpeedByDate")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summarySubjectSpeedByDateStudent(@Headers('instancekey') instancekey: string, @Headers('timezoneoffset') timezoneoffset: number, @Param('user') user: string, @Query() query: SummarySubjectSpeedByDateStudentRequest) {
         return this.attemptService.summarySubjectSpeedByDateStudent({ instancekey, timezoneoffset, user, ...query })
     }
 
     @Get("/student/:user/summaryCorrectByDate")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summarySubjectCorrect(@Headers('instancekey') instancekey: string, @Headers('timezoneoffset') timezoneoffset: number, @Query() query: SummarySubjectCorrectStudentRequest, @Param('user') user: string) {
         return this.attemptService.summaryCorrectByDateStudent({ instancekey, timezoneoffset, user, ...query })
     }
 
     @Get("/student/:user/summaryAttemptedBySubject")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summaryAttemptedBySubjectStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummaryAttemptedBySubjectStudentRequest) {
         return this.attemptService.summaryAttemptedBySubjectStudent({ instancekey, user, ...query })
     }
 
     @Get("/student/:user/summarySubjectSpeed")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summarySubjectSpeedStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummarySubjectSpeedStudentRequest) {
         return this.attemptService.summarySubjectSpeedStudent({ instancekey, user, ...query })
     }
 
     @Get("/student/:user/summaryAbondoned")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summaryAbondonedStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummaryAbondonedStudentRequest) {
         return this.attemptService.summaryAbondonedStudent({ instancekey, user, ...query })
     }
 
     @Get("/student/:user/summaryPractice")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summaryPracticeStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummaryPracticeStudentRequest) {
         return this.attemptService.summaryPracticeStudent({ instancekey, user, ...query });
     }
@@ -605,49 +606,49 @@ export class AttemptController {
 
     @Get("/student/:user/summaryAttempted")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summaryAttemptedStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummaryAttemptedStudentRequest) {
         return this.attemptService.summaryAttemptedStudent({ instancekey, user, ...query });
     }
 
     @Get('/student/:user/summaryQuestionBySubject')
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summaryQuestionBySubjectStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummaryQuestionBySubjectStudentRequest) {
         return this.attemptService.summaryQuestionBySubjectStudent({ instancekey, user, ...query });
     }
 
     @Get('/student/:user/summarySpeedTopicByDate')
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summarySpeedTopicByDateStudent(@Headers('instancekey') instancekey: string, @Param("user") user: string, @Query() query: SummarySpeedTopicByDateStudentRequest) {
         return this.attemptService.summarySpeedTopicByDateStudent({ instancekey, user, ...query });
     }
 
     @Get('/student/:user/summaryQuestionByTopic')
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summaryQuestionByTopicStudent(@Headers('instancekey') instancekey: string, @Param("user") user: string, @Query() query: SummaryQuestionByTopicStudentRequest) {
         return this.attemptService.summaryQuestionByTopicStudent({ instancekey, user, ...query })
     }
 
     @Get("/student/:user/summaryDoPractice")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     summaryDoPracticeStudent(@Headers('instancekey') instancekey: string, @Param('user') user: string, @Query() query: SummaryDoPracticeRequest) {
         return this.attemptService.summaryDoPractice({ instancekey, user, ...query })
     }
 
     @Get("/student/:user/getSpeedRank/:practice")
     @ApiHeader({ name: 'authtoken' })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     getSpeedRankStudent(@Headers('instancekey') instancekey: string, @Param('practice') practicesetId: string, @Query() query: GetSpeedRankRequest, @Param('user') user: string) {
         return this.attemptService.getSpeedRank({ instancekey, practicesetId, ...query, user })
     }
 
     @Get("/student/:user/getAccuracyRank/:practice")
     @ApiHeader({ name: 'authtoken' })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user'))
     getAccuracyRankStudent(@Headers('instancekey') instancekey: string, @Param('practice') practicesetId: string, @Query() query: GetAccuracyRankRequest, @Param('user') user: string) {
         return this.attemptService.getAccuracyRank({ instancekey, practicesetId, ...query, user });
     }
@@ -661,7 +662,7 @@ export class AttemptController {
 
     @Get("/proctoring/:userId")
     @ApiHeader({ name: "authtoken" })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('userId'))
     getProctoringAttempt(@Headers('instancekey') instancekey: string, @Param("userId") userId: string, @Query() query: GetProctoringAttemptRequest) {
         return this.attemptService.getProctoringAttempt({ instancekey, userId, ...query })
     }
@@ -677,6 +678,7 @@ export class AttemptController {
     @Get('/summaryAttemtedPractice/:id')
     @ApiHeader({ name: "authtoken" })
     @UseGuards(AuthenticationGuard)
+    @UseInterceptors(HideOthersContactInterceptor)
     summaryAttemptedPractice(@Headers('instancekey') instancekey: string, @Param('id') practicesetId: string, @Query() query: SummaryAttemptedPracticeRequest) {
         return this.attemptService.summaryAttemptedPractice({ instancekey, practicesetId, ...query });
     }
@@ -730,6 +732,7 @@ export class AttemptController {
     @ApiParam({ name: "id", description: "Attempt Id" })
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
+    @UseInterceptors(OwnRecordInterceptor)
     findOneAttempt(@Headers("instancekey") instancekey: string, @Param("id") attemptId: string) {
         return this.attemptService.findOneAttempt({ instancekey, attemptId })
     }
@@ -738,6 +741,7 @@ export class AttemptController {
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
     @ApiParam({ name: "id", description: "Psychoresult Id" })
+    @UseInterceptors(OwnRecordInterceptor)
     getPsychoResult(@Headers("instancekey") instancekey: string, @Param('id') psychoResultId: string) {
         return this.attemptService.getPsychoResult({ instancekey, psychoResultId });
     }
@@ -752,6 +756,7 @@ export class AttemptController {
     @Get("/get-one/:id")
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
+    @UseInterceptors(OwnRecordInterceptor)
     getAttempt(@Headers('instancekey') instancekey: string, @Param('id') attemptId: string) {
         return this.attemptService.getAttempt({ instancekey, attemptId })
     }
@@ -933,6 +938,7 @@ export class AttemptController {
     @ApiHeader({ name: "authtoken" })
     @UseGuards(AuthenticationGuard)
     @ApiParam({ name: "id", description: "attemptId" })
+    @UseInterceptors(OwnRecordInterceptor)
     getCareerScore(@Headers("instancekey") instancekey: string, @Param("id") attemptId: string, @Req() req) {
         let request = {
             userName: req.user.name,
@@ -954,6 +960,7 @@ export class AttemptController {
     @Get('/:id')
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
+    @UseInterceptors(OwnRecordInterceptor)
     findOne(@Headers('instancekey') instancekey: string, @Query() query: FindOneRequest, @Param('id') attemptId: string) {
         return this.attemptService.findOne({ instancekey, ...query, attemptId })
     }

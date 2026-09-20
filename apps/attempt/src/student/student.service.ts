@@ -3278,7 +3278,7 @@ export class StudentService {
                     subjects: 1
                 })
 
-                let Objectsubjects = sub[0].subjects.map(id => new Types.ObjectId(id))
+                let Objectsubjects = (sub[0]?.subjects || []).map(id => new Types.ObjectId(id))
                 condition["subjects._id"] = { $in: Objectsubjects }
             } else {
                 let Objectsubjects = request.user.subjects.map(id => new Types.ObjectId(id))
@@ -4122,6 +4122,9 @@ export class StudentService {
             this.testSeriesRepository.setInstanceKey(request.instancekey)
             this.practicesetRespository.setInstanceKey(request.instancekey)
             const testSeries = await this.testSeriesRepository.findById(request._id);
+            if (!testSeries) {
+                throw new NotFoundException('Test series not found')
+            }
 
             const tests = await this.practicesetRespository.find({ _id: { $in: testSeries.practiceIds } });
             let totalResults = [];
@@ -4769,15 +4772,20 @@ export class StudentService {
 
     async getResultPractice(request: GetResultPracticeRequest) {
         try {
+            // the caller's own attempt: without the user filter this returned whoever attempted first
             var condition: any = {
-                practicesetId: new Types.ObjectId(request.practicesetId)
+                practicesetId: new Types.ObjectId(request.practicesetId),
+                user: new Types.ObjectId(request.userId)
             }
-            if (request.query.attemptId) {
+            if (request.query?.attemptId) {
                 condition._id = new Types.ObjectId(request.query.attemptId)
             }
 
             this.attemptRepository.setInstanceKey(request.instancekey)
             let attempt = await this.attemptRepository.findOne(condition);
+            if (!attempt) {
+                throw new Error('Attempt not found')
+            }
             attempt = await this.attemptRepository.populate(attempt, {
                 path: 'attemptdetails',
                 select: '-_id QA',
@@ -5203,6 +5211,8 @@ export class StudentService {
                 { $sort: { name: 1 } }
             ])
 
+            // nobody has finished the test yet
+            if (!subjects.length) return { subjects }
             subjects[0]['accuracy'] = subjects[0]['accuracy'] / totalAttempt
             subjects[0]['speed'] = subjects[0]['speed'] / totalAttempt
             return { subjects }
@@ -5275,7 +5285,7 @@ export class StudentService {
                     subjects: 1
                 })
 
-                var Objectsubjects = sub[0].subjects.map(id => new Types.ObjectId(id))
+                var Objectsubjects = (sub[0]?.subjects || []).map(id => new Types.ObjectId(id))
 
                 condition["subjects._id"] = { $in: Objectsubjects }
             } else {

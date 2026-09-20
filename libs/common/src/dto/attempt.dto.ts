@@ -715,6 +715,8 @@ export class GetResultPracticeRequest {
     @ApiProperty({ required: false })
     attemptId?: string;
     instancekey: string;
+    userId?: string;
+    query?: any;
 }
 
 export class GetResultPracticeResponse {

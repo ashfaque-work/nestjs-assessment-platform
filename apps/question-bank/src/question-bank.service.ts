@@ -1,5 +1,5 @@
 import { canManageTest, canWriteContentsOfAllUsers } from '@app/common/helpers/role-helper';
-import { toGrpcError } from '@app/common/helpers/grpc-error';
+import { toGrpcError, notImplemented } from '@app/common/helpers/grpc-error';
 import { ApproveStudentExplanationRequest, CountByPracticeRequest, CreateExplanationRequest, CreateQuestionRequest, CreateTestFormPoolRequest, DeleteQuestionRequest, ExecuteCodeRequest, FeedbackQuestionCountRequest, FeedbackQuestionRequest, GenerateRandomTestRequest, GetAllQuestionRequest, GetByAttemptRequest, GetLastInPracticeRequest, GetLastRequest, GetQuestionForOnlineTestRequest, GetQuestionRequest, GetQuestionTagsResquest, GetRandomQuestionsRequest, GetReusedCountRequest, InternalSearchDto, InternalSearchRequest, PersonalTopicAnalysisRequest, QuestionBankDto, QuestionCategoryDto, QuestionComplexityByTopicRequest, QuestionDistributionCategoryResponse, QuestionDistributionMarksResponse, QuestionDistributionRequest, QuestionIsAttemptRequest, QuestionPerformanceRequest, QuestionSummaryTopicRequest, QuestionUsedCountResponse, SummarySubjectPracticeRequest, SummaryTopicOfPracticeBySubjectRequest, SummaryTopicPracticeRequest, TestSeriesSummaryBySubjectRequest, UpdateQuestionRequest, UpdateStudentQuestionRequest, UpdateTagsRequest, UserDto } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { Types } from 'mongoose';
@@ -1076,7 +1076,7 @@ export class QuestionBankService {
 
       return { response: result };
     } catch (error) {
-      throw new Error(`Error while fetching question distribution: ${error.message}`);
+      throw toGrpcError(error, `Error while fetching question distribution: ${error.message}`);
     }
   }
 
@@ -1115,7 +1115,7 @@ export class QuestionBankService {
 
       return { response: result };
     } catch (error) {
-      throw new Error(`Error while fetching question distribution: ${error.message}`);
+      throw toGrpcError(error, `Error while fetching question distribution: ${error.message}`);
     }
   }
 
@@ -3247,29 +3247,10 @@ export class QuestionBankService {
     }
   }
 
+  // Never finished: the original version also failed (it used a variable it never declared)
+  // and returned nothing. Random tests are made with POST /question/generateRandomTest.
   async getRandomQuestions(request: GetRandomQuestionsRequest) {
-    this.redisCache.getSetting({ instancekey: request.instancekey }, async (settings) => {
-      let filter: any = {}
-      let practice = await this.practiceSetRepository.findById(request.id, { questions: 1, randomTestDetails: 1 });
-      filter.practiceSets = {
-        $in: request.id
-      }
-
-      // waterfall function removed
-      const questions = await this.questionRepository.find(filter, {
-        createdAt: 1,
-        plusMark: 1,
-        minusMark: 1,
-        subject: 1,
-        isActive: 1,
-        isAllowReuse: 1,
-        unit: 1,
-        topic: 1,
-        complexity: 1
-      })
-
-      // todaySchedule varible used without initialization
-    })
+    throw notImplemented('Random questions for a test are not available')
   }
 
   async createTestFormPool(request: CreateTestFormPoolRequest) {

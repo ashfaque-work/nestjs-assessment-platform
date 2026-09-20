@@ -1,7 +1,7 @@
 import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { ClassroomRepository, CourseRepository, DiscussionRepository, NotificationRepository, PushService, QuestionFeedbackRepository, RedisCaching, RedisClient, UsersRepository } from "@app/common";
 import { GetClassroomPostsReq, GetCommentsReq, GetCreateReq, GetDeleteReq, GetDiscussionOfCourseReq, GetDiscussionReq, GetFlagDiscussionReq, GetFlaggedPostReq, GetMySavedPostsReq, GetNotvoteReq, GetOneFlaggedPostReq, GetOneReq, GetUndonotvoteReq, GetUnflagDiscussionReq, GetUnvoteReq, GetVoteReq, GetYourPostsReq, PostCommentReq, PostUpdateReq, SavePostReq, UnsavedPostReq, createDiscussionRespondReq } from "@app/common/dto/userManagement/discussions.dto";
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { response } from "express";
 import { ObjectId } from "mongodb";
 import { GrpcInternalException, GrpcInvalidArgumentException } from "nestjs-grpc-exceptions";
@@ -816,7 +816,7 @@ export class DiscussionsService {
             let course = await this.courseRepository.findById(request.courseId);
 
             if (!course) {
-                throw new Error('Not found course')
+                throw new NotFoundException('Course not found')
             }
 
             // user can search discussions using course content title
@@ -910,9 +910,7 @@ export class DiscussionsService {
             let results = await this.discussionsRepository.aggregate(agg)
 
             if (!results[0]) {
-                return {
-                    count: 0, posts: []
-                }
+                return { response: { count: 0, posts: [] } }
             }
 
             let result: any = results[0]

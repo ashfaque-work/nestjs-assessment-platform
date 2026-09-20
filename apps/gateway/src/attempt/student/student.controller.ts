@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Headers, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Headers, Param, Post, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { ApiHeader, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { StudentService } from "./student.service";
-import { AuthenticationGuard, RolesGuard } from "@app/common/auth";
+import { AuthenticationGuard, RolesGuard, OwnRecordInterceptor, HideOthersContactInterceptor, SelfOrStaffGuard } from "@app/common/auth";
 import { Roles } from "@app/common/decorators";
 import { AddMentorReq, GetAttemptsQuery, SummaryAttemptedPracticeQuery } from "@app/common/dto/student.dto";
 import { AttemptService } from "../attempt.service";
@@ -106,7 +106,7 @@ export class StudentController {
 
     @Get('/textualAnalysis')
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     @ApiQuery({ name: "lastDay", required: false })
     @ApiQuery({ name: "subjects", required: false })
     @ApiQuery({ name: "user", required: false })
@@ -257,7 +257,7 @@ export class StudentController {
 
     @Get("/accuracyAndSpeed")
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     @ApiQuery({ name: "user", required: false })
     @ApiQuery({ name: "subjects", required: false })
     getAccuracyAndSpeed(@Headers("instancekey") instancekey: string, @Query("user") user: string, @Query("subjects") subjects: string, @Req() req) {
@@ -266,7 +266,7 @@ export class StudentController {
 
     @Get("/accuracyAndSpeedByTopic")
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     @ApiQuery({ name: "user", required: false })
     @ApiQuery({ name: "subjects", required: false })
     getAccuracyAndSpeedByTopic(@Headers("instancekey") instancekey: string, @Query("user") user: string, @Query("subjects") subjects: string, @Req() req) {
@@ -277,6 +277,7 @@ export class StudentController {
     @ApiParam({ name: "id", description: "practiceSetId" })
     @ApiHeader({ name: "authtoken", required: true })
     @UseGuards(AuthenticationGuard)
+    @UseInterceptors(HideOthersContactInterceptor)
     summaryAttemptedPractice(@Headers("instancekey") instancekey: string,
         @Param("id") practicesetId: string,
         @Query() query: SummaryAttemptedPracticeQuery,
@@ -349,8 +350,9 @@ export class StudentController {
     @ApiQuery({ name: "attemptId", required: false })
     @ApiHeader({ name: "authtoken", required: true })
     @UseGuards(AuthenticationGuard)
-    getResultPractice(@Headers("instancekey") instancekey: string, @Query("attemptId") attemptId: string, @Param("id") practicesetId: string) {
-        return this.studentService.getResultPractice({ instancekey, query: { attemptId }, practicesetId })
+    @UseInterceptors(HideOthersContactInterceptor)
+    getResultPractice(@Headers("instancekey") instancekey: string, @Query("attemptId") attemptId: string, @Param("id") practicesetId: string, @Req() req: any) {
+        return this.studentService.getResultPractice({ instancekey, query: { attemptId }, practicesetId, userId: req.user._id })
     }
 
     @Get("/tests")
@@ -394,6 +396,7 @@ export class StudentController {
     @Get("/attempts/:id/summary")
     @ApiHeader({ name: "authtoken", required: true })
     @UseGuards(AuthenticationGuard)
+    @UseInterceptors(OwnRecordInterceptor)
     getAttempt(@Headers("instancekey") instancekey: string, @Param("id") attemptId: string, @Req() req) {
         return this.studentService.getAttempt({ instancekey, attemptId, user: req.user })
     }
@@ -440,6 +443,7 @@ export class StudentController {
     @ApiParam({ name: "id", description: "practicesetId" })
     @ApiHeader({ name: "authtoken", required: true })
     @UseGuards(AuthenticationGuard)
+    @UseInterceptors(HideOthersContactInterceptor)
     getBestAttempt(@Headers("instancekey") instancekey: string, @Param("id") practicesetId: string, @Req() req) {
         return this.studentService.getBestAttempt({ instancekey, practicesetId, user: req.user })
     }
@@ -465,7 +469,7 @@ export class StudentController {
     @ApiQuery({ name: "user", required: false })
     @ApiQuery({ name: "subjects", required: false })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     getTotalQuestionSolved(@Headers("instancekey") instancekey: string,
         @Query("lastDay") lastDay: string,
         @Query("user") user: string,
@@ -585,6 +589,7 @@ export class StudentController {
     }
 
     @Get("/shareAttempt/:id/summary")
+    @UseInterceptors(HideOthersContactInterceptor)
     getShareAttempt(@Headers("instancekey") instancekey: string, @Param("id") attemptId: string, @Req() req) {
         return this.studentService.getAttempt({ instancekey, attemptId, user: req.user })
     }
@@ -662,7 +667,7 @@ export class StudentController {
     @Get("/subjectwiseRanking/:subjectId")
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     getSubjectwiseRanking(
         @Param("subjectId") subjectId: string, @Req() req,
         @Headers("instancekey") instancekey: string, @Query("user") user: string
@@ -673,7 +678,7 @@ export class StudentController {
     @Get("/markRanking")
     @ApiQuery({ name: "user", required: false, type: String })
     @ApiHeader({ name: "authtoken", required: true })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('user', { from: 'query' }))
     getMarkRanking(@Headers("instancekey") instancekey: string, @Query("user") user: string, @Req() req) {
         return this.studentService.getMarkRanking({ instancekey, user: req.user, query: { user } })
     }
@@ -693,4 +698,4 @@ export class StudentController {
     }
 
 
-}
+}

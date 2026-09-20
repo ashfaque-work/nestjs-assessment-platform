@@ -1,6 +1,6 @@
 import { Body, Controller, Param, Get, Post, Put, Delete, UseGuards, Headers, Query, Req, Ip, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { Roles } from '@app/common/decorators';
-import { AuthenticationGuard, RolesGuard } from '@app/common/auth';
+import { AuthenticationGuard, RolesGuard, SelfOrStaffGuard } from '@app/common/auth';
 import { ApiTags, ApiHeader, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { ClassroomService } from './classroom.service';
 import {
@@ -766,7 +766,7 @@ export class ClassroomController {
     @ApiHeader({ name: 'authtoken', required: true })
     @ApiQuery({ name: 'isMentee', required: false, type: Boolean })
     @ApiQuery({ name: 'isMyCircle', required: false, type: Boolean })
-    @UseGuards(AuthenticationGuard)
+    @UseGuards(AuthenticationGuard, SelfOrStaffGuard('studentId'))
     findStudent(
         @Param('studentId') studentId: string,
         @Headers('instancekey') instancekey: string,

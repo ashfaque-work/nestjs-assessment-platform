@@ -136,6 +136,7 @@ service AuthGrpcService {
   // Discussions - Start
   rpc GetDiscussion(GetDiscussionReq) returns (GetDiscussionRes) {}
   rpc GetClassroomPosts(GetClassroomPostsReq) returns (GetClassroomPostsRes) {}
+  rpc GetDiscussionOfCourse(GetDiscussionOfCourseReq) returns (GetDiscussionOfCourseRes) {}
   rpc GetYourPosts(GetYourPostsReq) returns (GetYourPostsRes) {}
   rpc GetMySavedPosts(GetMySavedPostsReq) returns (GetMySavedPostsRes) {}
   rpc FlagDiscussion(GetFlagDiscussionReq) returns (GetFlagDiscussionRes) {}
@@ -2488,6 +2489,58 @@ message GetClassroomPosts {
   string updatedAt = 26;
   int32 totalComments = 27;
   int32 commentPage = 28;
+}
+
+// GET /discussions/course/:courseId: the questions students asked on a course's content
+message GetDiscussionOfCourseReq {
+  string courseId = 1;
+  string searchText = 2;
+  int32 limit = 3;
+  int32 skip = 4;
+  string lastDays = 5;
+  string unanswered = 6;
+  int32 count = 7;
+  GetUserResponse user = 8;
+  string instancekey = 9;
+}
+
+message CourseDiscussionPost {
+  string _id = 1;
+  GetClassroomPostsUser user = 2;
+  string courseContent = 3;
+  GradeSubjectTopic subject = 4;
+  GradeSubjectTopic topic = 5;
+  string description = 6;
+  repeated IdName classRooms = 7;
+  repeated Attachment attachments = 8;
+  int32 viewed = 9;
+  repeated string vote = 10;
+  repeated string notVote = 11;
+  bool isComment = 12;
+  string parent = 13;
+  repeated Comment comments = 14;
+  repeated string savedBy = 15;
+  string feedType = 16;
+  bool active = 17;
+  bool allowComment = 18;
+  bool pin = 19;
+  bool flagged = 20;
+  int32 questionNumber = 21;
+  string createdAt = 22;
+  string updatedAt = 23;
+  int32 totalComments = 24;
+  int32 commentPage = 25;
+  string sectionTitle = 26;
+  string contentTitle = 27;
+}
+
+message CourseDiscussions {
+  int32 count = 1;
+  repeated CourseDiscussionPost posts = 2;
+}
+
+message GetDiscussionOfCourseRes {
+  CourseDiscussions response = 1;
 }
 
 message GetClassroomPostsRes {

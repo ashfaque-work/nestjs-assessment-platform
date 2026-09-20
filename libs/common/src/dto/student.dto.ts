@@ -1006,6 +1006,7 @@ export class SummaryOnePracticeSetResponse {
 }
 
 export class GetResultPracticeRequest {
+    userId?: string;
     query: Query;
     practicesetId: string;
     instancekey: string;

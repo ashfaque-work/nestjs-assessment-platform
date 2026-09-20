@@ -1945,6 +1945,9 @@ export class AssessmentService {
     try {
       this.practiceSetRepository.setInstanceKey(request.instancekey)
       let test = await this.practiceSetRepository.findById(new ObjectId(request.id), { attemptAllowed: 1, offscreenLimit: 1 });
+      if (!test) {
+        throw new NotFoundException('Test not found');
+      }
 
       this.attendanceRepository.setInstanceKey(request.instancekey);
       const atd = await this.attendanceRepository.findOne({ practicesetId: test._id, studentId: new ObjectId(request.studentId) })
@@ -2541,6 +2544,9 @@ export class AssessmentService {
   async checkSectionQuestion(request: CheckSectionQuestionRequest) {
     try {
       if (request.testId) {
+        if (request.sectionName === undefined || request.sectionName === null) {
+          throw new BadRequestException('sectionName is required')
+        }
         this.practiceSetRepository.setInstanceKey(request.instancekey)
         var questions = await this.practiceSetRepository.aggregate([
           {

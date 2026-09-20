@@ -1033,6 +1033,8 @@ message GetResultPracticeRequest{
   string attemptId = 2;
   string instancekey = 3;
   Query query = 4;
+  // the signed-in user: only their own attempt is returned
+  string userId = 5;
 }
 
 message GetResultPracticeResponse{

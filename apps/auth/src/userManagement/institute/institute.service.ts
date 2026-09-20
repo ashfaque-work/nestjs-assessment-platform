@@ -290,6 +290,9 @@ export class InstituteService {
                 name: 1, code: 1, facebook: 1, linkedIn: 1, whatsapp: 1, youtube: 1, instagram: 1, coverImageUrl: 1, logo: 1, imageUrl: 1, teachers: 1, description: 1, programs: 1, subjects: 1, specialization: 1
             })
 
+            if (!query) {
+                throw new Error('Institute not found');
+            }
             let result: any = await this.locationRepository.populate(query, [
                 { path: 'programs', select: 'name', options: { lean: true } },
                 { path: 'subjects', select: 'name', options: { lean: true } },
@@ -394,7 +397,7 @@ export class InstituteService {
                     ...newInstitute
                 }
             } catch (error) {
-                throw new Error(error)
+                throw toGrpcError(error);
             }
         } catch (error) {
             throw toGrpcError(error);

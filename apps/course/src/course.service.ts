@@ -134,9 +134,11 @@ export class CourseService {
     return enrolledCourseIds;
   }
   async findOneAttempt(req, filter, sort) {
-
-    var attemptQuery = await this.attemptRepository.findOne(filter, null, sort)
     this.attemptRepository.setInstanceKey(req.instancekey)
+    var attemptQuery = await this.attemptRepository.findOne(filter, null, { sort: Array.isArray(sort) ? Object.fromEntries(sort) : sort })
+    if (!attemptQuery) {
+      throw new NotFoundException('Attempt not found')
+    }
     await this.attemptRepository.populate(attemptQuery, [
       {
         path: "attemptdetails",
@@ -445,7 +447,7 @@ export class CourseService {
         throw new Error('Course not found');
       }
     } catch (error) {
-      throw new Error('Failed to get course by Id');
+      throw toGrpcError(error, 'Failed to get course by Id');
     }
   }
 
@@ -461,7 +463,7 @@ export class CourseService {
         throw new Error('Course not found');
       }
     } catch (error) {
-      throw new Error('Failed to update course');
+      throw toGrpcError(error, 'Failed to update course');
     }
   }
 
@@ -475,7 +477,7 @@ export class CourseService {
         throw new Error('Course not found');
       }
     } catch (error) {
-      throw new Error('Failed to delete course');
+      throw toGrpcError(error, 'Failed to delete course');
     }
   }
 
@@ -658,7 +660,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
 
     }
   }
@@ -801,7 +803,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async getRatingCountByCourse(request: GetRatingCountByCourseRequest) {
@@ -884,7 +886,7 @@ export class CourseService {
     } catch (err) {
       Logger.log(err);
 
-      throw new Error("Internal Server error");
+      throw toGrpcError(err, "Internal Server error");
     }
   }
   async updateSectionsOrder(request: UpdateSectionsOrderRequest): Promise<UpdateSectionsOrderResponse> {
@@ -950,7 +952,7 @@ export class CourseService {
       }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async deleteContent(request: DeleteContentRequest): Promise<DeleteContentResponse> {
@@ -1003,7 +1005,7 @@ export class CourseService {
       throw "Invalid"
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
 
     }
   }
@@ -1095,7 +1097,7 @@ export class CourseService {
       return { status: "Ok" }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server error")
+      throw toGrpcError(err, "Internal Server error");
     }
   }
   async getFavoriteCourse(request: GetFavoriteCourseRequest) {
@@ -1112,7 +1114,7 @@ export class CourseService {
       return { response: course }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   /* 
@@ -1170,7 +1172,7 @@ export class CourseService {
       }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server error")
+      throw toGrpcError(err, "Internal Server error");
     }
   }
   //ID: 622b98c27083db4d0e069480
@@ -1178,6 +1180,9 @@ export class CourseService {
     try {
       this.courseRepository.setInstanceKey(request.instancekey)
       let course = await this.courseRepository.findOne({ _id: (request.courseId) });
+      if (!course) {
+        throw new Error('Course not found');
+      }
 
       let totalContent = 0;
       course.sections
@@ -1322,7 +1327,7 @@ export class CourseService {
       return userCourse
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -1381,7 +1386,7 @@ export class CourseService {
       return { result: result }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server error")
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -1425,7 +1430,7 @@ export class CourseService {
       }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server error")
+      throw toGrpcError(err, "Internal Server error");
     }
   }
 
@@ -1836,7 +1841,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async publicEnrolledCourse(request: PublicEnrolledCourseRequest) {
@@ -1855,15 +1860,15 @@ export class CourseService {
 
           return { response: userCourse }
         } else {
-          throw response.status(404).send("No student found")
+          throw new NotFoundException("No student found")
         }
       }
       else {
-        throw response.status(404).send("No student found")
+        throw new NotFoundException("No student found")
       }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -1886,7 +1891,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
 
     }
   }
@@ -1993,7 +1998,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   /* 
@@ -2100,7 +2105,7 @@ export class CourseService {
       return { response: allCourses }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   /* 
@@ -2148,7 +2153,7 @@ export class CourseService {
       return { response: courses }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -2241,7 +2246,7 @@ export class CourseService {
       return { response: courses }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async userWithoutEnroll(request: UserWithoutEnrollRequest) {
@@ -2278,7 +2283,7 @@ export class CourseService {
       return { response: [] };
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async getCourseMembers(request: GetCourseMembersRequest) {
@@ -2384,7 +2389,7 @@ export class CourseService {
       return { result, totalCount }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -2414,7 +2419,7 @@ export class CourseService {
 
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   /* 
@@ -2454,7 +2459,7 @@ export class CourseService {
       return { response: fuc }
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
 
@@ -2581,7 +2586,7 @@ export class CourseService {
       throw "Enter Course Id"
     } catch (err) {
       Logger.log(err);
-      throw new Error("Internal Server Error")
+      throw toGrpcError(err, "Internal Server Error");
     }
   }
   async getAllMyCourseProgress(request: GetAllMyCourseProgressRequest) {

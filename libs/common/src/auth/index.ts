@@ -3,3 +3,4 @@ export * from './interceptors/auth.interceptor'
 export * from './interceptors/newUserIdConversion.interceptor';
 export * from './interceptors/userIdConversion.interceptor';
 export * from './interceptors/requestAuth.interceptor';
+export * from './ownership';
