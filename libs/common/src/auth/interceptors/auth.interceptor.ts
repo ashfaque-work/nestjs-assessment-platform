@@ -50,6 +50,11 @@ export class AuthenticationGuard implements CanActivate {
         _id: decodedTokenPayload.userId,
       });
 
+      // A deactivated account loses access at once, even with a token issued before
+      if (user?.isActive === false) {
+        throw new UnauthorizedException('Your account is disabled. Please contact support to enable it.');
+      }
+
       // Always overwrite client supplied userid/roles with the verified values
       request.body = { ...request.body, userid: user._id, roles: user.roles };
       request.user = user;

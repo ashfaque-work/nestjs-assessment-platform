@@ -14,6 +14,9 @@ import * as geoip from 'geoip-lite';
 import * as _ from 'lodash';
 import { MessageCenter } from '@app/common/components/messageCenter';
 import { config } from '@app/common/config';
+// How long after it expires a token may still be exchanged for a new one
+const REFRESH_GRACE_SECONDS = 7 * 24 * 60 * 60;
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -448,6 +451,11 @@ export class AuthService {
       if (!decodedUser?.userId || (decodedUser.ik && request.instancekey && decodedUser.ik !== request.instancekey)) {
         throw new ForbiddenException();
       }
+      // An expired token is refreshed only for a while after it expired; an old one (a stolen
+      // token, a device left signed in for months) means signing in again
+      if (decodedUser.exp && Date.now() / 1000 - decodedUser.exp > REFRESH_GRACE_SECONDS) {
+        throw new ForbiddenException('Session expired. Please sign in again.');
+      }
 
       // The token must belong to a session created at login
       this.userLogRepository.setInstanceKey(request.instancekey);
@@ -456,8 +464,14 @@ export class AuthService {
         throw new ForbiddenException('Session not found');
       }
 
-      const expiresIn = request.remember ? 60 * 60 * 24 * 365 : 60 * 60 * 24;
-      const payload = { userId: decodedUser.userId, roles: decodedUser.roles, ik: request.instancekey };
+      // A deactivated account gets no new token
+      const user: any = await this.userService.getUser({ instancekey: request.instancekey, _id: decodedUser.userId });
+      if (user?.isActive === false) {
+        throw new ForbiddenException('Your account is disabled. Please contact support to enable it.');
+      }
+
+      const expiresIn = request.remember === true ? 60 * 60 * 24 * 365 : 60 * 60 * 24;
+      const payload = { userId: decodedUser.userId, roles: user?.roles ?? decodedUser.roles, ik: request.instancekey };
 
       const newToken = this.jwtService.sign(payload, { secret, expiresIn });
 

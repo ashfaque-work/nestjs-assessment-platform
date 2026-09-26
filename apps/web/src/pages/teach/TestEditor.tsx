@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   MIN_QUESTIONS_TO_PUBLISH,
@@ -113,7 +113,7 @@ function Questions({ test, questions, locked }: { test: TeacherTest; questions: 
                 initial={draftFrom(q, units)}
                 saving={save.isPending}
                 error={save.error?.message}
-                onSave={(d) => save.mutate({ draft: d, test, questionId: q._id, existing: q }, { onSuccess: close })}
+                onSave={(d) => save.mutate({ draft: d, test, questionId: q._id }, { onSuccess: close })}
                 onCancel={close}
               />
             </li>
@@ -213,7 +213,14 @@ function Settings({ test, locked }: { test: TeacherTest & Record<string, unknown
   });
   const [form, setForm] = useState(initial);
   const [saved, setSaved] = useState(false);
-  useEffect(() => setForm(initial()), [test]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The test reloads whenever a question is saved or removed. Take its new values only if the form
+  // has no unsaved edits, so those edits are not thrown away.
+  const loaded = useRef(initial());
+  useEffect(() => {
+    const next = initial();
+    setForm((f) => (JSON.stringify(f) === JSON.stringify(loaded.current) ? next : f));
+    loaded.current = next;
+  }, [test]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dirty = JSON.stringify(form) !== JSON.stringify(initial());
   const valid = form.title.trim() && form.totalTime >= 1 && form.totalTime <= 600 && form.plusMark > 0 && form.penalty >= 0;

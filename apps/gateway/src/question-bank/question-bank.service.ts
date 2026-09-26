@@ -70,7 +70,7 @@ export class QuestionBankService {
     return await this.questionBankGrpcServiceClientImpl.PracticeSummaryBySubject(request);
   }
 
-  async getByPractice(request: { practiceId: string, instancekey: string }): Promise<PracticeQuestionsResponse> {
+  async getByPractice(request: { practiceId: string, instancekey: string, userId?: string, userRoles?: string[] }): Promise<PracticeQuestionsResponse> {
     return await this.questionBankGrpcServiceClientImpl.GetByPractice(request);
   }
 

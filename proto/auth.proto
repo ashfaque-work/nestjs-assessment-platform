@@ -4757,6 +4757,7 @@ message FindQuery {
   bool lastAttempt = 7;
   bool chatSupport = 8;
   bool count = 9;
+  bool includeInactive = 10;
 }
 
 message FindRequest {

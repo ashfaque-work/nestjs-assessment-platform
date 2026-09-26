@@ -11,7 +11,7 @@ import {
 } from './session';
 
 const T0 = 1_000_000;
-const start = () => createSession('att1', 'test1', ['q1', 'q2', 'q3'], 20 * 60_000, T0);
+const start = () => createSession('att1', 'test1', ['q1', 'q2', 'q3'], 20 * 60_000, T0, 'u1');
 
 describe('test session', () => {
   it('keeps one option for a single-answer question, replacing the previous choice', () => {
@@ -67,8 +67,16 @@ describe('test session', () => {
     const s = sessionReducer(start(), { type: 'choose', questionId: 'q1', optionId: 'a', multiple: false, at: T0 });
     saveSession(s);
     expect(loadSession('att1')?.answers).toEqual({ q1: ['a'] });
-    expect(findOpenSession('test1', T0 + 60_000)?.attemptId).toBe('att1');
-    expect(findOpenSession('test1', T0 + 30 * 60_000)).toBeNull();
-    expect(findOpenSession('other-test', T0)).toBeNull();
+    expect(findOpenSession('test1', T0 + 60_000, 'u1')?.attemptId).toBe('att1');
+    expect(findOpenSession('test1', T0 + 30 * 60_000, 'u1')).toBeNull();
+    expect(findOpenSession('other-test', T0, 'u1')).toBeNull();
+  });
+
+  it("never offers or loads another student's attempt on a shared device", () => {
+    saveSession(start());
+    expect(findOpenSession('test1', T0 + 60_000, 'u2')).toBeNull();
+    expect(findOpenSession('test1', T0 + 60_000, undefined)).toBeNull();
+    expect(loadSession('att1', 'u2')).toBeNull();
+    expect(loadSession('att1', 'u1')?.attemptId).toBe('att1');
   });
 });

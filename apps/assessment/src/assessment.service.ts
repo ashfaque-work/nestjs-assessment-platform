@@ -374,31 +374,29 @@ export class AssessmentService {
     }
   }
 
+  // Withdraw a test (status 'revoked'): students can no longer take it. The request is the one
+  // updateAssessment gets: the test id in `id`, the changes in `body`.
   private async withDrawn(request: any) {
-    var userFilter: any = {}
-    userFilter._id = new ObjectId(request._id)
-    if (request.user.roles.includes('admin') || request.user.roles.includes('director')) { } else {
-      userFilter.user = new ObjectId(request.user._id)
-    }
+    const filter = { _id: new ObjectId(request.id) };
     this.practiceSetRepository.setInstanceKey(request.instancekey);
-    let practiceset = await this.practiceSetRepository.findOne(userFilter);
+    const practiceset = await this.practiceSetRepository.findOne(filter);
     if (!practiceset) {
-      throw new NotFoundException('Practice test could not be withdrawn. Please contact Administrator.')
+      throw new NotFoundException('Practice Not Found');
+    }
+    if (!canManageTest(request.user, practiceset)) {
+      throw new ForbiddenException('You can only change your own tests');
     }
 
-    const result = await this.practiceSetRepository.updateOne(userFilter, {
-      $set: {
-        status: request.status,
-        isShowResult: request.isShowResult,
-        peerVisibility: request.peerVisibility,
-        isShowAttempt: request.isShowAttempt,
-        instructors: request.instructors
-      }
-    })
-    await this.redisCache.del({ instancekey: request.instancekey, params: { id: request._id } }, 'findOneWithQuestionsAccessMode')
-    await this.redisCache.del({ instancekey: request.instancekey, params: { id: request._id } }, 'findOneWithQuestionsAccessMode_meta')
+    const body = request.body || {};
+    const $set: any = { status: 'revoked', statusChangedAt: new Date() };
+    for (const key of ['isShowResult', 'peerVisibility', 'isShowAttempt', 'instructors']) {
+      if (body[key] !== undefined) $set[key] = body[key];
+    }
+    await this.practiceSetRepository.updateOne(filter, { $set });
+    await this.redisCache.del({ instancekey: request.instancekey, params: { id: request.id } }, 'findOneWithQuestionsAccessMode')
+    await this.redisCache.del({ instancekey: request.instancekey, params: { id: request.id } }, 'findOneWithQuestionsAccessMode_meta')
 
-    return result;
+    return this.practiceSetRepository.findOne(filter);
   }
 
   private async validateUpdatePracticeTitle(request: UpdateAssessmentRequest, title: string, settings: any) {
@@ -964,7 +962,7 @@ export class AssessmentService {
         }
       }
       if (request.body.status == 'revoked') {
-        await this.withDrawn(request)
+        return { response: await this.withDrawn(request) }
       } else {
         if (request.body.testMode != 'proctored') {
           request.body.startDate = null;
@@ -6410,12 +6408,16 @@ export class AssessmentService {
 
     try {
       this.practiceSetRepository.setInstanceKey(req.instancekey)
-      const test = await this.practiceSetRepository.findOne({ _id: new ObjectId(req.body.practice) }, { user: 1, instructors: 1 }, { lean: true })
+      const test = await this.practiceSetRepository.findOne({ _id: new ObjectId(req.body.practice) }, { user: 1, instructors: 1, status: 1 }, { lean: true })
       if (!test) {
         throw new NotFoundException();
       }
       if (!canManageTest(req.user, test)) {
         throw new ForbiddenException('You can only change your own tests');
+      }
+      // students may already have answered a published test: its questions stay as they are
+      if (test.status !== 'draft' && test.status !== 'tempt') {
+        throw new BadRequestException('Questions can be removed only from a draft test');
       }
       const data = await this.practiceSetRepository.findOneAndUpdate(
         { _id: new ObjectId(req.body.practice), 'questions.question': new ObjectId(req.body.question) },

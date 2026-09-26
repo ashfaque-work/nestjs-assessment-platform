@@ -164,7 +164,8 @@ export interface QuestionDraft {
   questionText: string;
   unit: NamedRef | null;
   topic: NamedRef | null;
-  options: { answerText: string; isCorrectAnswer: boolean }[];
+  // _id: the option's id once it is saved; a new option has none
+  options: { _id?: string; answerText: string; isCorrectAnswer: boolean }[];
   answerExplain: string;
 }
 

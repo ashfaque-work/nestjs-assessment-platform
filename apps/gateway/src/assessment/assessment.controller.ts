@@ -68,7 +68,7 @@ import {
 import { AssessmentService } from './assessment.service';
 
 import { Roles } from '@app/common/decorators';
-import { AuthenticationGuard, RolesGuard } from '@app/common/auth';
+import { AuthenticationGuard, RolesGuard, isStaffUser } from '@app/common/auth';
 
 import { ApiBody, ApiConsumes, ApiHeader, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ObjectIdPipe } from '@app/common';
@@ -86,16 +86,6 @@ export class AssessmentController {
   @UseGuards(AuthenticationGuard, RolesGuard)
   createAssessment(@Headers('instancekey') instancekey: string, @Body() request: CreateAssessmentRequest, @Req() req: any) {
     return this.assessmentService.createAssessment({ instancekey, ...request, user: req.user });
-  }
-
-  // update assessment
-  @Put("/:id")
-  @ApiHeader({ required: true, name: 'authtoken' })
-  @Roles(['teacher', 'support', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director'])
-  @UseGuards(AuthenticationGuard, RolesGuard)
-  updateAssessment(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() body: UpdateAssessmentBody, @Req() req: any) {
-    const user = req.user;
-    return this.assessmentService.updateAssessment({ instancekey, id, body, user: user, headers: { authorization: req.headers.authtoken } });
   }
 
   // subject enrollment 
@@ -721,6 +711,11 @@ export class AssessmentController {
   @ApiHeader({ required: true, name: 'authtoken' })
   @UseGuards(AuthenticationGuard)
   findOneWithQuestions(@Headers('instancekey') instancekey: string, @Headers('authtoken') authorization: string, @Param('id', ObjectIdPipe) id: string, @Query() query: FindOneWithQuestionsQuery, @Ip() ip: string, @Req() req: any) {
+    // Students always go through the access checks (published, not expired, invited...);
+    // skipping them is for the staff who prepare tests
+    if (!isStaffUser(req.user)) {
+      query = { ...query, hasAccessMode: true } as FindOneWithQuestionsQuery;
+    }
     return this.assessmentService.findOneWithQuestions({ instancekey, id, authorization, query, ip, user: req.user, token: req.headers['authtoken'] })
   }
 
@@ -809,5 +804,16 @@ export class AssessmentController {
   @UseGuards(AuthenticationGuard)
   show(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Query() query: FindOnePracticeQuery, @Req() req: any, @Ip() ip: string) {
     return this.assessmentService.findOneWithTotalQuestion({ instancekey, id, query, user: req.user, ip })
+  }
+
+  // update assessment. Declared last: Express matches routes in order, and "/:id" would otherwise
+  // catch PUT /attendance, /resetTerminatedAttempt and /shareLink, which then fail the id check.
+  @Put("/:id")
+  @ApiHeader({ required: true, name: 'authtoken' })
+  @Roles(['teacher', 'support', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
+  updateAssessment(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() body: UpdateAssessmentBody, @Req() req: any) {
+    const user = req.user;
+    return this.assessmentService.updateAssessment({ instancekey, id, body, user: user, headers: { authorization: req.headers.authtoken } });
   }
 }

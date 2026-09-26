@@ -1,5 +1,6 @@
 import { AddEventsReq, AddExperienceReq, AddLocationReq, AddSubjectsReq, AddUtmVisitorReq, BlockuserReq, ChangeNewPasswordBody, ChangeNewPasswordQuery, ChangePasswordBody, CreateUserDto, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, ExportUsersReq, FindOnlineUsersQuery, FindQuery, GetEventsQuery, GetStudentEventsQuery, InviteUsersReq, JoinOneOnOneWbSessionQuery, LoginAfterOauthReq, LoginReqDto, ManageSessionBody, ManageSessionReq, ObjectIdPipe, PartnerUserBody, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReqUser, SendForReviewDossierReq, SocialLoginBody, StartOneOnOneWbSessionQuery, TempSignupReq, TotalUserQuery, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataBody, UpdateAmbassadorReq, UpdateConnectionBody, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageBody, UpdateIdentityImageParam, UpdateMentorPreferencesReq, UpdateOptionsDataBody, UpdateRequest, UpdateRoleBody, UpdateSubjectsReq, UpdateTempUserBody, UpdateUserBody, UpdateUserCountryReq, UpdateUserStatusReq, UpdateUserRoleBody, UpdateUtmStatusReq, UserLiveBoardQuery, ValidateUserPictureRequest, VoiceServiceRequest } from '@app/common';
-import { Body, Controller, Delete, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from '@nestjs/common';
+import { canGrantRoles, SELF_SIGNUP_ROLES } from '@app/common/helpers/role-helper';
 import { AuthGatewayService } from './auth.service';
 import { ApiTags, ApiHeader, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { AuthenticationGuard, RequestAuthenticationGuard, RolesGuard, UserIdConversion, SelfOrStaffGuard, HideOthersContactInterceptor } from '@app/common/auth';
@@ -18,7 +19,8 @@ export class AuthController {
     @Query('accesstoken') accesstoken: string, @Query('remember') remember: boolean,
     @Headers('authtoken') authtoken: string, @Headers('instancekey') instancekey: string
   ) {
-    return this.authService.refreshToken({ accesstoken, remember, authtoken, instancekey });
+    // the query string gives "true"/"false" text, and "false" is truthy
+    return this.authService.refreshToken({ accesstoken, remember: String(remember) === 'true', authtoken, instancekey });
   }
 
   @Get('set-password')
@@ -346,6 +348,10 @@ export class AuthController {
   @Post('users')
   @UseInterceptors(UserIdConversion)
   async createUser(@Headers('instancekey') instancekey: string, @Body() request: CreateUserDto, @Ip() ip: string) {
+    // Signing up gives a learning role only; staff roles are given by staff
+    if (!(request.userRoles ?? []).every((role) => SELF_SIGNUP_ROLES.includes(role))) {
+      throw new ForbiddenException('You can sign up as a student or a teacher');
+    }
     request = {
       ...request,
       instancekey: instancekey
@@ -360,6 +366,9 @@ export class AuthController {
   @Roles(['admin', 'support', 'director'])
   @UseGuards(AuthenticationGuard, RolesGuard)
   async addUsers(@Body() request: CreateUserDto, @Ip() ip: string, @Req() user: ReqUser) {
+    if (!canGrantRoles((user as any).user?.roles, request.userRoles ?? [])) {
+      throw new ForbiddenException('You cannot give those roles');
+    }
     return this.authService.createUser(request, ip, user);
   }
 
@@ -434,12 +443,21 @@ export class AuthController {
     return this.authService.updateUserStatus(id, request);
   }
 
-  // Change a user's roles. The only path that sets another user's roles, so it is admin-only.
+  // Change another user's roles. Directors and operators may not give or take away admin; nobody
+  // changes their own roles, so no one can promote themselves.
   @Put(':id/role')
   @ApiHeader({ name: 'authtoken' })
   @Roles(['admin', 'director', 'operator'])
   @UseGuards(AuthenticationGuard, RolesGuard)
-  async updateUserRole(@Param('id') id: string, @Body() body: UpdateUserRoleBody) {
+  async updateUserRole(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() body: UpdateUserRoleBody, @Req() req: any) {
+    if (String(req.user._id) === id) {
+      throw new ForbiddenException('You cannot change your own roles');
+    }
+    const target: any = await this.authService.getUser({ instancekey, _id: id });
+    const current: string[] = target?.roles ?? [];
+    if (!canGrantRoles(req.user.roles, [...(body.newRoles ?? []), ...current])) {
+      throw new ForbiddenException('You cannot change this person to or from those roles');
+    }
     return this.authService.updateUserRole(id, body.newRoles);
   }
 
@@ -818,6 +836,10 @@ export class AuthController {
   @Roles(['admin', 'centerHead', 'teacher', 'director', 'support', 'operator', 'publisher'])
   @UseGuards(AuthenticationGuard, RolesGuard)
   async find(@Headers('instancekey') instancekey: string, @Query() query: FindQuery, @Req() req: any) {
+    // Deactivated accounts are listed only for the people who can reactivate them. The query
+    // string gives "true"/"false" text, not a boolean.
+    const managesAccounts = (req.user?.roles ?? []).some((r: string) => ['admin', 'director', 'operator', 'centerHead', 'support'].includes(r));
+    query = { ...query, includeInactive: managesAccounts && String(query.includeInactive) === 'true' };
     return this.authService.find({ instancekey, query, userdata: req.user });
   }
 

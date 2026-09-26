@@ -903,6 +903,21 @@ export class GetUpdateRequest {
     
     @ApiProperty({ required: false, type: [NotificationTemplates] })
     notificationTemplates?: NotificationTemplates[];
+
+    @ApiProperty({ required: false })
+    productName?: string;
+    @ApiProperty({ required: false })
+    pageTitle?: string;
+    @ApiProperty({ required: false })
+    supportEmail?: string;
+    @ApiProperty({ required: false })
+    adminName?: string;
+    @ApiProperty({ required: false })
+    copyRight?: string;
+    @ApiProperty({ required: false })
+    themeColor?: string;
+    @ApiProperty({ required: false })
+    isWhiteLabelled?: boolean;
 }
 
 export class GetUpdateResponse {

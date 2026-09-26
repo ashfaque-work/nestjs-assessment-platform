@@ -600,6 +600,8 @@ message PracticeSummaryBySubjectResponse {
 message PracticeQuestionsRequest {
   string practiceId = 1;
   string instancekey = 2;
+  string userId = 3;
+  repeated string userRoles = 4;
 }
 
 message PracticeQuestion {

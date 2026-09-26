@@ -127,9 +127,14 @@ export class SettingController {
     @Roles(['admin'])
     @UseGuards(AuthenticationGuard, RolesGuard)
     update(@Body() request: GetUpdateRequest, @Headers('instancekey') instancekey: string) {
-        const combinedData = {
+        const combinedData: any = {
             ...request,
             instancekey
+        }
+        // AuthenticationGuard replaces body.roles with the caller's own roles (an array); that is not
+        // the settings' role switches, and sending it on would wipe them
+        if (Array.isArray(combinedData.roles)) {
+            delete combinedData.roles;
         }
         return this.settingService.update(combinedData);
     }

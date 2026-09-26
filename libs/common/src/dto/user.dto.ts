@@ -1688,6 +1688,9 @@ export class FindQuery {
   chatSupport: boolean;
   @ApiProperty({ required: false })
   count: boolean;
+  // deactivated people too: for the staff who manage accounts (an admin reactivating someone)
+  @ApiProperty({ required: false })
+  includeInactive: boolean;
 }
 
 export class FindRequest {

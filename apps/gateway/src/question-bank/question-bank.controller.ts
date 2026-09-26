@@ -127,8 +127,9 @@ export class QuestionBankController {
   @ApiHeader({ name: 'authtoken' })
   @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
   @UseGuards(AuthenticationGuard, RolesGuard)
-  async getByPractice(@Headers('instancekey') instancekey: string, @Param('practiceId', ObjectIdPipe) practiceId: string) {
-    return this.questionBankService.getByPractice({ practiceId: practiceId, instancekey })
+  async getByPractice(@Headers('instancekey') instancekey: string, @Param('practiceId', ObjectIdPipe) practiceId: string, @Req() req: any) {
+    // the answer key: for the test's own author and instructors, and those who oversee all tests
+    return this.questionBankService.getByPractice({ practiceId: practiceId, instancekey, userId: String(req.user._id), userRoles: req.user.roles })
   }
 
   // question used count

@@ -1,4 +1,4 @@
-import { AuthenticationGuard, RolesGuard, SelfOrStaffGuard, OwnRecordInterceptor, HideOthersContactInterceptor } from "@app/common/auth";
+import { AuthenticationGuard, RolesGuard, SelfOrStaffGuard, OwnRecordInterceptor, HideOthersContactInterceptor, isStaffUser } from "@app/common/auth";
 import { Roles } from "@app/common/decorators";
 import {
     ClassroomListSubjectStudentDoRequest, CountAllByTeacherRequest, CountAllRequest, CountMeRequest, CreateRequest,
@@ -111,8 +111,8 @@ export class AttemptController {
     @ApiHeader({ name: 'authtoken' })
     @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
     @UseGuards(AuthenticationGuard, RolesGuard)
-    findAllByPractice(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string) {
-        return this.attemptService.findAllByPractice({ instancekey, practicesetId })
+    findAllByPractice(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string, @Req() req) {
+        return this.attemptService.findAllByPractice({ instancekey, practicesetId, userId: String(req.user._id), userRoles: req.user.roles })
     }
 
     // Every student's attempts at a test, with names and emails: for the people who run it
@@ -120,8 +120,8 @@ export class AttemptController {
     @ApiHeader({ name: 'authtoken' })
     @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
     @UseGuards(AuthenticationGuard, RolesGuard)
-    findAllByPracticeSet(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string) {
-        return this.attemptService.findAllByPractice({ instancekey, practicesetId })
+    findAllByPracticeSet(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string, @Req() req) {
+        return this.attemptService.findAllByPractice({ instancekey, practicesetId, userId: String(req.user._id), userRoles: req.user.roles })
     }
 
     @Get('/getResultPractice/:id')
@@ -834,8 +834,9 @@ export class AttemptController {
     @Post("/finish")
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
-    finish(@Headers('instancekey') instancekey: string, @Body() body: FinishRequest) {
-        return this.attemptService.finish({ instancekey, ...body })
+    finish(@Headers('instancekey') instancekey: string, @Body() body: FinishRequest, @Req() req) {
+        // only the student who started the attempt may hand it in
+        return this.attemptService.finish({ instancekey, ...body, userId: String(req.user._id) })
     }
 
     @Post("/finishPsychoTest")
@@ -912,11 +913,12 @@ export class AttemptController {
     @UseGuards(AuthenticationGuard)
     updateAbandonStatus(@Headers("instancekey") instancekey: string, @Body() body: UpdateAbandonStatusRequest, @Param('id') attemptId: string, @Req() req) {
         // liveboard sets markedSuspicious, the proctor's flag on an attempt: not for students
-        const staff = ['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'];
-        if (body.liveboard && !(req.user?.roles || []).some((role) => staff.includes(role))) {
+        const isStaff = isStaffUser(req.user);
+        if (body.liveboard && !isStaff) {
             throw new ForbiddenException();
         }
-        return this.attemptService.updateAbandonStatus({ instancekey, ...body, attemptId })
+        // a student may only change their own attempt
+        return this.attemptService.updateAbandonStatus({ instancekey, ...body, attemptId, userId: String(req.user._id), isStaff })
     }
 
     @Put("/updateSuspicious/:id")

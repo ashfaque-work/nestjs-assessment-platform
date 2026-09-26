@@ -4803,8 +4803,9 @@ export class StudentService {
 
     async getAvailableTests(request: FindAllRequest) {
         try {
-            const page = request.query.page ? (request.query.page, 10) : 1;
-            const limit = request.query.limit ? (request.query.limit, 10) : 20;
+            // page and limit arrive as text; a missing or bad value falls back to the default
+            const page = Math.max(1, parseInt(String(request.query.page), 10) || 1);
+            const limit = Math.min(100, Math.max(1, parseInt(String(request.query.limit), 10) || 20));
             let sort: any = { pinTop: -1, statusChangedAt: -1 };
 
             if (request.query.sort) {
@@ -4812,7 +4813,7 @@ export class StudentService {
                 sort = sortOrder === 'desc' ? { pinTop: -1, [sortField]: -1 } : { pinTop: -1, [sortField]: 1 };
             }
 
-            const skip = request.query.skip ? request.query.skip : (page - 1) * limit;
+            const skip = request.query.skip ? Math.max(0, parseInt(String(request.query.skip), 10) || 0) : (page - 1) * limit;
 
             const basicFilter = await this.baseFilter(request);
             if (request.query.tags) {

@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../auth/auth';
 import { useStartAttempt, useTest } from '../api/hooks';
 import { Page } from '../components/Layout';
 import { Button, buttonClass, ErrorNote, Spinner } from '../components/ui';
@@ -10,7 +11,8 @@ export function TestIntro() {
   const test = useTest(testId);
   const start = useStartAttempt();
   const navigate = useNavigate();
-  const open = findOpenSession(testId, Date.now());
+  const { user } = useAuth();
+  const open = findOpenSession(testId, Date.now(), user?._id);
 
   const begin = () =>
     start.mutate(testId, {

@@ -23,7 +23,7 @@ export function draftFrom(question: BankQuestion | undefined, units: NamedRef[])
     questionText: question.questionText ?? '',
     unit: question.unit ?? null,
     topic: question.topic ?? null,
-    options: question.answers.map((a) => ({ answerText: a.answerText ?? '', isCorrectAnswer: !!a.isCorrectAnswer })),
+    options: question.answers.map((a) => ({ _id: a._id, answerText: a.answerText ?? '', isCorrectAnswer: !!a.isCorrectAnswer })),
     answerExplain: question.answerExplain ?? '',
   };
 }

@@ -67,7 +67,7 @@ const answered = (questionId: Types.ObjectId, chosen: Types.ObjectId) => ({
   timeEslapse: 20000,
 });
 
-function buildProcessor() {
+function buildProcessor(practiceChanges: Record<string, unknown> = {}) {
   // handleNewAttempt is where persistence starts; capture the graded attempt instead.
   const saved: { attempt?: any } = {};
 
@@ -82,7 +82,7 @@ function buildProcessor() {
     { getSettingAsync: jest.fn().mockResolvedValue({ features: {}, ssoConfig: [] }) } as any,
     {
       setInstanceKey: jest.fn(),
-      findById: jest.fn(async () => makePractice()),
+      findById: jest.fn(async () => ({ ...makePractice(), ...practiceChanges })),
       populate: jest.fn(async (doc: any) => doc),
     } as any,
     { setInstanceKey: jest.fn(), populate: jest.fn(async (doc: any) => populateQuestions(doc)) } as any,
@@ -97,8 +97,8 @@ function buildProcessor() {
   return { processor, saved };
 }
 
-const finish = async (answersOfUser: any[], order: Types.ObjectId[] = QUESTION_IDS) => {
-  const { processor } = buildProcessor();
+const finish = async (answersOfUser: any[], order: Types.ObjectId[] = QUESTION_IDS, practiceChanges: Record<string, unknown> = {}) => {
+  const { processor } = buildProcessor(practiceChanges);
   return processor.process('staging', oid('e1').toString(), {
     answersOfUser,
     practiceId: PRACTICE_ID.toString(),
@@ -217,6 +217,21 @@ describe('AttemptProcessor.process — grading a submitted attempt', () => {
   it('marks the graded attempt as no longer ongoing, so it cannot be resumed', async () => {
     const attempt: any = await finish([answered(Q_RIGHT, ANSWER_A)]);
     expect(attempt.ongoing).toBe(false);
+  });
+
+  it('grades every question of the test, even when the client lists only the one it got right', async () => {
+    const attempt: any = await finish([answered(Q_RIGHT, ANSWER_A)], [Q_RIGHT]);
+
+    expect(attempt.totalQuestions).toBe(3);
+    expect(attempt.totalCorrects).toBe(1);
+    expect(attempt.totalMissed).toBe(2);
+  });
+
+  it('grades only the questions shown when the test draws a random subset for each student', async () => {
+    const attempt: any = await finish([answered(Q_RIGHT, ANSWER_A)], [Q_RIGHT, Q_WRONG], { randomQuestions: true, questionsToDisplay: 2 });
+
+    expect(attempt.totalQuestions).toBe(2);
+    expect(attempt.QA.map((qa: any) => qa.question.toString())).toEqual([Q_RIGHT, Q_WRONG].map((id) => id.toString()));
   });
 
   it('scores an empty submission as all missed instead of failing', async () => {

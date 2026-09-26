@@ -119,19 +119,18 @@ export function questionBody(draft: QuestionDraft, test: TeacherTest) {
     // the grader adds minusMark to the score for a wrong answer, so a penalty is negative
     minusMark: -Math.abs(test.minusMark ?? 0),
     answerExplain: draft.answerExplain.trim(),
-    answers: draft.options.map((o) => ({ answerText: o.answerText.trim(), isCorrectAnswer: o.isCorrectAnswer })),
+    // each saved option keeps its own id, so earlier attempts still match the option they chose
+    answers: draft.options.map((o) => ({ ...(o._id ? { _id: o._id } : {}), answerText: o.answerText.trim(), isCorrectAnswer: o.isCorrectAnswer })),
   };
 }
 
 export function useSaveQuestion(testId: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async ({ draft, test, questionId, existing }: { draft: QuestionDraft; test: TeacherTest; questionId?: string; existing?: BankQuestion }) => {
+    mutationFn: async ({ draft, test, questionId }: { draft: QuestionDraft; test: TeacherTest; questionId?: string }) => {
       const body = questionBody(draft, test);
       if (!questionId) return api('POST', '/question', { ...body, practiceSets: [testId] });
-      // Keep the ids of options that are still there, so earlier attempts still match them
-      const answers = body.answers.map((a, i) => (existing?.answers[i] ? { ...a, _id: existing.answers[i]._id } : a));
-      return api('PUT', `/question/${questionId}`, { ...body, answers });
+      return api('PUT', `/question/${questionId}`, body);
     },
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['teacher', 'questions', testId] });

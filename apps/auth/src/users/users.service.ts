@@ -119,8 +119,11 @@ export class UsersService {
       if (request.user) {
         newUser.createdBy = new ObjectId(request.userid);
         if (request.user.activeLocation) {
-          newUser.activeLocation = request.user.activeLocation
-          newUser.locations = [request.user.activeLocation]
+          // the location arrives over gRPC as text; stored as text it never matches the location
+          // filters, so the new person would be missing from every list
+          const location = new ObjectId(String(request.user.activeLocation))
+          newUser.activeLocation = location
+          newUser.locations = [location]
           newUser.onboarding = true
         }
       } else if (request.joiningInstitute && request.instituteId) {
@@ -279,6 +282,10 @@ export class UsersService {
         const storedHash = user.hashedPassword;
         if (generatedPass !== storedHash) {
           throw 'Credentials are not valid';
+        }
+        // checked after the password, so the answer does not reveal which accounts exist
+        if (user.isActive === false) {
+          throw new ForbiddenException('Your account is disabled. Please contact support to enable it.');
         }
       } else {
         throw 'Credentials are not valid';
@@ -5699,7 +5706,7 @@ export class UsersService {
       });
       return { users: users };
     } else {
-      condition = { isActive: true };
+      condition = req.query.includeInactive ? {} : { isActive: true };
       var page = (req.query.page) ? req.query.page : 1;
       var limit = (req.query.limit) ? req.query.limit : 25;
       sort = { 'createdAt': -1 };
@@ -5718,7 +5725,6 @@ export class UsersService {
         avatarMD: 1,
         avatarSM: 1,
         avatar: 1,
-        emailVerifyToken: 1,
         passingYear: 1,
         placementStatus: 1,
         rollNumber: 1,

@@ -1,4 +1,4 @@
-import { canManageTest, canWriteContentsOfAllUsers } from '@app/common/helpers/role-helper';
+import { canManageTest, canReadTest, canWriteContentsOfAllUsers } from '@app/common/helpers/role-helper';
 import { toGrpcError, notImplemented } from '@app/common/helpers/grpc-error';
 import { ApproveStudentExplanationRequest, CountByPracticeRequest, CreateExplanationRequest, CreateQuestionRequest, CreateTestFormPoolRequest, DeleteQuestionRequest, ExecuteCodeRequest, FeedbackQuestionCountRequest, FeedbackQuestionRequest, GenerateRandomTestRequest, GetAllQuestionRequest, GetByAttemptRequest, GetLastInPracticeRequest, GetLastRequest, GetQuestionForOnlineTestRequest, GetQuestionRequest, GetQuestionTagsResquest, GetRandomQuestionsRequest, GetReusedCountRequest, InternalSearchDto, InternalSearchRequest, PersonalTopicAnalysisRequest, QuestionBankDto, QuestionCategoryDto, QuestionComplexityByTopicRequest, QuestionDistributionCategoryResponse, QuestionDistributionMarksResponse, QuestionDistributionRequest, QuestionIsAttemptRequest, QuestionPerformanceRequest, QuestionSummaryTopicRequest, QuestionUsedCountResponse, SummarySubjectPracticeRequest, SummaryTopicOfPracticeBySubjectRequest, SummaryTopicPracticeRequest, TestSeriesSummaryBySubjectRequest, UpdateQuestionRequest, UpdateStudentQuestionRequest, UpdateTagsRequest, UserDto } from '@app/common/dto/question-bank.dto';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
@@ -162,6 +162,10 @@ export class QuestionBankService {
 
       let data: any = createQuestionRequest;
       data.user = new Types.ObjectId(user._id);
+      // the schema defaults answerNumber to 2; a later edit trims the options to it
+      if (data.answerNumber === undefined && Array.isArray(data.answers)) {
+        data.answerNumber = data.answers.length;
+      }
       try {
         await this.validateSubjectUnitTopic(instancekey, data);
       } catch (error) {
@@ -670,7 +674,23 @@ export class QuestionBankService {
         nQuestion: _.pick(data, 'questionHeader', 'questionText', 'answers', 'answerExplain')
       })
 
+      // The options as stored, before the merge below changes them
+      const oldAnswers = (question.answers || []).map((a: any) => (a?.toObject ? a.toObject() : { ...a }));
+
       var updatedQues = _.merge(question, data)
+
+      // merge() pairs options by position and never drops one, so a removed option (and its
+      // correct-answer flag) would stay. The options sent are the options: each keeps what was
+      // stored for it (matched by id), and a new one gets a new id when saved.
+      if (Array.isArray(data.answers)) {
+        updatedQues.answers = data.answers.map((a: any) => {
+          const stored = a?._id ? oldAnswers.find((o: any) => String(o._id) === String(a._id)) : undefined;
+          return stored ? { ...stored, ...a } : a;
+        });
+        if (data.answerNumber === undefined) {
+          updatedQues.answerNumber = updatedQues.answers.length;
+        }
+      }
 
       // merge will not remove item in array, we have to do this manually
       if (data.coding && data.coding.length > 0) {
@@ -770,7 +790,8 @@ export class QuestionBankService {
 
       if (updatedQues.category === 'mcq') {
         updatedQues.answers.forEach((a: any) => {
-          const matchingAnswer = data.answers.find((da: any) => da._id.toString() === a._id.toString());
+          // a new option has no id yet
+          const matchingAnswer = (data.answers || []).find((da: any) => da?._id && a?._id && String(da._id) === String(a._id));
           
           if (matchingAnswer && matchingAnswer.audioFiles) {
             a.audioFiles = [...matchingAnswer.audioFiles];
@@ -1192,10 +1213,14 @@ export class QuestionBankService {
   async getByPractice(request) {
     try {
       this.practiceSetRepository.setInstanceKey(request.instancekey);     
-      const test = await this.practiceSetRepository.findOne({ _id: request.practiceId }, 'questions');
+      const test = await this.practiceSetRepository.findOne({ _id: request.practiceId }, 'questions user instructors');
 
       if (!test) {
         throw new NotFoundException("Practice not found.");
+      }
+      // These are the questions with their answers: only for people who may read this test
+      if (!canReadTest({ _id: request.userId, roles: request.userRoles }, test)) {
+        throw new ForbiddenException('You can only see the answers of your own tests');
       }
 
       const questions = await this.questionRepository.find({ _id: { $in: test.questions.map((q: any) => q.question) } });

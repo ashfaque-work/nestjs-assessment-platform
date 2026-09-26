@@ -686,6 +686,9 @@ export class CountAllResponse {
 export class FindAllByPracticeRequest {
     instancekey: string;
     practicesetId: string;
+    // the caller, set by the gateway: only people who may read the test see its results
+    userId?: string;
+    userRoles?: string[];
 
 }
 
@@ -2115,6 +2118,9 @@ export class UpdateAbandonStatusRequest {
     liveboard: boolean
     @ApiProperty()
     markedSuspicious: boolean
+    // set by the gateway from the verified user, never from the body
+    userId?: string;
+    isStaff?: boolean;
 }
 
 export class UpdateAbandonStatusResponse {
@@ -2342,6 +2348,8 @@ export class FinishRequest {
     questionOrder: string[];
     @ApiProperty()
     isAbandoned: string;
+    // set by the gateway from the verified user, never from the body
+    userId?: string;
 }
 
 export class FinishResponse {

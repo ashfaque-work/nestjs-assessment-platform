@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { ApiError } from '../api/client';
 import { useFinishAttempt, useTest } from '../api/hooks';
+import { useAuth } from '../auth/auth';
 import type { Question, TestWithQuestions } from '../api/types';
 import { AnswerSheet } from '../components/AnswerSheet';
 import { Bubble } from '../components/Bubble';
@@ -43,12 +45,13 @@ function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: stri
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const finish = useFinishAttempt();
+  const { user } = useAuth();
 
   const questions = useMemo(() => new Map(test.questions.map((q) => [q._id, q])), [test.questions]);
   const [session, dispatch] = useReducer(
     sessionReducer,
     null,
-    (): Session => loadSession(attemptId) ?? createSession(attemptId, test._id, test.questions.map((q) => q._id), test.totalTime * 60_000, Date.now()),
+    (): Session => loadSession(attemptId, user?._id) ?? createSession(attemptId, test._id, test.questions.map((q) => q._id), test.totalTime * 60_000, Date.now(), user?._id),
   );
   useEffect(() => saveSession(session), [session]);
 
@@ -75,7 +78,13 @@ function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: stri
           queryClient.invalidateQueries({ queryKey: ['attempts'] });
           navigate(`/results/${attemptId}`, { replace: true });
         },
-        onError: () => {
+        onError: (error) => {
+          // Handed in already (another tab, or a retry after a lost response): show the result
+          if (error instanceof ApiError && error.status === 400 && /already been submitted/i.test(error.message)) {
+            discardSession(attemptId);
+            navigate(`/results/${attemptId}`, { replace: true });
+            return;
+          }
           // let the student try again; the answers are still saved on this device
           submitted.current = false;
         },
@@ -83,9 +92,14 @@ function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: stri
     );
   }, [attemptId, finish, navigate, queryClient, session, test._id]);
 
-  // Out of time: hand in what is there
+  // Out of time: hand in what is there, once. If that fails the student submits again with the
+  // button; retrying here would send a request on every render.
+  const autoSubmitted = useRef(false);
   useEffect(() => {
-    if (left === 0) submit();
+    if (left === 0 && !autoSubmitted.current) {
+      autoSubmitted.current = true;
+      submit();
+    }
   }, [left, submit]);
 
   const index = session.current;

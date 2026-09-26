@@ -17,7 +17,7 @@ export interface QuestionBankGrpcInterface {
   QuestionDistributionByCategory(request: { _id: string, instancekey: string }): Promise<QuestionDistributionCategoryResponse>;
   QuestionDistributionByMarks(request: { _id: string, instancekey: string }): Promise<QuestionDistributionMarksResponse>;
   PracticeSummaryBySubject(request: { practice: string, instancekey: string }): Promise<PracticeSummaryBySubjectResponse>;
-  GetByPractice(request: { practiceId: string, instancekey: string }): Promise<PracticeQuestionsResponse>;
+  GetByPractice(request: { practiceId: string, instancekey: string, userId?: string, userRoles?: string[] }): Promise<PracticeQuestionsResponse>;
   QuestionUsedCount(request): Promise<QuestionUsedCountResponse>;
   QuestionIsAttempt(request: QuestionIsAttemptRequest): Promise<QuestionIsAttemptResponse>;
   QuestionPerformance(request: QuestionPerformanceRequest): Promise<QuestionPerformanceResponse>;
@@ -104,7 +104,7 @@ export class QuestionBankGrpcServiceClientImpl implements QuestionBankGrpcInterf
     return await this.questionBankGrpcServiceClient.PracticeSummaryBySubject(request);
   }
 
-  async GetByPractice(request: { practiceId: string, instancekey: string }): Promise<PracticeQuestionsResponse> {
+  async GetByPractice(request: { practiceId: string, instancekey: string, userId?: string, userRoles?: string[] }): Promise<PracticeQuestionsResponse> {
     return await this.questionBankGrpcServiceClient.GetByPractice(request);
   }
 

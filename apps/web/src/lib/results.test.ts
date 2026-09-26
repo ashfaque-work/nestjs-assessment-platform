@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { STATUS, type ResultAttempt } from '../api/types';
 import { classResults } from './results';
-import { draftProblems } from '../api/teacher';
+import { draftProblems, questionBody } from '../api/teacher';
 
 const attempt = (over: Partial<ResultAttempt>, statuses: number[]): ResultAttempt => ({
   _id: Math.random().toString(36).slice(2),
@@ -86,5 +86,23 @@ describe('draftProblems', () => {
   it('asks for the text, a topic and two filled options', () => {
     const problems = draftProblems({ ...ready, questionText: ' ', topic: null, options: [{ answerText: '7', isCorrectAnswer: true }, { answerText: '', isCorrectAnswer: false }] });
     expect(problems).toEqual(['Write the question.', 'Choose the topic it tests.', 'Give at least two answer options.', 'Fill in or remove the empty option.']);
+  });
+});
+
+describe('questionBody', () => {
+  const test = { _id: 't1', title: 'T', status: 'draft', subjects: [{ _id: 's', name: 'Maths' }], units: [], totalTime: 10 } as never;
+  const draft = (options: { _id?: string; answerText: string; isCorrectAnswer: boolean }[]) => ({
+    questionText: 'Q', unit: null, topic: null, answerExplain: '', options,
+  });
+
+  it('keeps each saved option with its own id when another option is removed', () => {
+    // A, B, C saved; B removed: C must keep C's id, not take B's
+    const body = questionBody(draft([{ _id: 'a', answerText: 'A', isCorrectAnswer: true }, { _id: 'c', answerText: 'C', isCorrectAnswer: false }]), test);
+    expect(body.answers.map((a) => ('_id' in a ? a._id : undefined))).toEqual(['a', 'c']);
+  });
+
+  it('sends a new option without an id', () => {
+    const body = questionBody(draft([{ _id: 'a', answerText: 'A', isCorrectAnswer: true }, { answerText: 'New', isCorrectAnswer: false }]), test);
+    expect(body.answers[1]).toEqual({ answerText: 'New', isCorrectAnswer: false });
   });
 });

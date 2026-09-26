@@ -8,7 +8,8 @@ export function useAdminUsers(role?: string) {
   return useQuery({
     queryKey: ['admin', 'users', role ?? 'all'],
     queryFn: async () => {
-      const q = new URLSearchParams({ page: '1', limit: '200' });
+      // deactivated people too, so an admin can see and reactivate them
+      const q = new URLSearchParams({ page: '1', limit: '200', includeInactive: 'true' });
       if (role) q.set('roles', role);
       return (await api<{ users: AdminUser[] }>('GET', `/auth/users?${q}`)).users ?? [];
     },

@@ -975,6 +975,8 @@ message CountAllResponse{
 message FindAllByPracticeRequest{
   string instancekey = 1;
   string practicesetId = 2;
+  string userId = 3;
+  repeated string userRoles = 4;
 }
 
 message FindAllByPracticeDto {
@@ -2642,6 +2644,8 @@ message UpdateAbandonStatusRequest{
   string instancekey = 2;
   bool liveboard = 3;
   bool markedSuspicious = 4;
+  string userId = 5;
+  bool isStaff = 6;
 }
 
 message UpdateAbandonStatusResponse{
@@ -2846,6 +2850,7 @@ message FinishRequest{
   string practiceId = 4;
   repeated string questionOrder = 5;
   bool isAbandoned = 6;
+  string userId = 7;
 }
 
 message FinishResponse{
