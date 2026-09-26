@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAddUser, useAdminUsers, useSetUserActive, useUpdateUserRole } from '../../api/admin';
 import type { AdminUser } from '../../api/types';
 import { isAdmin, useAuth } from '../../auth/auth';
@@ -9,22 +9,27 @@ import { plural } from '../../lib/format';
 const ROLE_FILTERS = ['all', 'student', 'teacher', 'admin', 'mentor', 'publisher', 'operator', 'centerHead', 'director', 'support'];
 const ASSIGNABLE_ROLES = ['student', 'teacher', 'mentor', 'publisher', 'operator', 'centerHead', 'director', 'support', 'admin'];
 const roleLabel = (r: string) => (r === 'centerHead' ? 'centre head' : r);
+const PAGE_SIZE = 50;
 
 export function AdminUsers() {
   const { user: me } = useAuth();
-  const users = useAdminUsers();
   const [q, setQ] = useState('');
+  const [search, setSearch] = useState('');
   const [role, setRole] = useState('all');
+  const [page, setPage] = useState(1);
   const [adding, setAdding] = useState(false);
 
-  const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return (users.data ?? []).filter((u) => {
-      if (role !== 'all' && !(u.roles ?? []).includes(role)) return false;
-      if (!needle) return true;
-      return [u.name, u.userId, u.email].some((v) => v?.toLowerCase().includes(needle));
-    });
-  }, [users.data, q, role]);
+  // search once typing pauses, and start again from the first page
+  useEffect(() => {
+    const t = setTimeout(() => { setSearch(q.trim()); setPage(1); }, 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  // The API searches, filters and pages, so this works however many people there are
+  const users = useAdminUsers({ page, limit: PAGE_SIZE, role: role === 'all' ? undefined : role, search: search || undefined });
+  const filtered = users.data?.users ?? [];
+  const total = users.data?.count ?? 0;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <Page>
@@ -32,7 +37,7 @@ export function AdminUsers() {
         <div>
           <h1 className="text-[34px] font-bold leading-tight tracking-tight">People</h1>
           <p className="mt-2 text-[15px] text-graphite-soft">
-            {users.data ? `${plural(users.data.length, 'account')} on the platform.` : 'Loading accounts.'}
+            {users.data ? `${plural(total, 'account')}${search || role !== 'all' ? ' match' : ' on the platform'}.` : 'Loading accounts.'}
           </p>
         </div>
         {isAdmin(me) && (
@@ -54,7 +59,7 @@ export function AdminUsers() {
           {ROLE_FILTERS.map((r) => (
             <button
               key={r}
-              onClick={() => setRole(r)}
+              onClick={() => { setRole(r); setPage(1); }}
               className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize transition-colors ${
                 role === r ? 'accent-gradient border-transparent text-white' : 'border-rule bg-sheet text-graphite-soft hover:text-graphite'
               }`}
@@ -75,6 +80,14 @@ export function AdminUsers() {
             <UserRow key={u._id} u={u} isAdminMe={isAdmin(me)} isMe={u._id === me?._id} />
           ))}
         </Card>
+      )}
+
+      {pages > 1 && (
+        <nav aria-label="Pages" className="mt-4 flex items-center justify-between gap-3 text-sm">
+          <Button variant="secondary" onClick={() => setPage((p) => p - 1)} disabled={page <= 1}>Previous</Button>
+          <span className="figures text-graphite-soft">Page {page} of {pages}</span>
+          <Button variant="secondary" onClick={() => setPage((p) => p + 1)} disabled={page >= pages}>Next</Button>
+        </nav>
       )}
 
       {adding && <AddPersonDialog onClose={() => setAdding(false)} />}

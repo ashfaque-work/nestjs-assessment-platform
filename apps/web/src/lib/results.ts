@@ -4,6 +4,7 @@ export type Cell = 'right' | 'wrong' | 'missed' | 'pending';
 
 export interface StudentRow {
   id: string;
+  student: string; // who took it: the same for every attempt by one student
   name: string;
   attemptNumber: number; // 1 for the student's first finished attempt
   score: number;
@@ -22,7 +23,7 @@ export interface ClassResults {
   hardest: number | null; // index of the question fewest got right
 }
 
-const idOf = (q: GradedAnswer['question']) => (typeof q === 'string' ? q : q?._id);
+const idOf = (q: GradedAnswer['question'] | ResultAttempt['user']) => (typeof q === 'string' ? q : q?._id);
 
 function cellFor(status: number | undefined): Cell {
   if (status === STATUS.CORRECT) return 'right';
@@ -40,12 +41,14 @@ export function classResults(attempts: ResultAttempt[], questionIds: string[]): 
 
   const seen = new Map<string, number>();
   const rows: StudentRow[] = finished.map((a, i) => {
-    const student = a.email || a.studentName || `student-${i}`;
+    // by account first: two students can share a name
+    const student = idOf(a.user) || a.email || a.studentName || `student-${i}`;
     const attemptNumber = (seen.get(student) ?? 0) + 1;
     seen.set(student, attemptNumber);
     const byQuestion = new Map((a.QA ?? []).map((qa) => [idOf(qa.question), qa.status]));
     return {
       id: a._id ?? `${student}-${attemptNumber}`,
+      student,
       name: a.studentName || a.email || 'Student',
       attemptNumber,
       score: a.totalMark,

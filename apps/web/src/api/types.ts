@@ -173,6 +173,7 @@ export interface QuestionDraft {
 export interface ResultAttempt extends Attempt {
   studentName?: string;
   email?: string;
+  user?: string | { _id: string }; // the student: an id, or their record when populated
 }
 
 // A user as the admin user list returns them

@@ -19,9 +19,11 @@ export function Dashboard() {
   const lastByTest = new Map<string, Attempt>();
   for (const a of done) if (!lastByTest.has(a.practicesetId)) lastByTest.set(a.practicesetId, a);
 
-  const answered = done.reduce((n, a) => n + a.totalQuestions, 0);
+  // questions the student gave an answer to, not every question they saw
+  const answered = done.reduce((n, a) => n + a.totalQuestions - (a.totalMissed ?? 0), 0);
   const correct = done.reduce((n, a) => n + a.totalCorrects, 0);
   const accuracy = answered ? percent(correct, answered) : null;
+  const testsTaken = new Set(done.map((a) => a.practicesetId)).size;
 
   return (
     <Page>
@@ -36,7 +38,7 @@ export function Dashboard() {
 
       {done.length > 0 && (
         <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4">
-          <Stat label="Tests taken" value={String(done.length)} />
+          <Stat label="Tests taken" value={String(testsTaken)} />
           <Stat label="Questions answered" value={String(answered)} />
           <Stat label="Accuracy" value={accuracy === null ? '—' : `${accuracy}%`} accent />
         </div>

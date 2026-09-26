@@ -19,6 +19,24 @@ export function Result() {
   }
   const a = attempt.data;
 
+  // Started but not handed in: there is no score yet
+  if (a.ongoing || !a.totalQuestions) {
+    return (
+      <Page>
+        <Link to="/" className="text-sm font-semibold text-graphite-soft hover:text-graphite">Your tests</Link>
+        <p className="mt-6 text-sm font-semibold text-form">{a.practiceSetInfo?.title ?? 'Test'}</p>
+        <h1 className="mt-1 text-[32px] font-bold leading-tight tracking-tight">This attempt is not finished yet.</h1>
+        <p className="mt-2 max-w-prose text-graphite-soft">Your result shows here once you hand the test in.</p>
+        <div className="mt-8 flex flex-wrap gap-2">
+          {a.ongoing && (
+            <Link to={`/tests/${a.practicesetId}/attempt/${a._id ?? attemptId}`} className={buttonClass()}>Continue the test</Link>
+          )}
+          <Link to="/" className={buttonClass('secondary')}>Back to your tests</Link>
+        </div>
+      </Page>
+    );
+  }
+
   return (
     <Page>
       <Link to="/" className="text-sm font-semibold text-graphite-soft hover:text-graphite">Your tests</Link>

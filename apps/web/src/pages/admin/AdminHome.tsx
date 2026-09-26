@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useAdminUsers, useOnlineUsers } from '../../api/admin';
+import { useOnlineUsers, useUserCounts } from '../../api/admin';
 import { canManageUsers, isAdmin, useAuth } from '../../auth/auth';
 import { Page } from '../../components/Layout';
 import { Badge, Card, ErrorNote, Spinner } from '../../components/ui';
@@ -12,14 +12,11 @@ const ROLE_LABELS: Record<string, string> = {
 
 export function AdminHome() {
   const { user } = useAuth();
-  const users = useAdminUsers();
+  // counted by the API, so the figures hold however many people there are
+  const users = useUserCounts(Object.keys(ROLE_LABELS));
   const online = useOnlineUsers();
   const firstName = user?.name?.split(' ')[0];
-
-  const byRole = new Map<string, number>();
-  for (const u of users.data ?? []) for (const r of u.roles ?? []) byRole.set(r, (byRole.get(r) ?? 0) + 1);
-  const active = (users.data ?? []).filter((u) => u.isActive !== false).length;
-  const roleRows = [...byRole.entries()].sort((a, b) => b[1] - a[1]);
+  const roleRows = [...(users.data?.byRole ?? [])].sort((a, b) => b[1] - a[1]);
 
   return (
     <Page>
@@ -35,10 +32,10 @@ export function AdminHome() {
       {users.data && (
         <>
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-            <Stat label="People" value={String(users.data.length)} />
-            <Stat label="Active" value={String(active)} />
+            <Stat label="People" value={String(users.data.total)} />
+            <Stat label="Active" value={String(users.data.active)} />
             <Stat label="Online now" value={online.data === undefined ? '—' : String(online.data)} accent />
-            <Stat label="Roles" value={String(byRole.size)} />
+            <Stat label="Roles" value={String(roleRows.length)} />
           </div>
 
           <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
@@ -56,7 +53,7 @@ export function AdminHome() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               {canManageUsers(user) && (
-                <QuickLink to="/admin/users" title="People" body={`Manage the ${plural(users.data.length, 'account')}: roles, access, activation.`} />
+                <QuickLink to="/admin/users" title="People" body={`Manage the ${plural(users.data.total, 'account')}: roles, access, activation.`} />
               )}
               {isAdmin(user) && (
                 <QuickLink to="/admin/settings" title="Platform settings" body="Branding, sign-up, support email and feature switches." />

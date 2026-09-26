@@ -43,6 +43,15 @@ describe('classResults', () => {
     expect(result.rows.map((r) => r.attemptNumber)).toEqual([2, 1]);
   });
 
+  it('keeps two students who share a name apart', () => {
+    const result = classResults([
+      attempt({ studentName: 'Asha', user: 'u1', createdAt: 'Sat Sep 19 2026 01:00:00 GMT+0000' }, [R, R, W]),
+      attempt({ studentName: 'Asha', user: { _id: 'u2' }, createdAt: 'Sat Sep 19 2026 02:00:00 GMT+0000' }, [R, W, W]),
+    ], questions);
+    expect(new Set(result.rows.map((r) => r.student)).size).toBe(2);
+    expect(result.rows.map((r) => r.attemptNumber)).toEqual([1, 1]);
+  });
+
   it('counts right answers per question and finds the hardest one', () => {
     const result = classResults([
       attempt({ email: 'a@x' }, [R, R, W]),

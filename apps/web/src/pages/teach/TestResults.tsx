@@ -28,7 +28,7 @@ export function TestResults() {
 
   const qs = questions.data ?? [];
   const r = classResults(attempts.data ?? [], qs.map((q) => q._id));
-  const students = new Set(r.rows.map((row) => row.name)).size;
+  const students = new Set(r.rows.map((row) => row.student)).size;
 
   return (
     <Page>

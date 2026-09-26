@@ -7842,7 +7842,8 @@ export class AttemptService {
       }
 
       let body = {
-        answersOfUser: request.answersOfUser,
+        // gRPC drops an empty list: no answers at all is still a hand-in
+        answersOfUser: request.answersOfUser ?? [],
         // the attempt's own test, never one named by the client
         practiceId: String(attempt.practicesetId),
         isAbandoned: request.isAbandoned,
@@ -7851,6 +7852,11 @@ export class AttemptService {
       let newAttempt = await this.attemptProcessor.process(
         request.instancekey, request.attemptId, body
       )
+      // A hand-in (not an abandon) counts as finished at once, so it shows in the student's
+      // results even if a follow-up call from the client never arrives
+      if (String(request.isAbandoned) !== 'true') {
+        await this.updateAbandonStatus({ instancekey: request.instancekey, attemptId: request.attemptId, userId: request.userId } as UpdateAbandonStatusRequest)
+      }
       return { attempt: newAttempt }
 
     } catch (err) {

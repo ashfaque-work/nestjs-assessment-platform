@@ -5750,23 +5750,11 @@ export class UsersService {
       }
 
       if (req.query.searchText) {
-        condition.$or = [{
-          name: {
-            $regex: req.query.searchText,
-            $options: "i"
-          }
-        },
-        {
-          userId: {
-            $regex: req.query.searchText,
-            $options: "i"
-          }
-        }, {
-          rollNumber: {
-            $regex: req.query.searchText,
-            $options: "i"
-          }
-        }]
+        // the text is matched as typed: "(" or "+" in a search must not break or slow the query
+        const text = String(req.query.searchText).slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        condition.$or = ['name', 'userId', 'email', 'rollNumber'].map((field) => ({
+          [field]: { $regex: text, $options: 'i' }
+        }))
       }
 
       this.usersRepository.setInstanceKey(req.instancekey)

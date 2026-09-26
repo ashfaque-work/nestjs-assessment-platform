@@ -1,17 +1,46 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import type { AdminUser, WhiteLabel } from './types';
 
-// The people on the platform. The list is small at demo scale, so we load a page and search on
-// the client; the query still passes a role filter through to the API.
-export function useAdminUsers(role?: string) {
+export interface UserQuery {
+  page?: number;
+  limit?: number;
+  role?: string;
+  search?: string;
+  activeOnly?: boolean;
+}
+
+// One page of people, filtered and searched by the API, with how many match in all.
+// Deactivated people are included unless asked otherwise, so an admin can reactivate them.
+async function fetchUsers({ page = 1, limit = 50, role, search, activeOnly }: UserQuery) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit), count: 'true' });
+  if (!activeOnly) q.set('includeInactive', 'true');
+  if (role) q.set('roles', role);
+  if (search) q.set('searchText', search);
+  const r = await api<{ users?: AdminUser[]; count?: number }>('GET', `/auth/users?${q}`);
+  return { users: r.users ?? [], count: r.count ?? 0 };
+}
+
+export function useAdminUsers(query: UserQuery) {
   return useQuery({
-    queryKey: ['admin', 'users', role ?? 'all'],
+    queryKey: ['admin', 'users', query],
+    queryFn: () => fetchUsers(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+// Head counts for the overview: everyone, the active, and each role
+export function useUserCounts(roles: string[]) {
+  return useQuery({
+    queryKey: ['admin', 'users', 'counts', roles],
     queryFn: async () => {
-      // deactivated people too, so an admin can see and reactivate them
-      const q = new URLSearchParams({ page: '1', limit: '200', includeInactive: 'true' });
-      if (role) q.set('roles', role);
-      return (await api<{ users: AdminUser[] }>('GET', `/auth/users?${q}`)).users ?? [];
+      const count = async (q: UserQuery) => (await fetchUsers({ ...q, limit: 1 })).count;
+      const [total, active, ...perRole] = await Promise.all([
+        count({}),
+        count({ activeOnly: true }),
+        ...roles.map((role) => count({ role })),
+      ]);
+      return { total, active, byRole: roles.map((role, i) => [role, perRole[i]] as const).filter(([, n]) => n > 0) };
     },
   });
 }

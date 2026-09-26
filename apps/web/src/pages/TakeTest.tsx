@@ -76,6 +76,9 @@ function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: stri
         onSuccess: () => {
           discardSession(attemptId);
           queryClient.invalidateQueries({ queryKey: ['attempts'] });
+          // a copy loaded before the hand-in (from the result page) still says "not finished"
+          queryClient.removeQueries({ queryKey: ['attempt', attemptId] });
+          queryClient.removeQueries({ queryKey: ['review', attemptId] });
           navigate(`/results/${attemptId}`, { replace: true });
         },
         onError: (error) => {
