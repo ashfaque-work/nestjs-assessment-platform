@@ -18,6 +18,7 @@ service AuthGrpcService {
   rpc UpdateDossierComments(UpdateDossierCommentsReq) returns (UpdateDossierCommentsRes) {}
   rpc UpdateUserStatus(UpdateUserStatusReq) returns (UpdateUserStatusRes) {}
   rpc UpdateUserRole(UpdateUserRoleReq) returns (UpdateUserStatusRes) {}
+  rpc ManageUser(ManageUserReq) returns (UpdateUserStatusRes) {}
   rpc SendForReviewDossier(SendForReviewDossierReq) returns (SendForReviewDossierRes) {}
   rpc Blockuser(BlockUserReq) returns (BlockUserRes){}
   rpc AddLocation(AddLocationReq) returns (AddLocationRes) {}
@@ -995,6 +996,17 @@ message UpdateUserStatusRes{
 message UpdateUserRoleReq{
   string _id = 1;
   repeated string roles = 2;
+}
+
+// An account manager's changes to one person; a field left out is left as it is
+message ManageUserReq{
+  string _id = 1;
+  string instancekey = 2;
+  optional string name = 3;
+  repeated string subjects = 4;
+  bool setSubjects = 5;
+  optional bool isVerified = 6;
+  optional string password = 7;
 }
 
 message SendForReviewDossierReq{

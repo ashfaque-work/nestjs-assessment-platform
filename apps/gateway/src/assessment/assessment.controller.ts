@@ -443,8 +443,8 @@ export class AssessmentController {
   @ApiHeader({ required: true, name: 'authtoken' })
   @Roles(['support', 'teacher', 'publisher', 'admin', 'operator', 'centerHead', 'director'])
   @UseGuards(AuthenticationGuard, RolesGuard)
-  updateQuestionOrder(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() body: UpdateQuestionOrderRequest) {
-    return this.assessmentService.updateQuestionOrder({ instancekey, id, ...body })
+  updateQuestionOrder(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() body: UpdateQuestionOrderRequest, @Req() req: any) {
+    return this.assessmentService.updateQuestionOrder({ instancekey, id, ...body, user: req.user })
   }
 
   // delete assessment by-> id
@@ -693,7 +693,9 @@ export class AssessmentController {
   @Put('/saveAs/:id')
   @ApiParam({ name: 'id', description: 'Practice ID' })
   @ApiHeader({ required: true, name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  // a copy carries the questions and their answers: for the people who write tests
+  @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   saveAs(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() body: SaveAsRequest, @Req() req: any) {
     return this.assessmentService.saveAs({ instancekey, id, ...body, user: req.user })
   }

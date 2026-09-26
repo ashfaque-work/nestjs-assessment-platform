@@ -1,4 +1,5 @@
 import { STATUS, type GradedAnswer, type ResultAttempt } from '../api/types';
+import { parseDate } from './format';
 
 export type Cell = 'right' | 'wrong' | 'missed' | 'pending';
 
@@ -7,6 +8,7 @@ export interface StudentRow {
   student: string; // who took it: the same for every attempt by one student
   name: string;
   attemptNumber: number; // 1 for the student's first finished attempt
+  late: boolean; // handed in after the time ran out
   score: number;
   maxScore: number;
   timeMs: number;
@@ -49,6 +51,7 @@ export function classResults(attempts: ResultAttempt[], questionIds: string[]): 
     return {
       id: a._id ?? `${student}-${attemptNumber}`,
       student,
+      late: !!a.submittedLate,
       name: a.studentName || a.email || 'Student',
       attemptNumber,
       score: a.totalMark,
@@ -80,4 +83,21 @@ export function classResults(attempts: ResultAttempt[], questionIds: string[]): 
 function time(value: string | undefined): number {
   const t = value ? Date.parse(value.replace(/\s*\(.*\)\s*$/, '')) : NaN;
   return Number.isNaN(t) ? 0 : t;
+}
+
+// One field of a CSV line: quoted when it holds a comma, quote or line break; a leading = + - @
+// is prefixed so a spreadsheet does not run it as a formula
+function csvField(value: string | number): string {
+  let text = String(value);
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+// The class sheet as CSV: a line per attempt, newest first, with each question's outcome
+export function classResultsCsv(results: ClassResults, questionCount: number): string {
+  const header = ['Student', 'Attempt', 'Score', 'Out of', 'Time (s)', 'Handed in', 'Late', ...Array.from({ length: questionCount }, (_, i) => `Q${i + 1}`)];
+  const lines = results.rows.map((r) => [
+    r.name, r.attemptNumber, r.score, r.maxScore, Math.round((r.timeMs ?? 0) / 1000), parseDate(r.date)?.toISOString() ?? '', r.late ? 'yes' : '', ...r.cells,
+  ]);
+  return [header, ...lines].map((line) => line.map(csvField).join(',')).join('\r\n');
 }

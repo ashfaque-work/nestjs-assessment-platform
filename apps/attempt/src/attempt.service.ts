@@ -399,6 +399,9 @@ let Branch_Mapping_For_Personality = [
 
 let definedLevel = ["Low", "Medium", "High"];
 
+// Allowance for a slow connection before a hand-in counts as late
+const LATE_GRACE_MS = 2 * 60_000;
+
 @Injectable()
 export class AttemptService {
   constructor(
@@ -6799,6 +6802,16 @@ export class AttemptService {
         if (test.expiresOn && new Date(test.expiresOn) < new Date()) {
           throw new ForbiddenException('This test has expired');
         }
+        // a test may allow only so many hand-ins per student (0: no limit)
+        if (test.attemptAllowed > 0) {
+          this.attemptRepository.setInstanceKey(request.instancekey);
+          const taken = await this.attemptRepository.countDocuments({
+            user: new Types.ObjectId(request.userId), practicesetId: test._id, ongoing: false, isAbandoned: false,
+          });
+          if (taken >= test.attemptAllowed) {
+            throw new ForbiddenException(`You have used all ${test.attemptAllowed} attempts at this test`);
+          }
+        }
       }
       this.attemptRepository.setInstanceKey(request.instancekey)
       let newAttempt: any = new Attempt()
@@ -7825,7 +7838,7 @@ export class AttemptService {
       this.attemptRepository.setInstanceKey(request.instancekey);
       const attempt: any = await this.attemptRepository.findOne(
         { _id: new Types.ObjectId(request.attemptId) },
-        { user: 1, practicesetId: 1, ongoing: 1, totalQuestions: 1 },
+        { user: 1, practicesetId: 1, ongoing: 1, totalQuestions: 1, createdAt: 1 },
         { lean: true }
       )
       if (!attempt) {
@@ -7857,11 +7870,29 @@ export class AttemptService {
       if (String(request.isAbandoned) !== 'true') {
         await this.updateAbandonStatus({ instancekey: request.instancekey, attemptId: request.attemptId, userId: request.userId } as UpdateAbandonStatusRequest)
       }
+      await this.applyTimeLimit(request.instancekey, attempt);
       return { attempt: newAttempt }
 
     } catch (err) {
       throw toGrpcError(err);
     }
+  }
+
+  // The clock runs in the browser, so the server checks the time itself. A late hand-in is still
+  // graded (no answers are lost) but is flagged for the teacher, and the time on record never
+  // exceeds the test's limit, whatever the client reported.
+  private async applyTimeLimit(instancekey: string, attempt: any) {
+    this.practiceSetRepository.setInstanceKey(instancekey);
+    const test: any = await this.practiceSetRepository.findOne({ _id: attempt.practicesetId }, { totalTime: 1 }, { lean: true });
+    const limitMs = (test?.totalTime ?? 0) * 60_000;
+    if (!limitMs) return;
+    const startedAt = attempt.createdAt ? new Date(attempt.createdAt).getTime() : NaN;
+    const late = Number.isFinite(startedAt) && Date.now() - startedAt > limitMs + LATE_GRACE_MS;
+    this.attemptRepository.setInstanceKey(instancekey);
+    const saved: any = await this.attemptRepository.findOne({ _id: attempt._id }, { totalTime: 1 }, { lean: true });
+    const $set: any = { submittedLate: late };
+    if ((saved?.totalTime ?? 0) > limitMs) $set.totalTime = limitMs;
+    await this.attemptRepository.updateOne({ _id: attempt._id }, { $set });
   }
 
   async getCareerAttempts(request: GetCareerAttemptsRequest) {

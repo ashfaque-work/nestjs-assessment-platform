@@ -4,6 +4,8 @@ import { Page, RequireAdmin, RequireAuth, RequireManagement, RequireStaff } from
 import { buttonClass } from './components/ui';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
+import { Profile } from './pages/Profile';
+import { Signup } from './pages/Signup';
 import { Result } from './pages/Result';
 import { TakeTest } from './pages/TakeTest';
 import { TestIntro } from './pages/TestIntro';
@@ -19,7 +21,9 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route element={<RequireAuth />}>
+        <Route path="/profile" element={<Profile />} />
         <Route path="/" element={<Home />} />
         <Route path="/tests/:testId" element={<TestIntro />} />
         <Route path="/tests/:testId/attempt/:attemptId" element={<TakeTest />} />

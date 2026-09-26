@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../api/client';
-import { useFinishAttempt, useTest } from '../api/hooks';
+import { useAttempt, useFinishAttempt, useTest } from '../api/hooks';
 import { useAuth } from '../auth/auth';
 import type { Question, TestWithQuestions } from '../api/types';
 import { AnswerSheet } from '../components/AnswerSheet';
 import { Bubble } from '../components/Bubble';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Button, buttonClass, Dialog, ErrorNote, Spinner, Wordmark } from '../components/ui';
-import { clock, letter, marks, plural } from '../lib/format';
+import { clock, letter, marks, parseDate, plural } from '../lib/format';
 import {
   createSession,
   discardSession,
@@ -25,23 +25,30 @@ import {
 export function TakeTest() {
   const { testId = '', attemptId = '' } = useParams();
   const test = useTest(testId);
+  const attempt = useAttempt(attemptId);
 
-  if (test.isPending) return <Centered><Spinner label="Loading the test" /></Centered>;
-  if (test.isError) {
+  if (test.isPending || attempt.isPending) return <Centered><Spinner label="Loading the test" /></Centered>;
+  if (test.isError || attempt.isError) {
+    const error = test.error ?? attempt.error;
     return (
       <Centered>
-        <ErrorNote message={test.error.message} action={<Link to="/" className={buttonClass('secondary')}>Back to your tests</Link>} />
+        <ErrorNote message={error?.message ?? 'The test could not be loaded.'} action={<Link to="/" className={buttonClass('secondary')}>Back to your tests</Link>} />
       </Centered>
     );
   }
-  return <Attempt test={test.data} attemptId={attemptId} />;
+  // handed in already (another tab, another device): show the result instead
+  if (!attempt.data.ongoing) return <Navigate to={`/results/${attemptId}`} replace />;
+  // The clock starts when the attempt was started on the server, not when this page opened, so
+  // another device or cleared browser storage does not give more time
+  const startedAt = Math.min(Date.now(), parseDate(attempt.data.createdAt)?.getTime() ?? Date.now());
+  return <Attempt test={test.data} attemptId={attemptId} startedAt={startedAt} />;
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
   return <div className="mx-auto max-w-5xl px-4 sm:px-6">{children}</div>;
 }
 
-function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: string }) {
+function Attempt({ test, attemptId, startedAt }: { test: TestWithQuestions; attemptId: string; startedAt: number }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const finish = useFinishAttempt();
@@ -51,7 +58,7 @@ function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: stri
   const [session, dispatch] = useReducer(
     sessionReducer,
     null,
-    (): Session => loadSession(attemptId, user?._id) ?? createSession(attemptId, test._id, test.questions.map((q) => q._id), test.totalTime * 60_000, Date.now(), user?._id),
+    (): Session => loadSession(attemptId, user?._id) ?? createSession(attemptId, test._id, test.questions.map((q) => q._id), test.totalTime * 60_000, startedAt, user?._id),
   );
   useEffect(() => saveSession(session), [session]);
 

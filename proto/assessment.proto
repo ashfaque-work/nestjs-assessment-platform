@@ -1857,6 +1857,7 @@ message UpdateQuestionOrderRequest {
   string id = 2;
   string question = 3;
   int32 order = 4;
+  User user = 5;
 }
 
 message UpdateQuestionOrderResponse {

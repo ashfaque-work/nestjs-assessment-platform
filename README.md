@@ -145,18 +145,28 @@ The live demo's server setup (Caddy, the compose overrides, build, backup, healt
 ## Authentication
 - `POST /auth/login` returns a JWT. Send it as the `authtoken` header together with `instancekey`.
 - `AuthenticationGuard` verifies the token and loads the user; `RolesGuard` checks the user's roles from the database.
-- `GET /auth/refreshToken` issues a new token only for a validly signed token that belongs to an existing session.
+- `GET /auth/refreshToken` issues a new token only for a validly signed token that belongs to an existing session,
+  within 7 days of its expiry, and never for a deactivated account.
+- A deactivated account cannot sign in, and its existing tokens stop working at once.
+- Signing up (`POST /auth/users`) gives the student or teacher role only; staff roles are given by staff.
+- `PROTECTED_ACCOUNTS` (emails, comma separated) lists accounts nobody may change: roles, status, details or
+  password. Use it for shared demo accounts.
+- `SIGNUP_INSTITUTE_ID` (a location id) is the institute people who sign up themselves join, taking its subjects,
+  so a new student sees that institute's tests at once.
 
 ## Web app
 
 `apps/web` has its own `package.json`.
 
-- **Students** see open tests and past results, take a timed test (answer sheet navigator, mark for review,
-  keyboard shortcuts, answers kept if the page reloads), then review the marked answer sheet with explanations and a
-  breakdown by topic.
-- **Teachers** write tests (questions with an answer key and explanations, time, marking), publish them, and read
+- **Students** sign up, see open tests and past results, take a timed test (answer sheet navigator, mark for review,
+  keyboard shortcuts, answers kept if the page reloads; the clock runs from the server's start time), then review the
+  marked answer sheet with explanations and a breakdown by topic. The profile page changes their name and password.
+- **Teachers** write tests (single- and multiple-answer questions with an answer key and explanations, time, marking,
+  attempts per student, a closing date), reorder questions, publish, duplicate, withdraw or delete drafts, and read
   the class answer sheet: every student's answers to every question, the share of the class that got each one right,
-  and the hardest question.
+  the hardest question, late hand-ins, each student's own answer sheet, and a CSV download.
+- **Admins** manage people (search and pages on the server; add, edit name, subjects, teacher verification and
+  password, roles, deactivate and reactivate) and the platform settings.
 
 ```bash
 cd apps/web
@@ -167,8 +177,9 @@ npm test
 npm run build   # static files in apps/web/dist
 ```
 
-In production the built files are served by the same Caddy that fronts the gateway: `/`, `/login`, `/tests/*`,
-`/results/*`, `/teach/*` and `/assets/*` are the app, everything else goes to the API, so the app needs no CORS setup.
+In production the built files are served by the same Caddy that fronts the gateway: `/`, `/login`, `/signup`,
+`/profile`, `/tests/*`, `/results/*`, `/teach/*`, `/admin`, `/admin/users`, `/admin/settings` and `/assets/*` are the
+app, everything else goes to the API, so the app needs no CORS setup.
 
 ## Tests
 

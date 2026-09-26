@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAddUser, useAdminUsers, useSetUserActive, useUpdateUserRole } from '../../api/admin';
+import { useAddUser, useAdminUsers, useAllSubjects, useManageUser, useSetUserActive, useUpdateUserRole } from '../../api/admin';
 import type { AdminUser } from '../../api/types';
 import { isAdmin, useAuth } from '../../auth/auth';
 import { Page } from '../../components/Layout';
@@ -100,6 +100,7 @@ const ROLE_TONE: Record<string, 'accent' | 'neutral' | 'review'> = { admin: 'rev
 function UserRow({ u, isAdminMe, isMe }: { u: AdminUser; isAdminMe: boolean; isMe: boolean }) {
   const setActive = useSetUserActive();
   const [editing, setEditing] = useState(false);
+  const [editingPerson, setEditingPerson] = useState(false);
   const active = u.isActive !== false;
   const initials = (u.name ?? u.userId ?? '?').split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase();
   const canManage = isAdminMe && !isMe;
@@ -125,6 +126,9 @@ function UserRow({ u, isAdminMe, isMe }: { u: AdminUser; isAdminMe: boolean; isM
           <Badge key={r} tone={ROLE_TONE[r] ?? 'neutral'}>{roleLabel(r)}</Badge>
         ))}
       </button>
+      {canManage && (
+        <Button variant="quiet" className="h-8 px-3 text-xs" onClick={() => setEditingPerson(true)}>Edit</Button>
+      )}
       <div className="w-24 shrink-0 text-right">
         {canManage ? (
           <Button
@@ -140,6 +144,7 @@ function UserRow({ u, isAdminMe, isMe }: { u: AdminUser; isAdminMe: boolean; isM
         )}
       </div>
       {editing && <RoleDialog u={u} onClose={() => setEditing(false)} />}
+      {editingPerson && <EditPersonDialog u={u} onClose={() => setEditingPerson(false)} />}
     </div>
   );
 }
@@ -174,25 +179,110 @@ function RoleDialog({ u, onClose }: { u: AdminUser; onClose: () => void }) {
   );
 }
 
+// The roles that study or teach subjects: they need at least one to see or write tests
+const SUBJECT_ROLES = ['student', 'teacher', 'mentor', 'publisher'];
+const TEACHING_ROLES = ['teacher', 'mentor'];
+
+// Choose subjects from the platform's list
+function SubjectPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const subjects = useAllSubjects();
+  const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
+  return (
+    <fieldset>
+      <legend className="text-sm font-semibold">Subjects</legend>
+      {subjects.isPending && <p className="mt-1.5 text-sm text-graphite-soft">Loading subjects…</p>}
+      {subjects.isError && <p className="mt-1.5 text-sm text-wrong">{subjects.error.message}</p>}
+      {subjects.data && subjects.data.length === 0 && <p className="mt-1.5 text-sm text-graphite-soft">There are no subjects yet.</p>}
+      <div className="mt-1.5 grid max-h-40 grid-cols-2 gap-2 overflow-y-auto">
+        {(subjects.data ?? []).map((s) => (
+          <label key={s._id} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${value.includes(s._id) ? 'border-form bg-form-faint text-form' : 'border-rule hover:border-rule-strong'}`}>
+            <input type="checkbox" checked={value.includes(s._id)} onChange={() => toggle(s._id)} className="accent-[var(--form)]" />
+            {s.name}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+function VerifiedToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-1 accent-[var(--form)]" />
+      <span>
+        <span className="block text-sm font-semibold">Verified teacher</span>
+        <span className="block text-xs text-graphite-soft">A verified teacher can publish tests for every student.</span>
+      </span>
+    </label>
+  );
+}
+
+// Change a person's name, subjects, teacher verification and password
+function EditPersonDialog({ u, onClose }: { u: AdminUser; onClose: () => void }) {
+  const manage = useManageUser();
+  const [name, setName] = useState(u.name ?? '');
+  const [subjects, setSubjects] = useState<string[]>((u.subjects ?? []).map(String));
+  const [verified, setVerified] = useState(!!u.isVerified);
+  const [password, setPassword] = useState('');
+  const studies = (u.roles ?? []).some((r) => SUBJECT_ROLES.includes(r));
+  const teaches = (u.roles ?? []).some((r) => TEACHING_ROLES.includes(r));
+  const passwordOk = !password || (password.length >= 8 && password.length <= 20);
+  const ready = name.trim().length > 0 && passwordOk;
+
+  const save = async () => {
+    await manage.mutateAsync({
+      id: u._id,
+      name: name.trim(),
+      ...(studies ? { subjects } : {}),
+      ...(teaches ? { isVerified: verified } : {}),
+      ...(password ? { password } : {}),
+    });
+    onClose();
+  };
+
+  return (
+    <Dialog open onClose={onClose} title={`Edit ${u.name ?? u.userId}`}>
+      <div className="grid gap-4">
+        <Field label="Name" value={name} onChange={setName} />
+        {studies && <SubjectPicker value={subjects} onChange={setSubjects} />}
+        {studies && subjects.length === 0 && (
+          <p className="text-xs text-review">Without a subject they cannot {teaches ? 'write tests' : 'see any tests'}.</p>
+        )}
+        {teaches && <VerifiedToggle checked={verified} onChange={setVerified} />}
+        <Field label="New password" type="password" value={password} onChange={setPassword} hint="Leave empty to keep their password. 8 to 20 characters." />
+      </div>
+      {manage.isError && <p className="mt-3 text-sm text-wrong">{(manage.error as Error).message}</p>}
+      <div className="mt-5 flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+        <Button onClick={save} disabled={!ready || manage.isPending}>{manage.isPending ? 'Saving…' : 'Save'}</Button>
+      </div>
+    </Dialog>
+  );
+}
+
 function AddPersonDialog({ onClose }: { onClose: () => void }) {
   const add = useAddUser();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [verified, setVerified] = useState(false);
+  const studies = SUBJECT_ROLES.includes(role);
+  const teaches = TEACHING_ROLES.includes(role);
 
   const submit = async () => {
-    await add.mutateAsync({ name, email, password, role });
+    await add.mutateAsync({ name, email, password, role, subjects: studies ? subjects : [], verified: teaches && verified });
     onClose();
   };
-  const ready = name.trim() && /.+@.+\..+/.test(email) && password.length >= 8;
+  const ready = name.trim() && /.+@.+\..+/.test(email) && password.length >= 8 && password.length <= 20;
 
   return (
     <Dialog open onClose={onClose} title="Add a person">
       <div className="grid gap-3">
         <Field label="Name" value={name} onChange={setName} />
         <Field label="Email" type="email" value={email} onChange={setEmail} />
-        <Field label="Password" type="password" value={password} onChange={setPassword} hint="At least 8 characters" />
+        <Field label="Password" type="password" value={password} onChange={setPassword} hint="8 to 20 characters" />
         <label className="block">
           <span className="text-sm font-semibold">Role</span>
           <select
@@ -203,6 +293,8 @@ function AddPersonDialog({ onClose }: { onClose: () => void }) {
             {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{roleLabel(r)}</option>)}
           </select>
         </label>
+        {studies && <SubjectPicker value={subjects} onChange={setSubjects} />}
+        {teaches && <VerifiedToggle checked={verified} onChange={setVerified} />}
       </div>
       {add.isError && <p className="mt-3 text-sm text-wrong">{(add.error as Error).message}</p>}
       <div className="mt-5 flex justify-end gap-2">

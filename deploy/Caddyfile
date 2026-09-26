@@ -16,7 +16,7 @@ assess.ashfaqueahmad.com {
 	# /admin/reports still reverse-proxies, only /admin, /admin/users, /admin/settings are the app).
 	@pages {
 		method GET HEAD
-		path / /login /tests /tests/* /results/* /teach /teach/* /admin /admin/users /admin/settings /favicon.svg
+		path / /login /signup /profile /tests /tests/* /results/* /teach /teach/* /admin /admin/users /admin/settings /favicon.svg
 	}
 	handle @pages {
 		root * /srv/web

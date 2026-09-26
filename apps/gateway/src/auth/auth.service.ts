@@ -11,6 +11,7 @@ import {
   UpdateDossierCommentsReqDto,
   UpdateUserStatusReq,
   UpdateUserRoleReq,
+  ManageUserReq,
   SendForReviewDossierReq,
   BlockuserReq,
   AddLocationReq,
@@ -143,6 +144,10 @@ export class AuthGatewayService {
 
   async updateUserRole(id: string, roles: string[]) {
     return this.authGrpcService.UpdateUserRole({ _id: id, roles });
+  }
+
+  async manageUser(request: ManageUserReq) {
+    return this.authGrpcService.ManageUser(request);
   }
 
   async sendForReviewDossier(id: string, request: SendForReviewDossierReq) {

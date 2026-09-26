@@ -81,7 +81,7 @@ export function useUpdateUserRole() {
 export function useAddUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string; email: string; password: string; role: string }) =>
+    mutationFn: (input: { name: string; email: string; password: string; role: string; subjects: string[]; verified: boolean }) =>
       api('POST', '/auth/addUser', {
         name: input.name,
         userId: input.email,
@@ -89,7 +89,36 @@ export function useAddUser() {
         password: input.password,
         roles: [input.role],
         userRoles: [input.role],
+        // a student needs subjects to see tests; a teacher needs them to write tests
+        subjects: input.subjects,
+        isVerified: input.verified,
       }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  });
+}
+
+// Every subject on the platform, to choose from when setting what a person studies or teaches
+export function useAllSubjects() {
+  return useQuery({
+    queryKey: ['admin', 'subjects'],
+    queryFn: async () => (await api<{ response?: { _id: string; name: string }[] }>('GET', '/subjects')).response ?? [],
+    staleTime: 5 * 60_000,
+  });
+}
+
+export interface ManageUserInput {
+  id: string;
+  name?: string;
+  subjects?: string[];
+  isVerified?: boolean;
+  password?: string;
+}
+
+// Change a person's name, subjects, teacher verification or password; only what is given changes
+export function useManageUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...changes }: ManageUserInput) => api('PUT', `/auth/manageUser/${id}`, changes),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
   });
 }

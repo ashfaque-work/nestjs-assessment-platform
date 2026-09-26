@@ -69,6 +69,10 @@ export class Attempt extends AbstractDocument {
     @Prop({ type: Boolean, default: false })
     isFraudulent: boolean;
 
+    // handed in after the test's time (plus a short grace for a slow connection) had run out
+    @Prop({ type: Boolean, default: false })
+    submittedLate: boolean;
+
     @Prop({ type: Boolean, default: false })
     markedSuspicious: boolean;
 

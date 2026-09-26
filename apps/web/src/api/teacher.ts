@@ -105,12 +105,53 @@ export function usePublishTest(testId: string) {
   });
 }
 
-// The body POST /question and PUT /question/:id expect for a single-answer question
+// Withdraw a published test: students can no longer start it; results stay
+export function useWithdrawTest(testId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (test: Record<string, unknown>) => api('PUT', `/assessment/${testId}`, { ...test, status: 'revoked' }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['teacher', 'test', testId] });
+      client.invalidateQueries({ queryKey: ['teacher', 'tests'] });
+    },
+  });
+}
+
+// Delete a draft
+export function useDeleteTest() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (testId: string) => api('DELETE', `/assessment/${testId}`),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['teacher', 'tests'] }),
+  });
+}
+
+// A new draft with the same settings and its own copies of the questions
+export function useDuplicateTest() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ testId, title }: { testId: string; title: string }) =>
+      (await api<{ response: TeacherTest }>('PUT', `/assessment/saveAs/${testId}`, { title })).response,
+    onSuccess: () => client.invalidateQueries({ queryKey: ['teacher', 'tests'] }),
+  });
+}
+
+// Move a question of a draft to a new place (1 = first)
+export function useMoveQuestion(testId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ questionId, order }: { questionId: string; order: number }) =>
+      api('PUT', `/assessment/${testId}/questionOrder`, { question: questionId, order }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['teacher', 'questions', testId] }),
+  });
+}
+
+// The body POST /question and PUT /question/:id expect
 export function questionBody(draft: QuestionDraft, test: TeacherTest) {
   return {
     questionText: draft.questionText.trim(),
     category: 'mcq',
-    questionType: 'single',
+    questionType: draft.multiple ? 'multiple' : 'single',
     complexity: 'moderate',
     subject: test.subjects[0],
     unit: draft.unit,
@@ -159,6 +200,6 @@ export function draftProblems(draft: QuestionDraft): string[] {
   if (filled.length < 2) problems.push('Give at least two answer options.');
   if (filled.length !== draft.options.length) problems.push('Fill in or remove the empty option.');
   const correct = draft.options.filter((o) => o.isCorrectAnswer).length;
-  if (correct !== 1) problems.push('Mark the one correct answer.');
+  if (draft.multiple ? correct < 1 : correct !== 1) problems.push(draft.multiple ? 'Mark at least one correct answer.' : 'Mark the one correct answer.');
   return problems;
 }

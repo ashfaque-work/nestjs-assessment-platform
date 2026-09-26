@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/auth';
 import { ApiError } from '../api/client';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -69,6 +69,10 @@ export function Login() {
               {busy ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>
+
+          <p className="mt-4 text-sm text-graphite-soft">
+            New here? <Link to="/signup" className="font-semibold text-form hover:underline">Create an account</Link>
+          </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-graphite-soft">
             <span>Try it as</span>

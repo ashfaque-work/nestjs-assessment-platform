@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { useAttempt, useReview } from '../api/hooks';
+import { useAuth } from '../auth/auth';
 import { STATUS, type GradedAnswer, type ReviewQuestion, type SubjectScore } from '../api/types';
 import { Bubble, type BubbleState } from '../components/Bubble';
 import { Page } from '../components/Layout';
@@ -12,12 +13,17 @@ export function Result() {
   const { attemptId = '' } = useParams();
   const attempt = useAttempt(attemptId);
   const review = useReview(attemptId, attempt.isSuccess);
+  const { user } = useAuth();
 
   if (attempt.isPending) return <Page><Spinner label="Loading your result" /></Page>;
   if (attempt.isError) {
     return <Page><ErrorNote message={attempt.error.message} action={<Link to="/" className={buttonClass('secondary')}>Back to your tests</Link>} /></Page>;
   }
   const a = attempt.data;
+  // a teacher opening a student's answer sheet from the class results
+  const owner = typeof a.user === 'string' ? a.user : a.user?._id;
+  const mine = !owner || owner === user?._id;
+  const who = mine ? 'You' : a.studentName || 'The student';
 
   // Started but not handed in: there is no score yet
   if (a.ongoing || !a.totalQuestions) {
@@ -44,7 +50,7 @@ export function Result() {
         {a.practiceSetInfo?.title ?? 'Test'}, {day(a.createdAt)}
       </p>
       <h1 className="figures mt-1 text-[40px] font-bold leading-tight tracking-tight">
-        You scored {marks(a.totalMark)} of {marks(a.maximumMarks)}.
+        {who} scored {marks(a.totalMark)} of {marks(a.maximumMarks)}.
       </h1>
       <p className="figures mt-2 max-w-prose text-graphite-soft">
         {plural(a.totalCorrects, 'answer')} right, {a.totalErrors} wrong, {a.totalMissed} not answered, in {duration(a.totalTime)}.
@@ -54,7 +60,7 @@ export function Result() {
       <div className="mt-12 grid gap-14 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <section aria-labelledby="graded-sheet">
           <div className="flex items-baseline justify-between border-b border-form/40 pb-2">
-            <h2 id="graded-sheet" className="text-sm font-bold text-form">Your answer sheet, marked</h2>
+            <h2 id="graded-sheet" className="text-sm font-bold text-form">{mine ? "Your" : "Their"} answer sheet, marked</h2>
             <Legend />
           </div>
           {review.isPending && <Spinner label="Loading the answers" />}
@@ -72,8 +78,14 @@ export function Result() {
           <h2 id="by-topic" className="border-b border-rule pb-2 text-sm font-bold">By topic</h2>
           <Breakdown subjects={a.subjects} />
           <div className="mt-10 flex flex-col gap-2">
-            <Link to={`/tests/${a.practicesetId}`} className={buttonClass()}>Take the test again</Link>
-            <Link to="/" className={buttonClass('secondary')}>Back to your tests</Link>
+            {mine ? (
+              <>
+                <Link to={`/tests/${a.practicesetId}`} className={buttonClass()}>Take the test again</Link>
+                <Link to="/" className={buttonClass('secondary')}>Back to your tests</Link>
+              </>
+            ) : (
+              <Link to={`/teach/tests/${a.practicesetId}/results`} className={buttonClass('secondary')}>Back to the class results</Link>
+            )}
           </div>
         </aside>
       </div>

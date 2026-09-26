@@ -1,4 +1,4 @@
-import { canManageTest } from '@app/common/helpers/role-helper';
+import { canManageTest, canReadTest } from '@app/common/helpers/role-helper';
 import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import {
@@ -1100,7 +1100,7 @@ export class AssessmentService {
         newDataToSave.titleLower = practiceSet.title.toLowerCase()
         if (!newDataToSave.testType) { // without this check it will overwrite other type of test like psychometry
           // set default if not set or is set to tadaptive previously                            
-          newDataToSave.testType = 'practice';
+          newDataToSave.testType = 'standard'; // the schema's default ('practice' is not an allowed value)
         }
 
 
@@ -1209,7 +1209,7 @@ export class AssessmentService {
 
           try {
             // update instructors subjects
-            if (newDataToSave.instructors.length) {
+            if (newDataToSave.instructors?.length) {
               this.usersRepository.setInstanceKey(request.instancekey);
               await this.usersRepository.updateMany({ _id: { $in: newDataToSave.instructors } }, { $addToSet: { subjects: { $each: newDataToSave.subjects.map(s => s._id) } } })
               if (newDataToSave.accessMode === 'invitation') {
@@ -4771,6 +4771,13 @@ export class AssessmentService {
       if (!test) {
         throw new NotFoundException();
       }
+      if (!canManageTest(request.user, test)) {
+        throw new ForbiddenException('You can only change your own tests');
+      }
+      // students may already have taken a published test in this order
+      if (test.status !== 'draft' && test.status !== 'tempt') {
+        throw new BadRequestException('Questions can be reordered only in a draft test');
+      }
 
       if (test.questions.length === 0) {
         return { status: 'ok' };
@@ -4904,7 +4911,7 @@ export class AssessmentService {
                 uploadDir: getAssets(request.instancekey),
                 oQuestion: _.pick(q, 'questionHeader', 'questionText', 'answers', 'answerExplain'),
               });
-              await q.remove();
+              this.questionRepository.setInstanceKey(request.instancekey); await this.questionRepository.findByIdAndDelete(q._id);
             } else if (q.practiceSets && q.practiceSets.some((s) => s.equals(practice._id))) {
               // If this question is reusable and originally belong to this practiceSet
               // find if it is used by any other test.
@@ -4919,7 +4926,7 @@ export class AssessmentService {
                   uploadDir: getAssets(request.instancekey),
                   oQuestion: _.pick(q, 'questionHeader', 'questionText', 'answers', 'answerExplain'),
                 });
-                await q.remove();
+                this.questionRepository.setInstanceKey(request.instancekey); await this.questionRepository.findByIdAndDelete(q._id);
               } else {
                 this.questionRepository.setInstanceKey(request.instancekey)
                 await this.questionRepository.updateOne({ _id: q._id }, { $pull: { practiceSets: practice._id } });
@@ -7486,6 +7493,13 @@ export class AssessmentService {
 
       this.practiceSetRepository.setInstanceKey(req.instancekey);
       let result = await this.practiceSetRepository.findById(req.id, null, { lean: true });
+      if (!result) {
+        throw new NotFoundException('Practice Not Found');
+      }
+      // the copy is the caller's, questions and answers included: only for people who may read it
+      if (!canReadTest(req.user, result)) {
+        throw new ForbiddenException('You can only copy tests you can see');
+      }
 
       // Check if name already exists
       let found = await this.practiceSetRepository.findOne({ title: req.title }, null, { lean: true });
@@ -7522,7 +7536,27 @@ export class AssessmentService {
       }
       tempTest.locations = [new ObjectId(req.user.activeLocation)]
 
+      // The copy gets its own questions: shared ones would let an edit to the copy change the
+      // original (a published test included)
+      this.questionRepository.setInstanceKey(req.instancekey);
+      const copies = new Map<string, any>();
+      for (const item of tempTest.questions || []) {
+        const original: any = await this.questionRepository.findById(item.question, null, { lean: true });
+        if (!original) continue;
+        const { _id, uid, createdAt, updatedAt, ...fields } = original;
+        const answers = (original.answers || []).map(({ _id: answerId, ...answer }: any) => answer);
+        const copy: any = await this.questionRepository.create({ ...fields, answers, user: new ObjectId(req.user._id), practiceSets: [] });
+        copies.set(String(item.question), copy._id);
+      }
+      tempTest.questions = (tempTest.questions || [])
+        .filter((item: any) => copies.has(String(item.question)))
+        .map((item: any) => ({ ...item, question: copies.get(String(item.question)) }));
+      tempTest.totalQuestion = tempTest.questions.length;
+
       let test = await this.practiceSetRepository.create(tempTest)
+      if (copies.size) {
+        await this.questionRepository.updateMany({ _id: { $in: [...copies.values()] } }, { $set: { practiceSets: [test._id] } });
+      }
 
       return { response: test };
     } catch (error) {

@@ -1857,6 +1857,8 @@ export class UpdateQuestionOrderRequest {
   question: string;
   @ApiProperty()
   order: number;
+  // the caller, set by the gateway
+  user?: any;
 }
 
 export class UpdateQuestionOrderResponse {

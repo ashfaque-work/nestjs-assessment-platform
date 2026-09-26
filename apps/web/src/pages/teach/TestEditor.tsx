@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   MIN_QUESTIONS_TO_PUBLISH,
+  useDeleteTest,
+  useDuplicateTest,
+  useMoveQuestion,
   usePublishTest,
   useRemoveQuestion,
   useSaveQuestion,
   useSaveTest,
   useTeacherTest,
   useTestQuestions,
+  useWithdrawTest,
 } from '../../api/teacher';
 import type { BankQuestion, TeacherTest } from '../../api/types';
 import { Bubble } from '../../components/Bubble';
@@ -31,10 +35,24 @@ export function TestEditor() {
 }
 
 function Editor({ test, questions }: { test: TeacherTest & Record<string, unknown>; questions: BankQuestion[] }) {
+  const navigate = useNavigate();
   const draft = test.status === 'draft';
+  const published = test.status === 'published';
   const [publishing, setPublishing] = useState(false);
+  const [confirm, setConfirm] = useState<'withdraw' | 'delete' | null>(null);
   const publish = usePublishTest(test._id);
+  const withdraw = useWithdrawTest(test._id);
+  const remove = useDeleteTest();
+  const duplicate = useDuplicateTest();
   const missing = Math.max(0, MIN_QUESTIONS_TO_PUBLISH - questions.length);
+  const actionError = publish.error ?? withdraw.error ?? remove.error ?? duplicate.error;
+
+  // a copy needs its own title: titles are unique
+  const copy = () =>
+    duplicate.mutate(
+      { testId: test._id, title: `${test.title} (copy ${new Date().toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })})`.slice(0, 100) },
+      { onSuccess: (created) => navigate(`/teach/tests/${created._id}`) },
+    );
 
   return (
     <Page>
@@ -48,21 +66,47 @@ function Editor({ test, questions }: { test: TeacherTest & Record<string, unknow
               ? missing
                 ? `Draft. Add ${plural(missing, 'more question')} to publish it.`
                 : 'Draft. Ready to publish when you are.'
-              : 'Published. Students can take it, so its questions are locked.'}
+              : published
+                ? 'Published. Students can take it, so its questions and marks are locked.'
+                : 'Withdrawn. Students can no longer start it; its results stay.'}
           </p>
         </div>
-        {draft ? (
-          <Button onClick={() => setPublishing(true)} disabled={missing > 0 || publish.isPending}>Publish</Button>
-        ) : (
-          <Link to={`/teach/tests/${test._id}/results`} className={buttonClass()}>See results</Link>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={copy} disabled={duplicate.isPending}>{duplicate.isPending ? 'Copying…' : 'Duplicate'}</Button>
+          {draft && <Button variant="danger" onClick={() => setConfirm('delete')}>Delete</Button>}
+          {published && <Button variant="danger" onClick={() => setConfirm('withdraw')}>Withdraw</Button>}
+          {draft ? (
+            <Button onClick={() => setPublishing(true)} disabled={missing > 0 || publish.isPending}>Publish</Button>
+          ) : (
+            <Link to={`/teach/tests/${test._id}/results`} className={buttonClass()}>See results</Link>
+          )}
+        </div>
       </div>
-      {publish.isError && <ErrorNote message={publish.error.message} />}
+      {actionError && <ErrorNote message={actionError.message} />}
 
       <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Questions test={test} questions={questions} locked={!draft} />
-        <Settings test={test} locked={!draft} />
+        <Settings test={test} mode={draft ? 'draft' : published ? 'published' : 'closed'} />
       </div>
+
+      <Dialog open={confirm === 'withdraw'} onClose={() => setConfirm(null)} title="Withdraw this test?">
+        <p className="text-graphite-soft">Students can no longer start it. Attempts already handed in and their results stay.</p>
+        <div className="mt-6 flex flex-wrap justify-end gap-2">
+          <Button variant="secondary" onClick={() => setConfirm(null)}>Keep it open</Button>
+          <Button onClick={() => withdraw.mutate(test, { onSettled: () => setConfirm(null) })} disabled={withdraw.isPending}>
+            {withdraw.isPending ? 'Withdrawing…' : 'Withdraw'}
+          </Button>
+        </div>
+      </Dialog>
+      <Dialog open={confirm === 'delete'} onClose={() => setConfirm(null)} title="Delete this draft?">
+        <p className="text-graphite-soft">The draft goes away, with the questions written only for it. Questions other tests use stay.</p>
+        <div className="mt-6 flex flex-wrap justify-end gap-2">
+          <Button variant="secondary" onClick={() => setConfirm(null)}>Keep it</Button>
+          <Button onClick={() => remove.mutate(test._id, { onSuccess: () => navigate('/teach', { replace: true }), onSettled: () => setConfirm(null) })} disabled={remove.isPending}>
+            {remove.isPending ? 'Deleting…' : 'Delete'}
+          </Button>
+        </div>
+      </Dialog>
 
       <Dialog open={publishing} onClose={() => setPublishing(false)} title="Publish this test?">
         <p className="text-graphite-soft">
@@ -89,6 +133,7 @@ function Questions({ test, questions, locked }: { test: TeacherTest; questions: 
   const [removing, setRemoving] = useState<BankQuestion | null>(null);
   const save = useSaveQuestion(test._id);
   const remove = useRemoveQuestion(test._id);
+  const move = useMoveQuestion(test._id);
 
   const units = test.units.length ? test.units : [];
   const close = () => { setEditing(null); save.reset(); };
@@ -99,6 +144,7 @@ function Questions({ test, questions, locked }: { test: TeacherTest; questions: 
         Questions <span className="figures font-normal text-graphite-soft">({questions.length})</span>
       </h2>
 
+      {move.isError && <ErrorNote message={move.error.message} />}
       {questions.length === 0 && editing !== 'new' && (
         <p className="mt-4 text-graphite-soft">No questions yet. A test needs at least {MIN_QUESTIONS_TO_PUBLISH} before you can publish it.</p>
       )}
@@ -125,6 +171,9 @@ function Questions({ test, questions, locked }: { test: TeacherTest; questions: 
               locked={locked || editing !== null}
               onEdit={() => setEditing(q._id)}
               onRemove={() => setRemoving(q)}
+              onMove={(by) => move.mutate({ questionId: q._id, order: i + 1 + by })}
+              canMoveUp={i > 0 && !move.isPending}
+              canMoveDown={i < questions.length - 1 && !move.isPending}
             />
           ),
         )}
@@ -168,8 +217,9 @@ function Questions({ test, questions, locked }: { test: TeacherTest; questions: 
   );
 }
 
-function QuestionItem({ number, question, locked, onEdit, onRemove }: {
+function QuestionItem({ number, question, locked, onEdit, onRemove, onMove, canMoveUp, canMoveDown }: {
   number: number; question: BankQuestion; locked: boolean; onEdit: () => void; onRemove: () => void;
+  onMove: (by: -1 | 1) => void; canMoveUp: boolean; canMoveDown: boolean;
 }) {
   return (
     <li className="border-b border-rule py-5">
@@ -186,13 +236,17 @@ function QuestionItem({ number, question, locked, onEdit, onRemove }: {
             ))}
           </ul>
           <p className="mt-3 text-sm text-graphite-soft">
-            {[question.topic?.name, question.answerExplain ? 'has an explanation' : 'no explanation'].filter(Boolean).join('; ')}
+            {[question.topic?.name, question.questionType === 'multiple' ? 'several correct answers' : '', question.answerExplain ? 'has an explanation' : 'no explanation'].filter(Boolean).join('; ')}
           </p>
         </div>
         {!locked && (
           <div className="flex shrink-0 flex-col items-end gap-1">
             <button type="button" onClick={onEdit} className="text-sm font-semibold text-graphite hover:underline">Edit</button>
             <button type="button" onClick={onRemove} className="text-sm text-graphite-soft hover:text-wrong">Remove</button>
+            <span className="mt-1 flex gap-1">
+              <button type="button" onClick={() => onMove(-1)} disabled={!canMoveUp} aria-label={`Move question ${number} up`} className="rounded px-1.5 text-sm text-graphite-soft hover:text-graphite disabled:invisible">↑</button>
+              <button type="button" onClick={() => onMove(1)} disabled={!canMoveDown} aria-label={`Move question ${number} down`} className="rounded px-1.5 text-sm text-graphite-soft hover:text-graphite disabled:invisible">↓</button>
+            </span>
           </div>
         )}
       </div>
@@ -200,9 +254,19 @@ function QuestionItem({ number, question, locked, onEdit, onRemove }: {
   );
 }
 
-// The test's own settings. Marks apply to every question of the test.
-function Settings({ test, locked }: { test: TeacherTest & Record<string, unknown>; locked: boolean }) {
+// A date input's value (yyyy-mm-dd, local) for a stored date, and back (the end of that day)
+const dateValue = (value: string | null | undefined) => {
+  const d = value ? new Date(value) : null;
+  return d && !Number.isNaN(d.getTime()) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : '';
+};
+const endOfDay = (value: string) => (value ? new Date(`${value}T23:59:59`).toISOString() : null);
+
+// The test's own settings. Marks apply to every question of the test; they are fixed once it is
+// published (students may have answered already), and a withdrawn test changes no more.
+function Settings({ test, mode }: { test: TeacherTest & Record<string, unknown>; mode: 'draft' | 'published' | 'closed' }) {
   const save = useSaveTest(test._id);
+  const locked = mode === 'closed';
+  const marksLocked = mode !== 'draft';
   const initial = () => ({
     title: test.title ?? '',
     description: test.description ?? '',
@@ -210,6 +274,8 @@ function Settings({ test, locked }: { test: TeacherTest & Record<string, unknown
     totalTime: test.totalTime ?? 30,
     plusMark: test.plusMark ?? 1,
     penalty: Math.abs(test.minusMark ?? 0),
+    attempts: test.attemptAllowed ?? 0,
+    closes: dateValue(test.expiresOn),
   });
   const [form, setForm] = useState(initial);
   const [saved, setSaved] = useState(false);
@@ -223,7 +289,7 @@ function Settings({ test, locked }: { test: TeacherTest & Record<string, unknown
   }, [test]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dirty = JSON.stringify(form) !== JSON.stringify(initial());
-  const valid = form.title.trim() && form.totalTime >= 1 && form.totalTime <= 600 && form.plusMark > 0 && form.penalty >= 0;
+  const valid = form.title.trim() && form.totalTime >= 1 && form.totalTime <= 600 && form.plusMark > 0 && form.penalty >= 0 && Number.isInteger(form.attempts) && form.attempts >= 0;
   const set = (changes: Partial<typeof form>) => { setSaved(false); setForm((f) => ({ ...f, ...changes })); };
 
   const submit = () =>
@@ -235,10 +301,9 @@ function Settings({ test, locked }: { test: TeacherTest & Record<string, unknown
           description: form.description,
           instructions: form.instructions,
           totalTime: form.totalTime,
-          enableMarks: true,
-          isMarksLevel: true,
-          plusMark: form.plusMark,
-          minusMark: -form.penalty,
+          attemptAllowed: form.attempts,
+          expiresOn: endOfDay(form.closes),
+          ...(marksLocked ? {} : { enableMarks: true, isMarksLevel: true, plusMark: form.plusMark, minusMark: -form.penalty }),
         },
       },
       { onSuccess: () => setSaved(true) },
@@ -253,18 +318,25 @@ function Settings({ test, locked }: { test: TeacherTest & Record<string, unknown
         <TextArea label="Instructions" value={form.instructions} onChange={(v) => set({ instructions: v })} rows={3} disabled={locked} />
         <NumberField label="Time" value={form.totalTime} onChange={(v) => set({ totalTime: v })} min={1} max={600} suffix="minutes" disabled={locked} />
         <div className="grid grid-cols-2 gap-4">
-          <NumberField label="Right answer" value={form.plusMark} onChange={(v) => set({ plusMark: v })} min={0.25} step={0.25} suffix="marks" disabled={locked} />
-          <NumberField label="Wrong answer" value={form.penalty} onChange={(v) => set({ penalty: v })} min={0} step={0.25} suffix="off" disabled={locked} />
+          <NumberField label="Right answer" value={form.plusMark} onChange={(v) => set({ plusMark: v })} min={0.25} step={0.25} suffix="marks" disabled={marksLocked} />
+          <NumberField label="Wrong answer" value={form.penalty} onChange={(v) => set({ penalty: v })} min={0} step={0.25} suffix="off" disabled={marksLocked} />
         </div>
+        <NumberField label="Attempts per student" value={form.attempts} onChange={(v) => set({ attempts: v })} min={0} max={100} suffix="0 = no limit" disabled={locked} />
+        <label className="block">
+          <span className="text-sm font-semibold">Closes after</span>
+          <input type="date" value={form.closes} onChange={(e) => set({ closes: e.target.value })} disabled={locked}
+            className="mt-1.5 block h-11 w-full rounded-md border border-rule bg-sheet px-3 text-base outline-none focus:border-graphite disabled:cursor-not-allowed disabled:text-graphite-soft" />
+          <span className="mt-1 block text-xs text-graphite-soft">Leave empty to keep it open. Students cannot start it after this day.</span>
+        </label>
         {!locked && (
           <div className="flex items-center gap-3">
             <Button onClick={submit} disabled={!dirty || !valid || save.isPending}>{save.isPending ? 'Saving…' : 'Save changes'}</Button>
             {saved && !dirty && <span className="text-sm text-correct">Saved</span>}
           </div>
         )}
-        {!valid && !locked && <p className="text-sm text-wrong">Give it a title, a time from 1 to 600 minutes, and marks above zero.</p>}
+        {!valid && !locked && <p className="text-sm text-wrong">Give it a title, a time from 1 to 600 minutes, marks above zero, and a whole number of attempts.</p>}
         {save.isError && <ErrorNote message={save.error.message} />}
-        {locked && (
+        {marksLocked && (
           <p className="text-sm text-graphite-soft">
             {marks(form.plusMark)} marks for a right answer{form.penalty ? `, ${marks(form.penalty)} off for a wrong one` : ''}.
           </p>

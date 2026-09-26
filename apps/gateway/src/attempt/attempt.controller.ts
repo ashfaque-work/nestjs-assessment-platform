@@ -1,4 +1,5 @@
-import { AuthenticationGuard, RolesGuard, SelfOrStaffGuard, OwnRecordInterceptor, HideOthersContactInterceptor, isStaffUser } from "@app/common/auth";
+import { AuthenticationGuard, RolesGuard, SelfOrStaffGuard, OwnRecordInterceptor, HideOthersContactInterceptor, isStaffUser, ownerOf } from "@app/common/auth";
+import { resolveGrpc } from "@app/common/helpers/user-secrets";
 import { Roles } from "@app/common/decorators";
 import {
     ClassroomListSubjectStudentDoRequest, CountAllByTeacherRequest, CountAllRequest, CountMeRequest, CreateRequest,
@@ -19,7 +20,7 @@ import {
     SummarySubjectSpeedMeRequest, SummarySubjectSpeedStudentRequest, SummaryTopicCorrectMeRequest, SummaryTopicCorrectStudentRequest,
     SummaryTopicSpeedMeRequest, UpdateAbandonStatusRequest, UpdateSuspiciousRequest
 } from "@app/common/dto/attempt.dto";
-import { Body, Controller, ForbiddenException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, NotFoundException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { ApiHeader, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { AttemptService } from "./attempt.service";
 
@@ -27,6 +28,16 @@ import { AttemptService } from "./attempt.service";
 @ApiTags('Attempt')
 @Controller('attempt')
 export class AttemptController {
+    // A student may only reach their own attempt; for anyone else's it does not exist. Staff reach any.
+    private async assertOwnAttempt(instancekey: string, attemptId: string, user: any) {
+        if (isStaffUser(user)) return;
+        const found = await resolveGrpc(this.attemptService.findOneByMe({ instancekey, attemptId }));
+        const owner = ownerOf(found);
+        if (!owner || owner !== String(user?._id)) {
+            throw new NotFoundException('Attempt not found');
+        }
+    }
+
     constructor(private attemptService: AttemptService) { }
 
     @Get('/me')
@@ -55,7 +66,8 @@ export class AttemptController {
     @Get('/me/findQuestionFeedback/:id')
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
-    findQuestionFeedback(@Headers('instancekey') instancekey: string, @Param('id') attemptId: string) {
+    async findQuestionFeedback(@Headers('instancekey') instancekey: string, @Param('id') attemptId: string, @Req() req) {
+        await this.assertOwnAttempt(instancekey, attemptId, req.user);
         return this.attemptService.findQuestionFeedback({ instancekey, attemptId })
     }
 
@@ -811,7 +823,8 @@ export class AttemptController {
     @Get("/getUserResponse/:attempt")
     @ApiHeader({ name: 'authtoken', required: true, })
     @UseGuards(AuthenticationGuard)
-    getUserResponse(@Param('attempt') attempt: string, @Headers('instancekey') instancekey: string) {
+    async getUserResponse(@Param('attempt') attempt: string, @Headers('instancekey') instancekey: string, @Req() req) {
+        await this.assertOwnAttempt(instancekey, attempt, req.user);
         return this.attemptService.getUserResponse({ instancekey, attempt })
     }
 

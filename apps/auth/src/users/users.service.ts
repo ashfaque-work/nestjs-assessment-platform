@@ -1,5 +1,5 @@
 import { notImplemented, toGrpcError } from '@app/common/helpers/grpc-error';
-import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, AttemptDetailRepository, AttemptRepository, AttendanceRepository, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, ClassroomRepository, CloseUserAccountReq, CompetenciesRepository, CountTotalUsersReq, CouponRepository, CourseRepository, CreateUserDto, CreateUserResponse, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, EventBus, EventsRepository, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LocationRepository, LoginAfterOauthReq, LoginReqDto, ManageSessionReq, MarketingUtmRepository, NotificationRepository, NotificationTemplateRepository, PartnerUserReq, PracticeSetRepository, PsychoIndexReq, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReportedUserRepository, RequestEmailCodeReq, SendForReviewDossierReq, Setting, SettingRepository, SocialLoginReq, SocketClientService, StartOneOnOneWbSessionRequest, SubjectRepository, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUserRoleReq, UpdateUtmStatusReq, User, UserCourseRepository, UserLiveBoardRequest, UserRecentActivityReq, UserSuperCoinsRepository, UsersRepository, ValidateUserPictureRequest, VerifiedCodeReq, canOnlySeeHisOwnContents, canOnlySeeLocationContents, getRandomCode, isEmail } from "@app/common";
+import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, AttemptDetailRepository, AttemptRepository, AttendanceRepository, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, ClassroomRepository, CloseUserAccountReq, CompetenciesRepository, CountTotalUsersReq, CouponRepository, CourseRepository, CreateUserDto, CreateUserResponse, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, EventBus, EventsRepository, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LocationRepository, LoginAfterOauthReq, LoginReqDto, ManageSessionReq, MarketingUtmRepository, NotificationRepository, NotificationTemplateRepository, PartnerUserReq, PracticeSetRepository, PsychoIndexReq, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReportedUserRepository, RequestEmailCodeReq, SendForReviewDossierReq, Setting, SettingRepository, SocialLoginReq, SocketClientService, StartOneOnOneWbSessionRequest, SubjectRepository, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUserRoleReq, ManageUserReq, UpdateUtmStatusReq, User, UserCourseRepository, UserLiveBoardRequest, UserRecentActivityReq, UserSuperCoinsRepository, UsersRepository, ValidateUserPictureRequest, VerifiedCodeReq, canOnlySeeHisOwnContents, canOnlySeeLocationContents, getRandomCode, isEmail } from "@app/common";
 import { NotifyGrpcClientService } from "@app/common/grpc-clients/notify";
 import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UnprocessableEntityException } from "@nestjs/common";
 import { GrpcInternalException, GrpcInvalidArgumentException, GrpcNotFoundException, GrpcPermissionDeniedException, GrpcUnavailableException } from 'nestjs-grpc-exceptions';
@@ -71,6 +71,10 @@ export class UsersService {
       delete newUser.user;
       delete newUser.password;
       newUser.roles = request.userRoles;
+      // stored as ids, as the schema says: the subject and location filters compare ids
+      if (Array.isArray(request.subjects)) {
+        (newUser as any).subjects = request.subjects.filter((s) => /^[a-f0-9]{24}$/i.test(String(s))).map((s) => new ObjectId(String(s)));
+      }
       //check if email or phone nmber already exists or not
       await this.validateCreateUserDto(request);
 
@@ -184,13 +188,15 @@ export class UsersService {
         // add user to institute and remove invitees
         if (instituteId) {
           this.locationRepository.setInstanceKey(request.instancekey);
-          await this.locationRepository.findOneAndUpdate({ _id: instituteId },
+          await this.locationRepository.findOneAndUpdate({ _id: instituteId }, { $addToSet: { teachers: user._id } })
+          // mark their invitation as taken up, where they had one (an array update fails on an
+          // institute with no invitees)
+          await this.locationRepository.findOneAndUpdate({ _id: instituteId, 'invitees.email': newUser.email },
             {
               $set: {
                 "invitees.$[inner].joined": true,
                 "invitees.$[inner].joinedAt": new Date()
-              },
-              $addToSet: { teachers: user._id }
+              }
             },
             {
               arrayFilters: [{
@@ -738,6 +744,49 @@ export class UsersService {
       if (roles.includes('teacher') || roles.includes('mentor')) updateQuery.$set.isMentor = true;
       await this.usersRepository.findOneAndUpdate({ _id: new ObjectId(request._id) }, updateQuery);
       return { response: 'Roles updated' };
+    } catch (error) {
+      throw toGrpcError(error);
+    }
+  }
+
+  // An account manager's changes to one person: name, subjects, teacher verification, password.
+  // Only the fields sent change. (The gateway checks who may change whom.)
+  async manageUser(request: ManageUserReq) {
+    try {
+      this.usersRepository.setInstanceKey(request.instancekey);
+      const user = await this.usersRepository.findOne({ _id: new ObjectId(request._id) });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const $set: any = {};
+      if (request.name !== undefined) {
+        const name = String(request.name).trim();
+        if (!name) throw new BadRequestException('Give a name');
+        $set.name = name;
+      }
+      if (request.setSubjects) {
+        const ids = [...new Set((request.subjects ?? []).map(String))].map((s) => new ObjectId(s));
+        this.subjectRepository.setInstanceKey(request.instancekey);
+        const found = ids.length ? await this.subjectRepository.countDocuments({ _id: { $in: ids }, active: true }) : 0;
+        if (found !== ids.length) {
+          throw new BadRequestException('Choose subjects from the list');
+        }
+        $set.subjects = ids;
+      }
+      if (request.isVerified !== undefined) {
+        $set.isVerified = !!request.isVerified;
+      }
+      if (request.password) {
+        const salt = crypto.randomBytes(16).toString('hex');
+        $set.salt = salt;
+        $set.hashedPassword = await this.generatedHashedPassword(request.password, salt);
+        $set.passwordResetToken = null;
+      }
+      if (Object.keys($set).length) {
+        this.usersRepository.setInstanceKey(request.instancekey);
+        await this.usersRepository.findOneAndUpdate({ _id: user._id }, { $set });
+      }
+      return { response: 'Saved' };
     } catch (error) {
       throw toGrpcError(error);
     }

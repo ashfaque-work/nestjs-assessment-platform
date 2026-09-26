@@ -1024,6 +1024,8 @@ message FindAllByPracticeDto {
   string perCentCorrect = 42;
   int32 totalTimeElapse = 43;
   string averageTime = 44;
+  bool submittedLate = 45;
+  string _id = 46;
 }
 
 message FindAllByPracticeResponse {

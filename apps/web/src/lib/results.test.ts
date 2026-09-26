@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { STATUS, type ResultAttempt } from '../api/types';
-import { classResults } from './results';
+import { classResults, classResultsCsv } from './results';
 import { draftProblems, questionBody } from '../api/teacher';
 
 const attempt = (over: Partial<ResultAttempt>, statuses: number[]): ResultAttempt => ({
@@ -80,6 +80,7 @@ describe('draftProblems', () => {
     unit: { _id: 'u', name: 'Algebra' },
     topic: { _id: 't', name: 'Linear Equations' },
     options: [{ answerText: '5', isCorrectAnswer: false }, { answerText: '7', isCorrectAnswer: true }],
+    multiple: false,
     answerExplain: '',
   };
 
@@ -92,6 +93,12 @@ describe('draftProblems', () => {
     expect(draftProblems({ ...ready, options: ready.options.map((o) => ({ ...o, isCorrectAnswer: true })) })).toContain('Mark the one correct answer.');
   });
 
+  it('accepts several correct answers only on a multiple-answer question', () => {
+    const both = ready.options.map((o) => ({ ...o, isCorrectAnswer: true }));
+    expect(draftProblems({ ...ready, multiple: true, options: both })).toEqual([]);
+    expect(draftProblems({ ...ready, multiple: true, options: ready.options.map((o) => ({ ...o, isCorrectAnswer: false })) })).toContain('Mark at least one correct answer.');
+  });
+
   it('asks for the text, a topic and two filled options', () => {
     const problems = draftProblems({ ...ready, questionText: ' ', topic: null, options: [{ answerText: '7', isCorrectAnswer: true }, { answerText: '', isCorrectAnswer: false }] });
     expect(problems).toEqual(['Write the question.', 'Choose the topic it tests.', 'Give at least two answer options.', 'Fill in or remove the empty option.']);
@@ -101,7 +108,7 @@ describe('draftProblems', () => {
 describe('questionBody', () => {
   const test = { _id: 't1', title: 'T', status: 'draft', subjects: [{ _id: 's', name: 'Maths' }], units: [], totalTime: 10 } as never;
   const draft = (options: { _id?: string; answerText: string; isCorrectAnswer: boolean }[]) => ({
-    questionText: 'Q', unit: null, topic: null, answerExplain: '', options,
+    questionText: 'Q', unit: null, topic: null, answerExplain: '', multiple: false, options,
   });
 
   it('keeps each saved option with its own id when another option is removed', () => {
@@ -110,8 +117,27 @@ describe('questionBody', () => {
     expect(body.answers.map((a) => ('_id' in a ? a._id : undefined))).toEqual(['a', 'c']);
   });
 
+  it('sends a multiple-answer question as questionType multiple', () => {
+    const body = questionBody({ ...draft([{ answerText: 'A', isCorrectAnswer: true }, { answerText: 'B', isCorrectAnswer: true }]), multiple: true }, test);
+    expect(body.questionType).toBe('multiple');
+  });
+
   it('sends a new option without an id', () => {
     const body = questionBody(draft([{ _id: 'a', answerText: 'A', isCorrectAnswer: true }, { answerText: 'New', isCorrectAnswer: false }]), test);
     expect(body.answers[1]).toEqual({ answerText: 'New', isCorrectAnswer: false });
+  });
+});
+
+describe('classResultsCsv', () => {
+  it('writes a header and a line per attempt, quoting commas and defusing formulas', () => {
+    const r = classResults([
+      attempt({ studentName: 'Rao, Asha', email: 'a@x', createdAt: 'Sat Sep 19 2026 01:00:00 GMT+0000' }, [R, W, M]),
+      attempt({ studentName: '=cmd()', email: 'b@x', createdAt: 'Sat Sep 19 2026 02:00:00 GMT+0000' }, [R, R, R]),
+    ], questions);
+    const [header, first, second] = classResultsCsv(r, 3).split('\r\n');
+    expect(header).toBe('Student,Attempt,Score,Out of,Time (s),Handed in,Late,Q1,Q2,Q3');
+    expect(first.startsWith("'=cmd(),1,")).toBe(true);
+    expect(second.startsWith('"Rao, Asha",1,')).toBe(true);
+    expect(second.endsWith(',right,wrong,missed')).toBe(true);
   });
 });

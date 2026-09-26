@@ -100,6 +100,8 @@ export interface Attempt {
   totalMarkeds?: number;
   createdAt: string;
   isAbandoned?: boolean;
+  user?: string | { _id: string }; // whose attempt it is
+  studentName?: string;
   ongoing?: boolean;
   isEvaluated?: boolean;
   subjects: SubjectScore[];
@@ -131,6 +133,8 @@ export interface TeacherTest extends TestSummary {
   accessMode?: string;
   updatedAt?: string;
   user?: string;
+  attemptAllowed?: number; // hand-ins allowed per student; 0 or missing: no limit
+  expiresOn?: string | null; // after this students can no longer start it
 }
 
 export interface UnitOption {
@@ -166,6 +170,7 @@ export interface QuestionDraft {
   topic: NamedRef | null;
   // _id: the option's id once it is saved; a new option has none
   options: { _id?: string; answerText: string; isCorrectAnswer: boolean }[];
+  multiple: boolean; // more than one option can be correct
   answerExplain: string;
 }
 
@@ -174,6 +179,7 @@ export interface ResultAttempt extends Attempt {
   studentName?: string;
   email?: string;
   user?: string | { _id: string }; // the student: an id, or their record when populated
+  submittedLate?: boolean; // handed in after the time ran out
 }
 
 // A user as the admin user list returns them
@@ -186,6 +192,8 @@ export interface AdminUser {
   isActive?: boolean;
   createdAt?: string;
   activeLocation?: string;
+  subjects?: string[]; // subject ids: what the person studies or teaches
+  isVerified?: boolean; // a verified teacher may publish tests
 }
 
 // The platform's white-label settings (a large document; these are the fields the admin edits)
