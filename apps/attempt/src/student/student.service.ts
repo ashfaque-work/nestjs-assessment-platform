@@ -365,6 +365,10 @@ export class StudentService {
                 accessMode: 'buy'
             }]
         }
+        // and the invitation-only tests this student is invited to
+        if (req.user?.email) {
+            accessMode.$or.push({ accessMode: 'invitation', inviteeEmails: String(req.user.email).toLowerCase() })
+        }
 
         var expire = {
             $or: [{
@@ -1016,6 +1020,7 @@ export class StudentService {
                         createdAt: 1,
                         totalJoinedStudent: 1,
                         expiresOn: 1,
+                        opensOn: 1,
                         statusChangedAt: 1,
                         status: 1,
                         attemptAllowed: 1,
@@ -1025,9 +1030,8 @@ export class StudentService {
                         enableMarks: 1,
                         isMarksLevel: 1,
                         instructions: 1,
-                        studentEmails: 1,
+                        // not studentEmails, inviteeEmails or inviteePhones: other students' contacts
                         classRooms: 1,
-                        inviteeEmails: 1,
                         description: 1,
                         titleLower: 1,
                         title: 1,
@@ -1038,7 +1042,6 @@ export class StudentService {
                         totalTime: 1,
                         isShowResult: 1,
                         testCode: 1,
-                        inviteePhones: 1,
                         isShowAttempt: 1,
                         totalAttempt: 1,
                         questions: 1,

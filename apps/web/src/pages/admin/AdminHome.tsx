@@ -58,6 +58,9 @@ export function AdminHome() {
               {isAdmin(user) && (
                 <QuickLink to="/admin/settings" title="Platform settings" body="Branding, sign-up, support email and feature switches." />
               )}
+              {isAdmin(user) && (
+                <QuickLink to="/admin/audit" title="Audit log" body="Who added, edited or changed access for whom, and settings changes." />
+              )}
               <QuickLink to="/teach" title="Tests" body="Open the teaching workspace to write and review tests." />
             </div>
           </div>

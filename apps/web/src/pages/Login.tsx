@@ -70,8 +70,9 @@ export function Login() {
             </Button>
           </form>
 
-          <p className="mt-4 text-sm text-graphite-soft">
-            New here? <Link to="/signup" className="font-semibold text-form hover:underline">Create an account</Link>
+          <p className="mt-4 flex flex-wrap justify-between gap-2 text-sm text-graphite-soft">
+            <span>New here? <Link to="/signup" className="font-semibold text-form hover:underline">Create an account</Link></span>
+            <Link to="/forgot-password" className="font-semibold text-form hover:underline">Forgot your password?</Link>
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-graphite-soft">

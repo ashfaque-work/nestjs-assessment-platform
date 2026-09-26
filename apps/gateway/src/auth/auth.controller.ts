@@ -2,6 +2,8 @@ import { AddEventsReq, AddExperienceReq, AddLocationReq, AddSubjectsReq, AddUtmV
 import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import { canGrantRoles, SELF_SIGNUP_ROLES } from '@app/common/helpers/role-helper';
 import { AuthGatewayService } from './auth.service';
+import { resolveGrpc } from '@app/common/helpers/user-secrets';
+import { AuthCommonService } from '@app/common/auth/auth.service';
 import { ApiTags, ApiHeader, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { AuthenticationGuard, RequestAuthenticationGuard, RolesGuard, UserIdConversion, SelfOrStaffGuard, HideOthersContactInterceptor } from '@app/common/auth';
 import { Roles } from '@app/common/decorators';
@@ -10,7 +12,7 @@ import { Throttle } from '@nestjs/throttler';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthGatewayService) { }
+  constructor(private readonly authService: AuthGatewayService, private readonly authCommon: AuthCommonService) { }
 
   // Accounts nobody may change (the shared demo accounts): PROTECTED_ACCOUNTS, emails separated by
   // commas. Without it every account can be managed as usual.
@@ -402,7 +404,9 @@ export class AuthController {
     if (!canGrantRoles((user as any).user?.roles, request.userRoles ?? [])) {
       throw new ForbiddenException('You cannot give those roles');
     }
-    return this.authService.createUser(request, ip, user);
+    const result = await resolveGrpc(this.authService.createUser(request, ip, user));
+    await this.authCommon.recordAudit(user, 'user.add', { name: request.name, email: request.email ?? request.userId }, `as ${(request.userRoles ?? []).join(', ')}`);
+    return result;
   }
 
   @Put(':id/password')
@@ -415,6 +419,7 @@ export class AuthController {
     return this.authService.changePassword({ instancekey, timezoneoffset, body, user: req.user, token: req.headers['authtoken'] });
   }
 
+  @Throttle({ default: { limit: Number(process.env.LOGIN_THROTTLE_LIMIT ?? 10), ttl: 60_000 } })
   @Put(':id/newPassword')
   async changeNewPassword(@Headers('instancekey') instancekey: string,
     @Headers('timezoneoffset') timezoneoffset: string,
@@ -454,6 +459,7 @@ export class AuthController {
     // AuthenticationGuard put the caller's own roles on body.roles, and the update saves them to
     // the person edited: keep that person's roles (they change through PUT /:id/role)
     body = { ...body, roles: target.roles } as UpdateUserBody;
+    await this.authCommon.recordAudit(req, 'user.edit', target, 'details updated');
     return this.authService.updateUserDetails({ instancekey, timezoneoffset, body, _id: id, user: req.user, token: req.headers['authtoken'] });
   }
 
@@ -487,8 +493,10 @@ export class AuthController {
   @Roles(['admin', 'director', 'operator', 'centerHead', 'support'])
   @UseGuards(AuthenticationGuard, RolesGuard)
   async updateUserStatus(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() request: UpdateUserStatusReq, @Req() req: any) {
-    await this.targetFor(instancekey, id, req.user);
-    return this.authService.updateUserStatus(id, request);
+    const target = await this.targetFor(instancekey, id, req.user);
+    const result = await resolveGrpc(this.authService.updateUserStatus(id, request));
+    await this.authCommon.recordAudit(req, 'user.status', target, request.isActive ? 'activated' : 'deactivated');
+    return result;
   }
 
   // The signed-in person renames themselves
@@ -511,11 +519,19 @@ export class AuthController {
   @Roles(['admin', 'director', 'operator', 'centerHead', 'support'])
   @UseGuards(AuthenticationGuard, RolesGuard)
   async manageUser(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() body: ManageUserBody, @Req() req: any) {
-    await this.targetFor(instancekey, id, req.user);
-    return this.authService.manageUser({
+    const target = await this.targetFor(instancekey, id, req.user);
+    const result = await resolveGrpc(this.authService.manageUser({
       _id: id, instancekey, name: body.name, isVerified: body.isVerified, password: body.password,
       subjects: body.subjects, setSubjects: Array.isArray(body.subjects),
-    });
+    }));
+    const changes = [
+      body.name !== undefined && body.name !== target.name ? `name: ${body.name}` : '',
+      Array.isArray(body.subjects) ? `subjects: ${body.subjects.length}` : '',
+      body.isVerified !== undefined ? `verified: ${body.isVerified ? 'yes' : 'no'}` : '',
+      body.password ? 'password reset' : '',
+    ].filter(Boolean).join('; ');
+    await this.authCommon.recordAudit(req, 'user.edit', target, changes || 'no change');
+    return result;
   }
 
   // Change another user's roles. Directors and operators may not give or take away admin; nobody
@@ -536,7 +552,18 @@ export class AuthController {
     if (!canGrantRoles(req.user.roles, [...(body.newRoles ?? []), ...current])) {
       throw new ForbiddenException('You cannot change this person to or from those roles');
     }
-    return this.authService.updateUserRole(id, body.newRoles);
+    const result = await resolveGrpc(this.authService.updateUserRole(id, body.newRoles));
+    await this.authCommon.recordAudit(req, 'user.roles', target, `${current.join(', ') || 'none'} → ${(body.newRoles ?? []).join(', ')}`);
+    return result;
+  }
+
+  // What account managers changed, newest first
+  @Get('audit')
+  @ApiHeader({ name: 'authtoken' })
+  @Roles(['admin', 'director'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
+  async listAudit(@Headers('instancekey') instancekey: string, @Query('page') page: string, @Query('limit') limit: string) {
+    return this.authCommon.listAudit(instancekey, Number(page) || 1, Number(limit) || 50);
   }
 
   @Put('sendForReviewDossier/:id')
@@ -721,6 +748,8 @@ export class AuthController {
     return this.authService.recoverPassword(request);
   }
 
+  // unauthenticated: limited so reset tokens cannot be guessed at speed
+  @Throttle({ default: { limit: Number(process.env.LOGIN_THROTTLE_LIMIT ?? 10), ttl: 60_000 } })
   @Get('/confirmPasswordResetToken/:token')
   async confirmPasswordResetToken(@Headers('instancekey') instancekey: string, @Param('token') token: string) {
     return this.authService.confirmPasswordResetToken({ instancekey, token });

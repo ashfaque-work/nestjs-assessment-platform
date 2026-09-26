@@ -20,6 +20,7 @@ import { Page } from '../../components/Layout';
 import { Button, buttonClass, Dialog, ErrorNote, Spinner } from '../../components/ui';
 import { letter, marks, plural } from '../../lib/format';
 import { draftFrom, QuestionForm } from './QuestionForm';
+import { parseEmails } from '../../lib/emails';
 
 export function TestEditor() {
   const { testId = '' } = useParams();
@@ -72,6 +73,7 @@ function Editor({ test, questions }: { test: TeacherTest & Record<string, unknow
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link to={`/teach/tests/${test._id}/preview`} className={buttonClass('secondary')}>Preview</Link>
           <Button variant="secondary" onClick={copy} disabled={duplicate.isPending}>{duplicate.isPending ? 'Copying…' : 'Duplicate'}</Button>
           {draft && <Button variant="danger" onClick={() => setConfirm('delete')}>Delete</Button>}
           {published && <Button variant="danger" onClick={() => setConfirm('withdraw')}>Withdraw</Button>}
@@ -260,6 +262,8 @@ const dateValue = (value: string | null | undefined) => {
   return d && !Number.isNaN(d.getTime()) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : '';
 };
 const endOfDay = (value: string) => (value ? new Date(`${value}T23:59:59`).toISOString() : null);
+const startOfDay = (value: string) => (value ? new Date(`${value}T00:00:00`).toISOString() : null);
+
 
 // The test's own settings. Marks apply to every question of the test; they are fixed once it is
 // published (students may have answered already), and a withdrawn test changes no more.
@@ -275,7 +279,10 @@ function Settings({ test, mode }: { test: TeacherTest & Record<string, unknown>;
     plusMark: test.plusMark ?? 1,
     penalty: Math.abs(test.minusMark ?? 0),
     attempts: test.attemptAllowed ?? 0,
+    opens: dateValue(test.opensOn),
     closes: dateValue(test.expiresOn),
+    invitedOnly: test.accessMode === 'invitation',
+    invitees: (test.inviteeEmails ?? []).join('\n'),
   });
   const [form, setForm] = useState(initial);
   const [saved, setSaved] = useState(false);
@@ -289,7 +296,11 @@ function Settings({ test, mode }: { test: TeacherTest & Record<string, unknown>;
   }, [test]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dirty = JSON.stringify(form) !== JSON.stringify(initial());
-  const valid = form.title.trim() && form.totalTime >= 1 && form.totalTime <= 600 && form.plusMark > 0 && form.penalty >= 0 && Number.isInteger(form.attempts) && form.attempts >= 0;
+  const invite = parseEmails(form.invitees);
+  const datesOk = !form.opens || !form.closes || form.opens <= form.closes;
+  const inviteOk = !form.invitedOnly || (invite.emails.length > 0 && invite.invalid.length === 0);
+  const valid = form.title.trim() && form.totalTime >= 1 && form.totalTime <= 600 && form.plusMark > 0 && form.penalty >= 0
+    && Number.isInteger(form.attempts) && form.attempts >= 0 && datesOk && inviteOk;
   const set = (changes: Partial<typeof form>) => { setSaved(false); setForm((f) => ({ ...f, ...changes })); };
 
   const submit = () =>
@@ -302,11 +313,21 @@ function Settings({ test, mode }: { test: TeacherTest & Record<string, unknown>;
           instructions: form.instructions,
           totalTime: form.totalTime,
           attemptAllowed: form.attempts,
+          opensOn: startOfDay(form.opens),
           expiresOn: endOfDay(form.closes),
+          accessMode: form.invitedOnly ? 'invitation' : 'public',
+          inviteeEmails: form.invitedOnly ? invite.emails : [],
           ...(marksLocked ? {} : { enableMarks: true, isMarksLevel: true, plusMark: form.plusMark, minusMark: -form.penalty }),
         },
       },
-      { onSuccess: () => setSaved(true) },
+      {
+        // Show what was stored (trimmed title, the emails in lower case, one per line), so the
+        // saved form is not taken for an unsaved edit
+        onSuccess: () => {
+          setForm((f) => ({ ...f, title: f.title.trim(), invitees: f.invitedOnly ? invite.emails.join('\n') : '' }));
+          setSaved(true);
+        },
+      },
     );
 
   return (
@@ -323,18 +344,46 @@ function Settings({ test, mode }: { test: TeacherTest & Record<string, unknown>;
         </div>
         <NumberField label="Attempts per student" value={form.attempts} onChange={(v) => set({ attempts: v })} min={0} max={100} suffix="0 = no limit" disabled={locked} />
         <label className="block">
+          <span className="text-sm font-semibold">Opens on</span>
+          <input type="date" value={form.opens} onChange={(e) => set({ opens: e.target.value })} disabled={locked}
+            className="mt-1.5 block h-11 w-full rounded-md border border-rule bg-sheet px-3 text-base outline-none focus:border-graphite disabled:cursor-not-allowed disabled:text-graphite-soft" />
+          <span className="mt-1 block text-xs text-graphite-soft">Leave empty to open it as soon as it is published.</span>
+        </label>
+        <label className="block">
           <span className="text-sm font-semibold">Closes after</span>
           <input type="date" value={form.closes} onChange={(e) => set({ closes: e.target.value })} disabled={locked}
             className="mt-1.5 block h-11 w-full rounded-md border border-rule bg-sheet px-3 text-base outline-none focus:border-graphite disabled:cursor-not-allowed disabled:text-graphite-soft" />
           <span className="mt-1 block text-xs text-graphite-soft">Leave empty to keep it open. Students cannot start it after this day.</span>
         </label>
+        <fieldset>
+          <legend className="text-sm font-semibold">Who can take it</legend>
+          <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-sm">
+            <input type="radio" name="access" checked={!form.invitedOnly} onChange={() => set({ invitedOnly: false })} disabled={locked} className="accent-[var(--form)]" />
+            Every student at the school
+          </label>
+          <label className="mt-1 flex cursor-pointer items-center gap-2 text-sm">
+            <input type="radio" name="access" checked={form.invitedOnly} onChange={() => set({ invitedOnly: true })} disabled={locked} className="accent-[var(--form)]" />
+            Only the students I invite
+          </label>
+          {form.invitedOnly && (
+            <div className="mt-2">
+              <TextArea label="Their emails" value={form.invitees} onChange={(v) => set({ invitees: v })} rows={3} disabled={locked}
+                hint={`One per line or separated by commas. ${plural(invite.emails.length, 'student')} invited.`} />
+              {invite.invalid.length > 0 && <p className="mt-1 text-sm text-wrong">Not an email: {invite.invalid.slice(0, 3).join(', ')}</p>}
+            </div>
+          )}
+        </fieldset>
         {!locked && (
           <div className="flex items-center gap-3">
             <Button onClick={submit} disabled={!dirty || !valid || save.isPending}>{save.isPending ? 'Saving…' : 'Save changes'}</Button>
             {saved && !dirty && <span className="text-sm text-correct">Saved</span>}
           </div>
         )}
-        {!valid && !locked && <p className="text-sm text-wrong">Give it a title, a time from 1 to 600 minutes, marks above zero, and a whole number of attempts.</p>}
+        {!valid && !locked && (
+          <p className="text-sm text-wrong">
+            {!datesOk ? 'It must open before it closes.' : !inviteOk ? (invite.invalid.length ? 'Fix or remove the entries that are not emails.' : 'List the emails of the students you invite.') : 'Give it a title, a time from 1 to 600 minutes, marks above zero, and a whole number of attempts.'}
+          </p>
+        )}
         {save.isError && <ErrorNote message={save.error.message} />}
         {marksLocked && (
           <p className="text-sm text-graphite-soft">

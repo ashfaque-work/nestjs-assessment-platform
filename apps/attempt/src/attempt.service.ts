@@ -6802,6 +6802,9 @@ export class AttemptService {
         if (test.expiresOn && new Date(test.expiresOn) < new Date()) {
           throw new ForbiddenException('This test has expired');
         }
+        if (test.opensOn && new Date(test.opensOn) > new Date()) {
+          throw new ForbiddenException(`This test opens on ${new Date(test.opensOn).toISOString()}`);
+        }
         // a test may allow only so many hand-ins per student (0: no limit)
         if (test.attemptAllowed > 0) {
           this.attemptRepository.setInstanceKey(request.instancekey);

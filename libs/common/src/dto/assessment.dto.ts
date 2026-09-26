@@ -546,6 +546,8 @@ export class UpdateAssessmentBody {
   statusChangedAt: Date;
   @ApiProperty({ default: null })
   expiresOn: Date;
+  @ApiProperty({ default: null, required: false })
+  opensOn: Date;
   @ApiProperty({ default: null })
   startDate: Date;
   @ApiProperty({ default: 0 })

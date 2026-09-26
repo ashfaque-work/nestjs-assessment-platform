@@ -1,3 +1,5 @@
+import { AuthCommonService } from '@app/common/auth/auth.service';
+import { resolveGrpc } from '@app/common/helpers/user-secrets';
 import { Body, Controller, Param, Get, Post, Put, Delete, UseGuards, Headers, Req } from '@nestjs/common';
 import { Roles } from '@app/common/decorators';
 import { AuthenticationGuard, RolesGuard } from '@app/common/auth';
@@ -8,7 +10,7 @@ import { AddAdvertismentImageReq, GetConvertCurrencyReq, GetUpdateRequest, Setti
 @ApiTags('Setting')
 @Controller('settings')
 export class SettingController {
-    constructor(private settingService: SettingService) { }
+    constructor(private settingService: SettingService, private readonly authCommon: AuthCommonService) { }
 
     @Post('create')
     @ApiHeader({ name: 'authtoken' })
@@ -126,7 +128,7 @@ export class SettingController {
     @ApiHeader({ name: 'authtoken' })
     @Roles(['admin'])
     @UseGuards(AuthenticationGuard, RolesGuard)
-    update(@Body() request: GetUpdateRequest, @Headers('instancekey') instancekey: string) {
+    async update(@Body() request: GetUpdateRequest, @Headers('instancekey') instancekey: string, @Req() req: any) {
         const combinedData: any = {
             ...request,
             instancekey
@@ -136,7 +138,9 @@ export class SettingController {
         if (Array.isArray(combinedData.roles)) {
             delete combinedData.roles;
         }
-        return this.settingService.update(combinedData);
+        const result = await resolveGrpc(this.settingService.update(combinedData));
+        await this.authCommon.recordAudit(req, 'settings.update', null, ['productName', 'pageTitle', 'supportEmail', 'copyRight', 'themeColor', 'isWhiteLabelled', 'detectFraud', 'allowMarksChange'].filter((k) => request[k] !== undefined).join(', '));
+        return result;
     }
 
     @Delete('/deleteAdvertismentImage/:id')

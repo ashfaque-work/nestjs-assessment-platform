@@ -237,6 +237,10 @@ export class PracticeSet extends AbstractDocument {
   @Prop({ type: Date, default: null })
   expiresOn: Date;
 
+  // students can start it from this moment (a practice test that opens later; live exams use startDate)
+  @Prop({ type: Date, default: null })
+  opensOn: Date;
+
   @Prop({ type: Date, default: null })
   startDate: Date;
 

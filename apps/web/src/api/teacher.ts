@@ -96,7 +96,8 @@ export function usePublishTest(testId: string) {
     mutationFn: async (test: Record<string, unknown>) => {
       // the API explains what is missing (too few questions...) before the test changes
       await api('GET', `/assessment/checkQuestionsBeforePublish/${testId}`);
-      await api('PUT', `/assessment/${testId}`, { ...test, status: 'published', accessMode: 'public' });
+      // an invitation-only test stays invitation-only
+      await api('PUT', `/assessment/${testId}`, { ...test, status: 'published', accessMode: test.accessMode === 'invitation' ? 'invitation' : 'public' });
     },
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['teacher', 'test', testId] });

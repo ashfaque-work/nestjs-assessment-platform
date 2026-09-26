@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../api/client';
@@ -246,19 +246,24 @@ function Attempt({ test, attemptId, startedAt }: { test: TestWithQuestions; atte
   );
 }
 
-function QuestionView({ question, number, total, chosen, onChoose, onClear }: {
+export function QuestionView({ question, number, total, chosen, onChoose, onClear, headingLevel = 1 }: {
   question: Question;
   number: number;
   total: number;
   chosen: string[];
   onChoose: (optionId: string) => void;
   onClear: () => void;
+  // 1 when the question is the page's subject (taking a test); 2 when a page lists several
+  headingLevel?: 1 | 2;
 }) {
+  // unique per question: a preview shows several on one page
+  const headingId = useId();
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
   const multiple = question.questionType === 'multiple';
   const plus = question.plusMark ?? 1;
   const minus = Math.abs(question.minusMark ?? 0);
   return (
-    <section aria-labelledby="question-text">
+    <section aria-labelledby={headingId}>
       <p className="figures flex flex-wrap gap-x-4 text-sm text-graphite-soft">
         <span className="font-semibold text-graphite">Question {number} of {total}</span>
         <span>{minus ? `+${marks(plus)} / −${marks(minus)}` : `${plural(plus, 'mark')}`}</span>
@@ -268,12 +273,12 @@ function QuestionView({ question, number, total, chosen, onChoose, onClear }: {
       {question.questionHeader && (
         <p className="mt-4 max-w-prose whitespace-pre-line font-serif text-[17px] leading-[1.7] text-graphite-soft">{question.questionHeader}</p>
       )}
-      <h1 id="question-text" className="mt-4 max-w-prose whitespace-pre-line font-serif text-[22px] leading-[1.55]">
+      <Heading id={headingId} className="mt-4 max-w-prose whitespace-pre-line font-serif text-[22px] leading-[1.55]">
         {question.questionText}
-      </h1>
+      </Heading>
       {multiple && <p className="mt-2 text-sm text-graphite-soft">Choose every answer that applies.</p>}
 
-      <div role={multiple ? 'group' : 'radiogroup'} aria-labelledby="question-text" className="mt-7 max-w-prose space-y-2.5">
+      <div role={multiple ? 'group' : 'radiogroup'} aria-labelledby={headingId} className="mt-7 max-w-prose space-y-2.5">
         {question.answers.map((a, i) => {
           const selected = chosen.includes(a._id);
           return (

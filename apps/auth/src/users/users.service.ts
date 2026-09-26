@@ -1,5 +1,5 @@
 import { notImplemented, toGrpcError } from '@app/common/helpers/grpc-error';
-import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, AttemptDetailRepository, AttemptRepository, AttendanceRepository, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, ClassroomRepository, CloseUserAccountReq, CompetenciesRepository, CountTotalUsersReq, CouponRepository, CourseRepository, CreateUserDto, CreateUserResponse, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, EventBus, EventsRepository, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LocationRepository, LoginAfterOauthReq, LoginReqDto, ManageSessionReq, MarketingUtmRepository, NotificationRepository, NotificationTemplateRepository, PartnerUserReq, PracticeSetRepository, PsychoIndexReq, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReportedUserRepository, RequestEmailCodeReq, SendForReviewDossierReq, Setting, SettingRepository, SocialLoginReq, SocketClientService, StartOneOnOneWbSessionRequest, SubjectRepository, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUserRoleReq, ManageUserReq, UpdateUtmStatusReq, User, UserCourseRepository, UserLiveBoardRequest, UserRecentActivityReq, UserSuperCoinsRepository, UsersRepository, ValidateUserPictureRequest, VerifiedCodeReq, canOnlySeeHisOwnContents, canOnlySeeLocationContents, getRandomCode, isEmail } from "@app/common";
+import { AddEventsReq, AddExperienceReq, AddLocationReq, AddStudentInClassroomReq, AddSubjectsReq, AddUtmVisitorReq, AttemptDetailRepository, AttemptRepository, AttendanceRepository, BlockuserReq, ChangeNewPasswordReq, ChangePasswordReq, ClassroomRepository, CloseUserAccountReq, CompetenciesRepository, CountTotalUsersReq, CouponRepository, CourseRepository, CreateUserDto, CreateUserResponse, DeleteEventReq, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, EmployabilityIndexReq, EventBus, EventsRepository, ExportUsersReq, FindOnlineUsersRequest, FindRequest, GetCertificationReq, GetEventsRequest, GetLiveBoardClassroomsReq, GetMeReq, GetPracticeSummaryReq, GetStudentEventsRequest, GetSuperCoinsActivitiesReq, GetTotalCoinsReq, GetTurnAuthReq, GetTurnConfigReq, GetUpdateLocationStatusReq, GetUserLevelInfoReq, GetUserPublicProfileReq, GetUserRequest, GetUserSuperCoinActivitiesReq, InviteUsersReq, JoinOneOnOneWbSessionRequest, LinkPreviewReq, LocationRepository, LoginAfterOauthReq, LoginReqDto, ManageSessionReq, MarketingUtmRepository, NotificationRepository, NotificationTemplateRepository, PartnerUserReq, PracticeSetRepository, PsychoIndexReq, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReportedUserRepository, RequestEmailCodeReq, SendForReviewDossierReq, Setting, SettingRepository, SocialLoginReq, SocketClientService, StartOneOnOneWbSessionRequest, SubjectRepository, TempConfirmationCodeReq, TempSignupReq, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataRequest, UpdateAmbassadorReq, UpdateConnectionInfoReq, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageReq, UpdateMentorPreferencesReq, UpdateOptionsDataRequest, UpdateRequest, UpdateRoleRequest, UpdateSubjectsReq, UpdateTempUserRequest, UpdateUserCountryReq, UpdateUserDto, UpdateUserStatusReq, UpdateUserRoleReq, ManageUserReq, RecordAuditReq, ListAuditReq, AuditLogRepository, UpdateUtmStatusReq, User, UserCourseRepository, UserLiveBoardRequest, UserRecentActivityReq, UserSuperCoinsRepository, UsersRepository, ValidateUserPictureRequest, VerifiedCodeReq, canOnlySeeHisOwnContents, canOnlySeeLocationContents, getRandomCode, isEmail } from "@app/common";
 import { NotifyGrpcClientService } from "@app/common/grpc-clients/notify";
 import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UnprocessableEntityException } from "@nestjs/common";
 import { GrpcInternalException, GrpcInvalidArgumentException, GrpcNotFoundException, GrpcPermissionDeniedException, GrpcUnavailableException } from 'nestjs-grpc-exceptions';
@@ -30,6 +30,9 @@ import { getAssets } from "@app/common/config";
 import { S3Service } from "@app/common/components/aws/s3.service";
 
 
+// Wrong reset tokens allowed on one link before it is thrown away
+const RESET_TOKEN_MAX_TRIES = 5;
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -39,6 +42,7 @@ export class UsersService {
     private notifyGrpcClientService: NotifyGrpcClientService,
     private readonly locationRepository: LocationRepository,
     private readonly subjectRepository: SubjectRepository,
+    private readonly auditLogRepository: AuditLogRepository,
     private readonly classroomRepository: ClassroomRepository,
     private readonly settingRepository: SettingRepository,
     private readonly attemptRepository: AttemptRepository,
@@ -787,6 +791,37 @@ export class UsersService {
         await this.usersRepository.findOneAndUpdate({ _id: user._id }, { $set });
       }
       return { response: 'Saved' };
+    } catch (error) {
+      throw toGrpcError(error);
+    }
+  }
+
+  // Record one change an account manager made (the gateway calls this after the change succeeds)
+  async recordAudit(request: RecordAuditReq) {
+    try {
+      this.auditLogRepository.setInstanceKey(request.instancekey);
+      const id = (v?: string) => (v && /^[a-f0-9]{24}$/i.test(v) ? new ObjectId(v) : undefined);
+      await this.auditLogRepository.create({
+        actor: id(request.actorId), actorName: request.actorName, action: request.action,
+        target: id(request.targetId), targetName: request.targetName, details: String(request.details ?? '').slice(0, 500),
+      } as any);
+      return {};
+    } catch (error) {
+      throw toGrpcError(error);
+    }
+  }
+
+  // The audit log, newest first, a page at a time
+  async listAudit(request: ListAuditReq) {
+    try {
+      const limit = Math.min(100, Math.max(1, Number(request.limit) || 50));
+      const page = Math.max(1, Number(request.page) || 1);
+      this.auditLogRepository.setInstanceKey(request.instancekey);
+      const [entries, count] = await Promise.all([
+        this.auditLogRepository.find({}, null, { sort: { createdAt: -1 }, skip: (page - 1) * limit, limit, lean: true }),
+        this.auditLogRepository.countDocuments({}),
+      ]);
+      return { entries: entries.map((e: any) => ({ ...e, createdAt: e.createdAt ? new Date(e.createdAt).toISOString() : '' })), count };
     } catch (error) {
       throw toGrpcError(error);
     }
@@ -5500,6 +5535,13 @@ export class UsersService {
         } catch { /* invalid token: not this path */ }
       }
       if (!allowed) {
+        // a wrong token counts against the link: after a few the link stops working
+        if (resetToken && user.passwordResetToken) {
+          const attempts = (user.passwordResetAttempts ?? 0) + 1;
+          await this.usersRepository.updateOne({ _id: user._id }, attempts >= RESET_TOKEN_MAX_TRIES
+            ? { $set: { passwordResetToken: null, passwordResetAttempts: 0 } }
+            : { $set: { passwordResetAttempts: attempts } });
+        }
         throw new UnauthorizedException('A valid password-reset token is required.');
       }
 
@@ -5512,6 +5554,7 @@ export class UsersService {
       const salt = await crypto.randomBytes(16).toString('hex');
       const hashedPassword = await this.generatedHashedPassword(newPass, salt);
       user.passwordResetToken = null;
+      user.passwordResetAttempts = 0;
       user.emailVerified = true
       user.emailVerifyToken = null
       user.emailVerifyExpired = null

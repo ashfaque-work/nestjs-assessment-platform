@@ -6,6 +6,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
 import { Profile } from './pages/Profile';
 import { Signup } from './pages/Signup';
+import { ForgotPassword, SetPassword } from './pages/PasswordReset';
 import { Result } from './pages/Result';
 import { TakeTest } from './pages/TakeTest';
 import { TestIntro } from './pages/TestIntro';
@@ -13,6 +14,8 @@ import { NewTest } from './pages/teach/NewTest';
 import { TeachHome } from './pages/teach/TeachHome';
 import { TestEditor } from './pages/teach/TestEditor';
 import { TestResults } from './pages/teach/TestResults';
+import { TestPreview } from './pages/teach/TestPreview';
+import { AdminAudit } from './pages/admin/Audit';
 import { AdminHome } from './pages/admin/AdminHome';
 import { AdminUsers } from './pages/admin/Users';
 import { AdminSettings } from './pages/admin/Settings';
@@ -22,6 +25,8 @@ export function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/set-password" element={<SetPassword />} />
       <Route element={<RequireAuth />}>
         <Route path="/profile" element={<Profile />} />
         <Route path="/" element={<Home />} />
@@ -33,12 +38,14 @@ export function App() {
           <Route path="/teach/new" element={<NewTest />} />
           <Route path="/teach/tests/:testId" element={<TestEditor />} />
           <Route path="/teach/tests/:testId/results" element={<TestResults />} />
+          <Route path="/teach/tests/:testId/preview" element={<TestPreview />} />
         </Route>
         <Route element={<RequireManagement />}>
           <Route path="/admin" element={<AdminHome />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route element={<RequireAdmin />}>
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/audit" element={<AdminAudit />} />
           </Route>
         </Route>
       </Route>

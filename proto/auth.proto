@@ -19,6 +19,8 @@ service AuthGrpcService {
   rpc UpdateUserStatus(UpdateUserStatusReq) returns (UpdateUserStatusRes) {}
   rpc UpdateUserRole(UpdateUserRoleReq) returns (UpdateUserStatusRes) {}
   rpc ManageUser(ManageUserReq) returns (UpdateUserStatusRes) {}
+  rpc RecordAudit(RecordAuditReq) returns (Empty) {}
+  rpc ListAudit(ListAuditReq) returns (ListAuditRes) {}
   rpc SendForReviewDossier(SendForReviewDossierReq) returns (SendForReviewDossierRes) {}
   rpc Blockuser(BlockUserReq) returns (BlockUserRes){}
   rpc AddLocation(AddLocationReq) returns (AddLocationRes) {}
@@ -996,6 +998,39 @@ message UpdateUserStatusRes{
 message UpdateUserRoleReq{
   string _id = 1;
   repeated string roles = 2;
+}
+
+// The audit log: what account managers changed, newest first
+message RecordAuditReq{
+  string instancekey = 1;
+  string actorId = 2;
+  string actorName = 3;
+  string action = 4;
+  string targetId = 5;
+  string targetName = 6;
+  string details = 7;
+}
+
+message ListAuditReq{
+  string instancekey = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message AuditEntry{
+  string _id = 1;
+  string actor = 2;
+  string actorName = 3;
+  string action = 4;
+  string target = 5;
+  string targetName = 6;
+  string details = 7;
+  string createdAt = 8;
+}
+
+message ListAuditRes{
+  repeated AuditEntry entries = 1;
+  int32 count = 2;
 }
 
 // An account manager's changes to one person; a field left out is left as it is

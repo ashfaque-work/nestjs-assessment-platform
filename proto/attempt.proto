@@ -3783,8 +3783,8 @@ message FindAllResponse {
     string instructions = 16;
     bool isMarksLevel = 17;
     bool enableMarks = 18;
-    int32 minusMark = 19;
-    int32 plusMark = 20;
+    double minusMark = 19;
+    double plusMark = 20;
     string notes = 21;
     repeated QuestionEntry questions = 22;
     bool pinTop = 23;
@@ -3804,6 +3804,9 @@ message FindAllResponse {
     bool allowStudent = 37;
     string testCode = 38;
     int32 totalAttempt = 39;
+    string opensOn = 40;
+    string expiresOn = 41;
+    int32 attemptAllowed = 42;
   }
   repeated Result results = 1;
   int32 count = 2;

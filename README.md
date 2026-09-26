@@ -153,20 +153,27 @@ The live demo's server setup (Caddy, the compose overrides, build, backup, healt
   password. Use it for shared demo accounts.
 - `SIGNUP_INSTITUTE_ID` (a location id) is the institute people who sign up themselves join, taking its subjects,
   so a new student sees that institute's tests at once.
+- A forgotten password is reset by email: `POST /auth/recoverPassword` answers the same whether or not the account
+  exists and emails a link to `/set-password?token=...` (settings `baseUrl`). The token is random, works for an hour,
+  once, and is dropped after 5 wrong tries.
+- Staff changes to people (added, edited, roles, deactivated or reactivated) and to settings are kept in an audit
+  log, read by admins and directors at `GET /auth/audit` and on the web at `/admin/audit`.
 
 ## Web app
 
 `apps/web` has its own `package.json`.
 
+- **Everyone** can ask for a link to set a new password from the sign-in page.
 - **Students** sign up, see open tests and past results, take a timed test (answer sheet navigator, mark for review,
   keyboard shortcuts, answers kept if the page reloads; the clock runs from the server's start time), then review the
   marked answer sheet with explanations and a breakdown by topic. The profile page changes their name and password.
 - **Teachers** write tests (single- and multiple-answer questions with an answer key and explanations, time, marking,
-  attempts per student, a closing date), reorder questions, publish, duplicate, withdraw or delete drafts, and read
+  attempts per student, an opening and a closing date, every student or only invited emails), preview a test as a
+  student sees it, reorder questions, publish, duplicate, withdraw or delete drafts, and read
   the class answer sheet: every student's answers to every question, the share of the class that got each one right,
   the hardest question, late hand-ins, each student's own answer sheet, and a CSV download.
 - **Admins** manage people (search and pages on the server; add, edit name, subjects, teacher verification and
-  password, roles, deactivate and reactivate) and the platform settings.
+  password, roles, deactivate and reactivate), the platform settings, and read the audit log.
 
 ```bash
 cd apps/web
@@ -178,7 +185,8 @@ npm run build   # static files in apps/web/dist
 ```
 
 In production the built files are served by the same Caddy that fronts the gateway: `/`, `/login`, `/signup`,
-`/profile`, `/tests/*`, `/results/*`, `/teach/*`, `/admin`, `/admin/users`, `/admin/settings` and `/assets/*` are the
+`/profile`, `/forgot-password`, `/set-password`, `/tests/*`, `/results/*`, `/teach/*`, `/admin`, `/admin/users`,
+`/admin/settings`, `/admin/audit` and `/assets/*` are the
 app, everything else goes to the API, so the app needs no CORS setup.
 
 ## Tests
@@ -186,4 +194,24 @@ app, everything else goes to the API, so the app needs no CORS setup.
 ```bash
 npm test                    # backend (Jest)
 npm --prefix apps/web test  # web app (Vitest)
+npm run test:api            # API suites against a running stack (below)
 ```
+
+### API tests
+
+`test/api` checks the running services end to end over HTTP: who may do what, grading, schedules and attempt
+limits, invitations, settings, the audit log and password reset. Each suite first **drops and refills** its
+database with fixed test data, so point it at a database you can throw away, never a real one.
+
+Start the stack against that database, with the gateway's login limit raised and the test accounts set up:
+
+```bash
+# .env: MONGO_URI_* pointing at the throwaway database
+export REDIS_ISMOCK=true LOGIN_THROTTLE_LIMIT=100000   PROTECTED_ACCOUNTS=admin@example.com SIGNUP_INSTITUTE_ID=000000000000000000000010
+npm run build && node dist/apps/<each service>/main.js   # gateway, auth, administration, assessment, attempt, question-bank
+
+API_TEST_MONGO=mongodb://127.0.0.1:27017 API_TEST_DB=stagingdb npm run test:api
+node test/api/run.mjs attempts    # one suite: accounts, attempts, platform or teaching
+```
+
+`API_BASE` (default `http://localhost:8000`) and `API_TEST_INSTANCE` (the `instancekey`) are the other settings.

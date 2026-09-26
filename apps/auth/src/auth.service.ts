@@ -1,3 +1,4 @@
+import * as crypto from 'node:crypto';
 import { BitlyService, ConfirmEmailReq, ConfirmPasswordResetTokenRequest, LoginReqDto, NotificationRepository, RecoverPasswordReq, RedisCaching, RefreshTokenReq, ResetPasswordReq, Setting, SettingRepository, User, UserLogRepository, UsersRepository, VoiceServiceRequest } from '@app/common';
 import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -16,6 +17,9 @@ import { MessageCenter } from '@app/common/components/messageCenter';
 import { config } from '@app/common/config';
 // How long after it expires a token may still be exchanged for a new one
 const REFRESH_GRACE_SECONDS = 7 * 24 * 60 * 60;
+
+// How long a password-reset link stays good
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -158,8 +162,11 @@ export class AuthService {
         }
       }
 
+      // The same answer whether or not the account exists, so this cannot be used to find out
+      // who has an account
+      const sent = { response: 'If an account matches, we have sent it a link to set a new password.' };
       if (!condition.length) {
-        throw new UnprocessableEntityException("This account doesn't exist.");
+        return sent;
       }
 
       this.usersRepository.setInstanceKey(request.instancekey);
@@ -168,25 +175,24 @@ export class AuthService {
       });
 
       if (!user) {
-        throw new UnprocessableEntityException("This account doesn't exist.");
+        return sent;
       }
 
-      const now = new Date();
-      const nowCopy = new Date(now);
-      nowCopy.setDate(nowCopy.getDate() + 1);
-      let dataUpdate = {};
-      let resetToken = await this.userService.getRandomDigit(6);
-      //@ts-ignore
-      dataUpdate.passwordResetToken = resetToken;
-      //@ts-ignore
-      dataUpdate.passwordResetExpired = nowCopy;
+      // A long random token (not a 6-digit code anyone could guess), good for an hour, with a
+      // few wrong tries before it is thrown away
+      let dataUpdate: any = {
+        passwordResetToken: crypto.randomBytes(32).toString('hex'),
+        passwordResetExpired: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+        passwordResetAttempts: 0,
+      };
+      const resetToken = dataUpdate.passwordResetToken;
 
       await this.usersRepository.updateOne({ _id: user._id }, dataUpdate)
 
 
-      let msg = 'An email has been sent to your email';
+      let msg = sent.response;
       if (requestIs === 'phone') {
-        msg = `An sms has been sent to your phone ${resetToken}`;
+        // the text carries the link; the token is never part of the reply
         await this.sendSMSForRecovery(request, baseUrl, request.phone, resetToken)
       } else if (requestIs === 'email') {
         let options = {
@@ -336,6 +342,8 @@ export class AuthService {
     }
   }
 
+  // Whether a reset link is still good. Anyone may ask, so the answer names the account (for the
+  // page to say whose password is being set) and nothing more.
   async confirmPasswordResetToken(req: ConfirmPasswordResetTokenRequest) {
     try {
       if (!req.token) {
@@ -359,7 +367,7 @@ export class AuthService {
 
       return {
         status: true,
-        user: user
+        user: { _id: user._id, name: user.name }
       }
     } catch (error) {
       Logger.error(error);

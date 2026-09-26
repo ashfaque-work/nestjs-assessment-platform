@@ -27,6 +27,9 @@ export interface TestSummary {
   plusMark?: number;
   minusMark?: number;
   isShowAttempt?: boolean;
+  opensOn?: string | null; // students cannot start it before this
+  expiresOn?: string | null; // nor after this
+  attemptAllowed?: number; // hand-ins allowed per student; 0 or missing: no limit
 }
 
 export interface AnswerOption {
@@ -133,8 +136,7 @@ export interface TeacherTest extends TestSummary {
   accessMode?: string;
   updatedAt?: string;
   user?: string;
-  attemptAllowed?: number; // hand-ins allowed per student; 0 or missing: no limit
-  expiresOn?: string | null; // after this students can no longer start it
+  inviteeEmails?: string[]; // who may take an invitation-only test (accessMode 'invitation')
 }
 
 export interface UnitOption {

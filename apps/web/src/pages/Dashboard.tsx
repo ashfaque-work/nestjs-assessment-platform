@@ -5,6 +5,7 @@ import { useAuth } from '../auth/auth';
 import { Page } from '../components/Layout';
 import { Badge, buttonClass, Card, ErrorNote, Spinner } from '../components/ui';
 import { day, marks, percent, plural } from '../lib/format';
+import { availability, when } from '../lib/availability';
 
 // Only attempts the student finished: started-and-left ones are not results
 const finished = (attempts: Attempt[] = []) => attempts.filter((a) => !a.ongoing && !a.isAbandoned && a.totalQuestions > 0);
@@ -29,11 +30,7 @@ export function Dashboard() {
     <Page>
       <h1 className="text-[34px] font-bold leading-tight tracking-tight">{firstName ? `Hello, ${firstName}` : 'Your tests'}</h1>
       <p className="mt-2 max-w-prose text-[15px] text-graphite-soft">
-        {tests.data
-          ? tests.data.length
-            ? `${plural(tests.data.length, 'test is', 'tests are')} open to you.`
-            : 'No tests are open to you right now.'
-          : 'Loading your tests.'}
+        {tests.data ? summary(tests.data) : 'Loading your tests.'}
       </p>
 
       {done.length > 0 && (
@@ -45,7 +42,7 @@ export function Dashboard() {
       )}
 
       <section aria-labelledby="open-tests" className="mt-12">
-        <h2 id="open-tests" className="text-xs font-semibold uppercase tracking-wider text-graphite-soft">Open tests</h2>
+        <h2 id="open-tests" className="text-xs font-semibold uppercase tracking-wider text-graphite-soft">Tests</h2>
         {tests.isPending && <Spinner label="Loading tests" />}
         {tests.isError && <ErrorNote message={tests.error.message} />}
         {tests.data && tests.data.length === 0 && (
@@ -79,6 +76,16 @@ export function Dashboard() {
   );
 }
 
+// "1 test is open to you; 2 open later." Only a test that can be started now counts as open.
+function summary(tests: TestSummary[]): string {
+  const now = Date.now();
+  const open = tests.filter((t) => availability(t, now).state === 'open').length;
+  const later = tests.filter((t) => availability(t, now).state === 'not-yet').length;
+  if (!open && !later) return 'No tests are open to you right now.';
+  const first = open ? `${plural(open, 'test is', 'tests are')} open to you` : 'No tests are open to you yet';
+  return later ? `${first}; ${plural(later, 'test opens', 'tests open')} later.` : `${first}.`;
+}
+
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <Card className="px-4 py-4 sm:px-5">
@@ -90,6 +97,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 
 function TestCard({ test, last }: { test: TestSummary; last?: Attempt }) {
   const questions = test.totalQuestion || test.questions?.length || 0;
+  const open = availability(test, Date.now());
   return (
     <li>
       <Card className="flex h-full flex-col gap-4 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-rule-strong hover:shadow-pop">
@@ -105,10 +113,17 @@ function TestCard({ test, last }: { test: TestSummary; last?: Attempt }) {
             {test.totalTime} min
             {last && ` · last ${marks(last.totalMark)}/${marks(last.maximumMarks)}`}
           </p>
+          {open.state === 'open' && open.closesOn && <p className="mt-1 text-xs text-review">Closes {when(open.closesOn)}</p>}
         </div>
-        <Link to={`/tests/${test._id}`} className={`${buttonClass(last ? 'secondary' : 'primary')} w-full`}>
-          {last ? 'Take again' : 'Start test'}
-        </Link>
+        {open.state === 'not-yet' ? (
+          <span className={`${buttonClass('secondary')} w-full cursor-default opacity-70`}>Opens {when(open.opensOn)}</span>
+        ) : open.state === 'closed' ? (
+          <span className={`${buttonClass('secondary')} w-full cursor-default opacity-70`}>Closed</span>
+        ) : (
+          <Link to={`/tests/${test._id}`} className={`${buttonClass(last ? 'secondary' : 'primary')} w-full`}>
+            {last ? 'Take again' : 'Start test'}
+          </Link>
+        )}
       </Card>
     </li>
   );

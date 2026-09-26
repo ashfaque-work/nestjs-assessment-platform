@@ -672,6 +672,7 @@ export class ChangePasswordRes {
 export class ChangeNewPasswordBody {
   @ApiProperty()
   @IsNotEmpty({ message: 'New Password is required' })
+  @MinLength(8, { message: 'New Password must be at least 8 characters' })
   @MaxLength(20, { message: "New Password must be smaller than 20 characters" })
   newPassword: string;
   @ApiProperty()
@@ -765,6 +766,22 @@ export class ManageUserBody {
   @IsString()
   @Length(8, 20)
   password?: string;
+}
+
+export class RecordAuditReq {
+  instancekey: string;
+  actorId: string;
+  actorName?: string;
+  action: string;
+  targetId?: string;
+  targetName?: string;
+  details?: string;
+}
+
+export class ListAuditReq {
+  instancekey: string;
+  page?: number;
+  limit?: number;
 }
 
 export class ManageUserReq {
