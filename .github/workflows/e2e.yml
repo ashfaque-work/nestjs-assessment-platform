@@ -34,6 +34,23 @@ jobs:
       - name: Install the browser
         run: npx playwright install --with-deps chromium
 
+      # The demo runs on a free plan that stops the container after fifteen
+      # minutes idle, and this job is scheduled, so it almost always arrives to
+      # a cold one. Playwright would then spend its timeouts waiting for a
+      # server that is still booting and report the suite as broken — which is
+      # what it did nightly. Wake it first, and only then start the clock.
+      - name: Wake the demo
+        env:
+          BASE_URL: ${{ inputs.base_url || 'https://assess.ashfaqueahmad.com' }}
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 "$BASE_URL/login" || true)
+            echo "attempt $i: $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 15
+          done
+          echo "The demo did not answer in time; running the checks anyway."
+
       - name: Run the checks
         run: npx playwright test
         env:
