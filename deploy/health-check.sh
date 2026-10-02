@@ -29,8 +29,10 @@ echo "$(now) unhealthy (api=$code login=$login) consecutive=$fails" >> "$LOG"
 if [ "$fails" -ge 2 ]; then
   down=$($C ps --status exited --status dead --format '{{.Service}}' </dev/null | tr '\n' ' ')
   if [ -n "$down" ]; then
-    echo "$(now) restarting stopped: $down" >> "$LOG"
-    $C up -d </dev/null >/dev/null 2>&1
+    # recreate rather than restart: a container whose filesystem broke (e.g. on a full disk)
+    # fails the same way on every restart, but a fresh one from the same image starts
+    echo "$(now) recreating stopped: $down (disk $(df --output=pcent / | tail -1 | tr -d ' '))" >> "$LOG"
+    $C up -d --no-deps --force-recreate $down </dev/null >/dev/null 2>&1
   else
     echo "$(now) restarting gateway and auth" >> "$LOG"
     $C restart gateway auth </dev/null >/dev/null 2>&1

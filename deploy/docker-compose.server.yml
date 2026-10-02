@@ -2,8 +2,18 @@
 # internal, and MongoDB's cache is capped so the stack fits a 12 GB VM.
 #   docker compose -f docker-compose.local.yml -f deploy/docker-compose.server.yml up -d
 # Paths are relative to the repository root (the directory of the first compose file).
+
+# Docker keeps container logs forever by default; uncapped, they filled the 45 GB disk.
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   caddy:
+    <<: *logging
     image: caddy:2-alpine
     restart: unless-stopped
     ports:
@@ -18,9 +28,21 @@ services:
     depends_on:
       - gateway
   gateway:
+    <<: *logging
     ports: !override []
   mongo:
+    <<: *logging
     command: ["mongod", "--wiredTigerCacheSizeGB", "1"]
+  redis: *logging
+  auth: *logging
+  notify: *logging
+  administration: *logging
+  assessment: *logging
+  classroom: *logging
+  course: *logging
+  ecommerce: *logging
+  question-bank: *logging
+  attempt: *logging
 
 volumes:
   caddy-data:
