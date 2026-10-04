@@ -8,8 +8,8 @@ const openTest = (page: Page, title: string) =>
 
 async function signInAs(page: Page, who: 'student' | 'teacher' | 'admin') {
   await page.goto('/login');
+  // The demo button signs in by itself; there is no second click to make.
   await page.getByRole('button', { name: `Demo ${who}` }).click();
-  await page.getByRole('button', { name: 'Sign in' }).click();
 }
 
 test.describe('student', () => {
