@@ -52,7 +52,9 @@ export class AuthenticationGuard implements CanActivate {
 
       // Always overwrite client supplied userid/roles with the verified values
       request.body = { ...request.body, userid: user._id, roles: user.roles };
-      request.user = user;
+      // Over gRPC an unset bool arrives as false, so a user saved without isActive
+      // would read as deactivated in the services. Only an explicit false disables.
+      request.user = { ...user, isActive: user.isActive !== false };
       return true;
     } catch (error) {
       Logger.error(error?.message);
