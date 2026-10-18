@@ -11,7 +11,8 @@ and everything else in this folder.
 | `build-web.sh` | Builds `apps/web` into `apps/web/dist` (Node runs in a container) |
 | `health-check.sh` | Probes the API through Caddy; restarts containers after two failed checks in a row |
 | `backup-mongo.sh` | Daily `mongodump`, keeps the last 7 in `~/backups` |
-| `reset-demo.sh` | Restores the demo databases from `~/demo-baseline` every night |
+| `reset-demo.sh` | Restores the demo databases from `~/demo-baseline` every night, then repairs the shared demo student |
+| `repair-demo-student.mongosh.js` | Activates the shared sample student and fills missing initial subject levels after a restore; preserves existing higher levels | 
 | `save-demo-baseline.sh` | Saves the current demo data as that baseline (after a size check and a trial restore) |
 
 ## First run
@@ -48,3 +49,15 @@ certificate on its own.
 docker compose -f docker-compose.local.yml -f deploy/docker-compose.server.yml ps
 docker compose -f docker-compose.local.yml -f deploy/docker-compose.server.yml logs -f gateway
 ```
+
+## Demo account repair
+
+The shared sample student must be active and have level 1 in each enrolled subject. Older baseline archives can restore an inactive account with no levels, causing test pages to reject the student even though sign-in works. `reset-demo.sh` now repairs that sample account immediately after each database restore. Other accounts are not changed; existing higher levels are preserved, and the repair refuses databases other than `stagingdb` and `newstagingdb`.
+
+Validate the repair without a database:
+
+```bash
+node deploy/repair-demo-student.test.cjs
+```
+
+To install this protection, deploy the updated checkout and both scripts to the VM that runs the nightly cron. Merging the pull request alone does not update that server. The live account was separately restored through the API on 2026-10-18, and the live demo workflow passed afterward.
