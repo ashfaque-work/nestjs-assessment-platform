@@ -1,15 +1,47 @@
 import { Inject, Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import * as path from 'path';
-import { Swig } from 'swig';
+import { Swig, loaders } from 'swig';
 import { NotificationRepository, NotificationTemplateRepository, SettingRepository, UsersRepository } from "../database";
 import { isEmail } from "../helpers";
 import { RedisCaching } from "../services";
 import { GrpcInternalException } from "nestjs-grpc-exceptions";
 
 const viewsPath = '../views/emails/'
+
+/**
+ * swig's own filesystem loader resolves `{% include "/etc/passwd" %}` or a `../`
+ * chain to wherever it points (GHSA-2rq5-699j-x7p6), and template bodies here
+ * arrive through the API. This one refuses anything outside `basepath`.
+ */
+export function confinedTemplateLoader(basepath: string) {
+    const root = path.resolve(basepath);
+    const fsLoader = loaders.fs(root);
+
+    const inside = (file: string) => {
+        const relative = path.relative(root, file);
+        return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
+    };
+
+    return {
+        resolve: fsLoader.resolve,
+        load(identifier: string, cb?: (err: Error | null, src?: string) => void) {
+            const file = fsLoader.resolve(identifier);
+            if (!inside(file)) {
+                const err = new Error(`Template may not read outside the email views: ${identifier}`);
+                if (cb) {
+                    return cb(err);
+                }
+                throw err;
+            }
+            return fsLoader.load(file, cb);
+        },
+    };
+}
+
 const swig = new Swig({
     varControls: ['<%=', '%>'],
-    cache: false
+    cache: false,
+    loader: confinedTemplateLoader(path.join(__dirname, viewsPath)),
 })
 
 @Injectable()
