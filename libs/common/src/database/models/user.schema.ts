@@ -2,27 +2,27 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { AbstractDocument } from '../abstract.schema';
 import { Types } from 'mongoose';
 
-interface UserInfo {
+export interface UserEntryAuthor {
   user: Types.ObjectId,
   name: string,
 }
 
-interface Note {
+export interface UserNote {
   version: number,
   comment: string,
   type: string,
   updatedAt: Date,
-  userInfo: UserInfo,
+  userInfo: UserEntryAuthor,
 }
 
-interface Feedback {
+export interface UserFeedback {
   comment: string,
   type: string,
   updatedAt: Date,
-  userInfo: UserInfo,
+  userInfo: UserEntryAuthor,
 }
 
-interface MentorInfo {
+export interface UserMentorInfo {
   user: Types.ObjectId,
   name: string,
 }
@@ -100,8 +100,8 @@ export class User extends AbstractDocument {
   dossier?: {
     status: string,
     statusChangedAt: Date,
-    notes: Note[],
-    feedback: Feedback[]
+    notes: UserNote[],
+    feedback: UserFeedback[]
   }
 
   @Prop()
@@ -694,7 +694,7 @@ export class User extends AbstractDocument {
       }
     }
   })
-  mentorInfo?: MentorInfo;
+  mentorInfo?: UserMentorInfo;
 
   @Prop({ type: Types.ObjectId })
   instance?: Types.ObjectId;
