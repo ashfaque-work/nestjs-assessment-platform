@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { AbstractRepository } from './abstract.repository';
 import { tenantContext, TenantAwareServerGrpc } from './tenant-context';
 
@@ -52,11 +53,13 @@ describe('tenant context', () => {
 describe('TenantAwareServerGrpc replies', () => {
   const server = new TenantAwareServerGrpc({ package: 'test', protoPath: 'test.proto' } as any);
 
-  // Calls a unary gRPC method the way grpc-js does and returns what reaches the client
+  // Calls a unary gRPC method the way grpc-js does and returns what reaches the client.
+  // A grpc-js call is an EventEmitter, and Nest listens on it for cancellation.
   const callUnary = (handlerResult: any) => {
     const method: any = server.createServiceMethod(async () => handlerResult, { responseStream: false }, undefined);
+    const call = Object.assign(new EventEmitter(), { request: {}, metadata: {} });
     return new Promise<{ err: any; reply: any }>((resolve) =>
-      method({ request: {}, metadata: {} }, (err: any, reply: any) => resolve({ err, reply })));
+      method(call, (err: any, reply: any) => resolve({ err, reply })));
   };
 
   it('answers NOT_FOUND when a handler returns null for a missing record', async () => {

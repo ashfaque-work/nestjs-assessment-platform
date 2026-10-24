@@ -16,6 +16,9 @@ async function bootstrap() {
   if (configService.get('TRUST_PROXY') !== 'false') {
     app.getHttpAdapter().getInstance().set('trust proxy', 1);
   }
+  // Express 5 parses query strings flat by default; the web app's axios sends arrays
+  // as ids[]=1&ids[]=2 and filters as nested keys, which Express 4 read as objects.
+  app.getHttpAdapter().getInstance().set('query parser', 'extended');
   const config = new DocumentBuilder()
     .setTitle('Assessment Platform API')
     .setDescription('REST gateway for the assessment platform microservices')
