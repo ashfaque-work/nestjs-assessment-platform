@@ -9,7 +9,14 @@ const openTest = (page: Page, title: string) =>
 async function signInAs(page: Page, who: 'student' | 'teacher' | 'admin') {
   await page.goto('/login');
   await page.getByRole('button', { name: `Demo ${who}` }).click();
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  // The demo button signs in by itself. These tests run against a deployment,
+  // which can be behind the repository, so an older build that only fills the
+  // form still needs the second click.
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 5000 })
+    .catch(() => {});
+  if (new URL(page.url()).pathname.startsWith('/login')) {
+    await page.getByRole('button', { name: 'Sign in' }).click();
+  }
 }
 
 test.describe('student', () => {

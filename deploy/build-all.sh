@@ -12,5 +12,7 @@ for svc in auth gateway notify administration assessment classroom course ecomme
 done
 if "$ROOT/deploy/build-web.sh" > ~/build-web.log 2>&1; then echo "web OK"; else echo "web FAILED"; tail -20 ~/build-web.log; failed=1; fi
 $C up -d </dev/null 2>&1 | grep -cE "Recreated|Started" | sed "s/^/recreated: /"
+# every build leaves layers in the build cache; unpruned, they reached 26 GB and filled the disk
+docker builder prune -f --filter until=24h </dev/null 2>&1 | tail -1
 echo BUILD-DONE
 exit $failed

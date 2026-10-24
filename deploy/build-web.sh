@@ -4,6 +4,6 @@
 set -e
 source "$(dirname "$(readlink -f "$0")")/env.sh"
 cd apps/web
-docker run --rm -v "$PWD":/app -w /app -e HOME=/tmp -u "$(id -u):$(id -g)" node:22-alpine \
+docker run --rm -v "$PWD":/app -w /app -e HOME=/tmp -u "$(id -u):$(id -g)" node:22.23.4-alpine \
   sh -c "npm ci --no-audit --no-fund --loglevel=error && npm run build"
 ls -la dist | head

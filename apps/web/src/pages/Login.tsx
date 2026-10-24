@@ -23,12 +23,11 @@ export function Login() {
 
   if (signedIn) return <Navigate to={from} replace />;
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const attempt = async (id: string, secret: string) => {
     setError('');
     setBusy(true);
     try {
-      await signIn(userId.trim(), password);
+      await signIn(id.trim(), secret);
       navigate(from, { replace: true });
     } catch (err) {
       setError(
@@ -41,10 +40,18 @@ export function Login() {
     }
   };
 
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    void attempt(userId, password);
+  };
+
+  // Signs in rather than only filling the form: the buttons read as "try it as
+  // a student", and someone who has just been handed a filled-in password has
+  // no reason to think there is a second step.
   const useDemo = (who: keyof typeof DEMO) => {
     setUserId(DEMO[who].userId);
     setPassword(DEMO[who].password);
-    setError('');
+    void attempt(DEMO[who].userId, DEMO[who].password);
   };
 
   return (
@@ -77,13 +84,13 @@ export function Login() {
 
           <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-graphite-soft">
             <span>Try it as</span>
-            <button type="button" onClick={() => useDemo('student')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form">
+            <button type="button" disabled={busy} onClick={() => useDemo('student')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form disabled:cursor-not-allowed disabled:opacity-60">
               Demo student
             </button>
-            <button type="button" onClick={() => useDemo('teacher')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form">
+            <button type="button" disabled={busy} onClick={() => useDemo('teacher')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form disabled:cursor-not-allowed disabled:opacity-60">
               Demo teacher
             </button>
-            <button type="button" onClick={() => useDemo('admin')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form">
+            <button type="button" disabled={busy} onClick={() => useDemo('admin')} className="rounded-full border border-rule bg-sheet px-3 py-1 font-semibold text-graphite shadow-card transition-colors hover:border-form/40 hover:text-form disabled:cursor-not-allowed disabled:opacity-60">
               Demo admin
             </button>
           </div>

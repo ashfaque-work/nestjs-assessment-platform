@@ -11,6 +11,8 @@ for db in stagingdb newstagingdb; do
   # never restore (with --drop) from a missing or broken baseline
   if [ "$(stat -c%s "$archive" 2>/dev/null || echo 0)" -lt 5000 ]; then echo "$(date -u +%FT%TZ) reset SKIPPED: baseline for $db missing or too small" >> "$LOG"; exit 1; fi
   $C exec -T mongo mongorestore --archive --gzip --drop --nsInclude "$db.*" < "$archive" 2>/dev/null
+  # Older baselines predate subject-level access checks and may contain a disabled demo account.
+  $C exec -T mongo mongosh "$db" --quiet < "$(dirname "$(readlink -f "$0")")/repair-demo-student.mongosh.js"
 done
 
 # Cached copies of settings and tests are keyed by instance; the Bull queues (bull:*) are kept
