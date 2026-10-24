@@ -89,13 +89,13 @@
     "reflect-metadata": "^0.2.2",
     "rimraf": "^5.0.5",
     "rxjs": "^7.8.1",
+    "sanitize-html": "^2.18.1",
     "simple-recaptcha-new": "^1.1.1",
     "slug": "^9.0.0",
     "slugify": "^1.6.6",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
     "socketio-jwt": "^4.6.2",
-    "strip-js": "^1.2.0",
     "striptags": "^3.2.0",
     "swig": "^1.4.2",
     "ua-parser-js": "^1.0.37",
@@ -107,6 +107,8 @@
     "zip-local": "^0.3.5"
   },
   "devDependencies": {
+    "@babel/plugin-transform-export-namespace-from": "^7.29.7",
+    "@babel/plugin-transform-modules-commonjs": "^7.29.7",
     "@nestjs/cli": "^11.0.24",
     "@nestjs/schematics": "^11.1.0",
     "@nestjs/testing": "^11.2.8",
@@ -115,9 +117,10 @@
     "@types/jest": "^29.5.2",
     "@types/multer": "^1.4.11",
     "@types/node": "^22.20.5",
+    "@types/sanitize-html": "^2.16.2",
     "@types/supertest": "^2.0.12",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
+    "@typescript-eslint/parser": "^8.46.0",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
@@ -142,6 +145,15 @@
     "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
+      "node_modules.+\\.js$": [
+        "babel-jest",
+        {
+          "plugins": [
+            "@babel/plugin-transform-export-namespace-from",
+            "@babel/plugin-transform-modules-commonjs"
+          ]
+        }
+      ],
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
@@ -159,6 +171,9 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "<rootDir>/apps/web/"
+    ],
+    "transformIgnorePatterns": [
+      "/node_modules/(?!.*/node_modules/)(?!(htmlparser2|domhandler|domutils|dom-serializer|entities|domelementtype)/)"
     ]
   },
   "overrides": {
@@ -169,6 +184,8 @@
       "@nestjs/common": "$@nestjs/common",
       "@nestjs/core": "$@nestjs/core",
       "@nestjs/microservices": "$@nestjs/microservices"
-    }
+    },
+    "multer": "^2.5.0",
+    "js-yaml@<4.3.2": "^4.3.2"
   }
 }
