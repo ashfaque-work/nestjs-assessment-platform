@@ -71,14 +71,16 @@
     "ioredis-timeout": "^1.5.0",
     "joi": "^17.7.0",
     "jsonwebtoken": "^9.0.3",
+    "jszip": "^3.10.2",
     "libphonenumber-js": "^1.11.4",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
     "mongodb": "6.3.0",
     "mongoose": "^8.0.3",
     "nestjs-pino": "^4.6.1",
-    "nodemailer": "^10.0.16",
+    "nodemailer": "^10.1.7",
     "numeral": "^2.0.6",
+    "nunjucks": "^3.2.4",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
@@ -96,14 +98,12 @@
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
     "striptags": "^3.2.0",
-    "swig": "^1.4.2",
     "ua-parser-js": "^1.0.37",
     "url-metadata": "^4.1.0",
-    "uuid": "^9.0.1",
+    "uuid": "^11.1.1",
     "xlsx": "^0.18.5",
     "xml-writer": "^1.7.0",
-    "xml2js": "^0.6.2",
-    "zip-local": "^0.3.5"
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@babel/plugin-transform-export-namespace-from": "^7.29.7",
@@ -117,6 +117,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^1.4.11",
     "@types/node": "^22.20.5",
+    "@types/nunjucks": "^3.2.6",
     "@types/sanitize-html": "^2.16.2",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
@@ -177,9 +178,6 @@
     ]
   },
   "overrides": {
-    "optimist": {
-      "minimist": "^1.2.8"
-    },
     "nestjs-grpc-exceptions": {
       "@nestjs/common": "$@nestjs/common",
       "@nestjs/core": "$@nestjs/core",
@@ -190,6 +188,8 @@
     "geoip-lite": {
       "ip-address": "^10.7.4"
     },
-    "glob@>=10.2.0 <10.5.0": "^10.5.0"
+    "glob@>=10.2.0 <10.5.0": "^10.5.0",
+    "js-yaml@>=5.0.0 <5.5.0": "^5.5.0",
+    "uuid@<11.1.1": "^11.1.1"
   }
 }
