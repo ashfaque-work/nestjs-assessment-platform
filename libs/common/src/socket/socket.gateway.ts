@@ -16,7 +16,7 @@ import {
   UsersRepository,
 } from "../database";
 import { Server, Socket } from "socket.io";
-import * as socketioJwt from "socketio-jwt";
+import { socketJwtAuth } from "./socket-jwt";
 import { createHash } from "node:crypto";
 import { Injectable, Logger } from "@nestjs/common";
 import { config } from "../config";
@@ -108,20 +108,10 @@ export class SocketGateway
         next();
       })
       .use(
-        socketioJwt.authorize({
-          secret: this.configService.get("JWT_SECRET"),
-          handshake: true,
-          callback: false,
-          additional_auth: (decoded: DecodedToken, onSuccess, onError) => {
-            // Custom authentication logic
-            if (!decoded || !decoded.userId) {
-              const error = "Invalid token";
-              this.logger.error(`JWT authentication failed: ${error}`);
-              onError(error, "INVALID_TOKEN");
-            } else {
-              onSuccess();
-            }
-          },
+        socketJwtAuth(this.configService.get("JWT_SECRET"), (decoded: DecodedToken) => {
+          if (decoded?.userId) return true;
+          this.logger.error("JWT authentication failed: Invalid token");
+          return false;
         })
       )
       .on("connection", (socket: CustomSocket) => {

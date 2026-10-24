@@ -679,8 +679,8 @@ export class PaymentService {
         }
 
         try {
-          const response: any = await this.bitly.shorten(sharingLink);
-          sharingLink = response.link;
+          // shorten() returns the link itself; reading .link off it sent "undefined" in the SMS
+          sharingLink = await this.bitly.shorten(sharingLink);
 
           this.notificationRepository.setInstanceKey(req.instancekey);
           await this.notificationRepository.create({
