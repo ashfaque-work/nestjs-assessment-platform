@@ -47,6 +47,9 @@ import {
   ReportedUser,
   ReportedUserSchema,
   ReportedUserRepository,
+  AuditLog,
+  AuditLogSchema,
+  AuditLogRepository,
   MarketingUtm,
   MarketingUtmSchema,
   MarketingUtmRepository,
@@ -105,6 +108,7 @@ const practiceSetEntity = { name: PracticeSet.name, schema: PracticeSetSchema };
 const attemptDetailEntity = { name: AttemptDetail.name, schema: AttemptSchema };
 const notificationTemplateEntity = { name: NotificationTemplate.name, schema: NotificationTemplateSchema };
 const reportedUserEntity = { name: ReportedUser.name, schema: ReportedUserSchema };
+const auditLogEntity = { name: AuditLog.name, schema: AuditLogSchema };
 const marketingUtmEntity = { name: MarketingUtm.name, schema: MarketingUtmSchema };
 const notificationEntity = { name: Notification.name, schema: NotificationSchema };
 const attendanceEntity = { name: Attendance.name, schema: AttendanceSchema };
@@ -135,6 +139,7 @@ const chatUserEntity = { name: ChatUser.name, schema: ChatUserSchema };
       attemptDetailEntity,
       notificationTemplateEntity,
       reportedUserEntity,
+      auditLogEntity,
       marketingUtmEntity,
       notificationEntity,
       attendanceEntity,
@@ -166,6 +171,7 @@ const chatUserEntity = { name: ChatUser.name, schema: ChatUserSchema };
     AttemptDetailRepository,
     NotificationTemplateRepository,
     ReportedUserRepository,
+    AuditLogRepository,
     MarketingUtmRepository,
     NotificationRepository,
     AttendanceRepository,

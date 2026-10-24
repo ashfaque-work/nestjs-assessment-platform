@@ -1,4 +1,4 @@
-import { canManageTest } from '@app/common/helpers/role-helper';
+import { canManageTest, canReadTest } from '@app/common/helpers/role-helper';
 import { toGrpcError } from '@app/common/helpers/grpc-error';
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import {
@@ -374,31 +374,29 @@ export class AssessmentService {
     }
   }
 
+  // Withdraw a test (status 'revoked'): students can no longer take it. The request is the one
+  // updateAssessment gets: the test id in `id`, the changes in `body`.
   private async withDrawn(request: any) {
-    var userFilter: any = {}
-    userFilter._id = new ObjectId(request._id)
-    if (request.user.roles.includes('admin') || request.user.roles.includes('director')) { } else {
-      userFilter.user = new ObjectId(request.user._id)
-    }
+    const filter = { _id: new ObjectId(request.id) };
     this.practiceSetRepository.setInstanceKey(request.instancekey);
-    let practiceset = await this.practiceSetRepository.findOne(userFilter);
+    const practiceset = await this.practiceSetRepository.findOne(filter);
     if (!practiceset) {
-      throw new NotFoundException('Practice test could not be withdrawn. Please contact Administrator.')
+      throw new NotFoundException('Practice Not Found');
+    }
+    if (!canManageTest(request.user, practiceset)) {
+      throw new ForbiddenException('You can only change your own tests');
     }
 
-    const result = await this.practiceSetRepository.updateOne(userFilter, {
-      $set: {
-        status: request.status,
-        isShowResult: request.isShowResult,
-        peerVisibility: request.peerVisibility,
-        isShowAttempt: request.isShowAttempt,
-        instructors: request.instructors
-      }
-    })
-    await this.redisCache.del({ instancekey: request.instancekey, params: { id: request._id } }, 'findOneWithQuestionsAccessMode')
-    await this.redisCache.del({ instancekey: request.instancekey, params: { id: request._id } }, 'findOneWithQuestionsAccessMode_meta')
+    const body = request.body || {};
+    const $set: any = { status: 'revoked', statusChangedAt: new Date() };
+    for (const key of ['isShowResult', 'peerVisibility', 'isShowAttempt', 'instructors']) {
+      if (body[key] !== undefined) $set[key] = body[key];
+    }
+    await this.practiceSetRepository.updateOne(filter, { $set });
+    await this.redisCache.del({ instancekey: request.instancekey, params: { id: request.id } }, 'findOneWithQuestionsAccessMode')
+    await this.redisCache.del({ instancekey: request.instancekey, params: { id: request.id } }, 'findOneWithQuestionsAccessMode_meta')
 
-    return result;
+    return this.practiceSetRepository.findOne(filter);
   }
 
   private async validateUpdatePracticeTitle(request: UpdateAssessmentRequest, title: string, settings: any) {
@@ -964,7 +962,7 @@ export class AssessmentService {
         }
       }
       if (request.body.status == 'revoked') {
-        await this.withDrawn(request)
+        return { response: await this.withDrawn(request) }
       } else {
         if (request.body.testMode != 'proctored') {
           request.body.startDate = null;
@@ -1102,7 +1100,7 @@ export class AssessmentService {
         newDataToSave.titleLower = practiceSet.title.toLowerCase()
         if (!newDataToSave.testType) { // without this check it will overwrite other type of test like psychometry
           // set default if not set or is set to tadaptive previously                            
-          newDataToSave.testType = 'practice';
+          newDataToSave.testType = 'standard'; // the schema's default ('practice' is not an allowed value)
         }
 
 
@@ -1211,7 +1209,7 @@ export class AssessmentService {
 
           try {
             // update instructors subjects
-            if (newDataToSave.instructors.length) {
+            if (newDataToSave.instructors?.length) {
               this.usersRepository.setInstanceKey(request.instancekey);
               await this.usersRepository.updateMany({ _id: { $in: newDataToSave.instructors } }, { $addToSet: { subjects: { $each: newDataToSave.subjects.map(s => s._id) } } })
               if (newDataToSave.accessMode === 'invitation') {
@@ -4773,6 +4771,13 @@ export class AssessmentService {
       if (!test) {
         throw new NotFoundException();
       }
+      if (!canManageTest(request.user, test)) {
+        throw new ForbiddenException('You can only change your own tests');
+      }
+      // students may already have taken a published test in this order
+      if (test.status !== 'draft' && test.status !== 'tempt') {
+        throw new BadRequestException('Questions can be reordered only in a draft test');
+      }
 
       if (test.questions.length === 0) {
         return { status: 'ok' };
@@ -4906,7 +4911,7 @@ export class AssessmentService {
                 uploadDir: getAssets(request.instancekey),
                 oQuestion: _.pick(q, 'questionHeader', 'questionText', 'answers', 'answerExplain'),
               });
-              await q.remove();
+              this.questionRepository.setInstanceKey(request.instancekey); await this.questionRepository.findByIdAndDelete(q._id);
             } else if (q.practiceSets && q.practiceSets.some((s) => s.equals(practice._id))) {
               // If this question is reusable and originally belong to this practiceSet
               // find if it is used by any other test.
@@ -4921,7 +4926,7 @@ export class AssessmentService {
                   uploadDir: getAssets(request.instancekey),
                   oQuestion: _.pick(q, 'questionHeader', 'questionText', 'answers', 'answerExplain'),
                 });
-                await q.remove();
+                this.questionRepository.setInstanceKey(request.instancekey); await this.questionRepository.findByIdAndDelete(q._id);
               } else {
                 this.questionRepository.setInstanceKey(request.instancekey)
                 await this.questionRepository.updateOne({ _id: q._id }, { $pull: { practiceSets: practice._id } });
@@ -6410,12 +6415,16 @@ export class AssessmentService {
 
     try {
       this.practiceSetRepository.setInstanceKey(req.instancekey)
-      const test = await this.practiceSetRepository.findOne({ _id: new ObjectId(req.body.practice) }, { user: 1, instructors: 1 }, { lean: true })
+      const test = await this.practiceSetRepository.findOne({ _id: new ObjectId(req.body.practice) }, { user: 1, instructors: 1, status: 1 }, { lean: true })
       if (!test) {
         throw new NotFoundException();
       }
       if (!canManageTest(req.user, test)) {
         throw new ForbiddenException('You can only change your own tests');
+      }
+      // students may already have answered a published test: its questions stay as they are
+      if (test.status !== 'draft' && test.status !== 'tempt') {
+        throw new BadRequestException('Questions can be removed only from a draft test');
       }
       const data = await this.practiceSetRepository.findOneAndUpdate(
         { _id: new ObjectId(req.body.practice), 'questions.question': new ObjectId(req.body.question) },
@@ -7484,6 +7493,13 @@ export class AssessmentService {
 
       this.practiceSetRepository.setInstanceKey(req.instancekey);
       let result = await this.practiceSetRepository.findById(req.id, null, { lean: true });
+      if (!result) {
+        throw new NotFoundException('Practice Not Found');
+      }
+      // the copy is the caller's, questions and answers included: only for people who may read it
+      if (!canReadTest(req.user, result)) {
+        throw new ForbiddenException('You can only copy tests you can see');
+      }
 
       // Check if name already exists
       let found = await this.practiceSetRepository.findOne({ title: req.title }, null, { lean: true });
@@ -7520,7 +7536,27 @@ export class AssessmentService {
       }
       tempTest.locations = [new ObjectId(req.user.activeLocation)]
 
+      // The copy gets its own questions: shared ones would let an edit to the copy change the
+      // original (a published test included)
+      this.questionRepository.setInstanceKey(req.instancekey);
+      const copies = new Map<string, any>();
+      for (const item of tempTest.questions || []) {
+        const original: any = await this.questionRepository.findById(item.question, null, { lean: true });
+        if (!original) continue;
+        const { _id, uid, createdAt, updatedAt, ...fields } = original;
+        const answers = (original.answers || []).map(({ _id: answerId, ...answer }: any) => answer);
+        const copy: any = await this.questionRepository.create({ ...fields, answers, user: new ObjectId(req.user._id), practiceSets: [] });
+        copies.set(String(item.question), copy._id);
+      }
+      tempTest.questions = (tempTest.questions || [])
+        .filter((item: any) => copies.has(String(item.question)))
+        .map((item: any) => ({ ...item, question: copies.get(String(item.question)) }));
+      tempTest.totalQuestion = tempTest.questions.length;
+
       let test = await this.practiceSetRepository.create(tempTest)
+      if (copies.size) {
+        await this.questionRepository.updateMany({ _id: { $in: [...copies.values()] } }, { $set: { practiceSets: [test._id] } });
+      }
 
       return { response: test };
     } catch (error) {

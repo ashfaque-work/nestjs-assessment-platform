@@ -59,7 +59,7 @@ export interface FinishInput {
   order: string[];
 }
 
-// Grades the attempt, then records it as completed so it counts in the student's history
+// Grades the attempt; the API also records it as completed, so it counts in the student's history
 export function useFinishAttempt() {
   return useMutation({
     mutationFn: async ({ attemptId, testId, answers, order }: FinishInput) => {
@@ -70,7 +70,6 @@ export function useFinishAttempt() {
         questionOrder: order,
         isAbandoned: false,
       });
-      await api('PUT', `/attempt/updateAbandonStatus/${attemptId}`, {});
     },
   });
 }

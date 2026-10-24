@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsBoolean,
   IsDate,
   IsDateString,
   IsEmail,
@@ -14,6 +15,7 @@ import {
   Length,
   Matches,
   MaxLength,
+  MinLength,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
@@ -650,6 +652,7 @@ export class ChangePasswordBody {
   oldPassword: string;
   @ApiProperty()
   @IsNotEmpty({ message: 'New Password is required' })
+  @MinLength(8, { message: 'New Password must be at least 8 characters' })
   @MaxLength(20, { message: "New Password must be smaller than 20 characters" })
   newPassword: string;
 }
@@ -669,6 +672,7 @@ export class ChangePasswordRes {
 export class ChangeNewPasswordBody {
   @ApiProperty()
   @IsNotEmpty({ message: 'New Password is required' })
+  @MinLength(8, { message: 'New Password must be at least 8 characters' })
   @MaxLength(20, { message: "New Password must be smaller than 20 characters" })
   newPassword: string;
   @ApiProperty()
@@ -739,6 +743,56 @@ export class UpdateUserRoleReq {
   _id: string;
   @ApiProperty({ type: [String] })
   roles: string[];
+}
+
+// What an account manager may change about a person (PUT /auth/manageUser/:id)
+export class ManageUserBody {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  name?: string;
+  @ApiProperty({ required: false, type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  subjects?: string[];
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  isVerified?: boolean;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @Length(8, 20)
+  password?: string;
+}
+
+export class RecordAuditReq {
+  instancekey: string;
+  actorId: string;
+  actorName?: string;
+  action: string;
+  targetId?: string;
+  targetName?: string;
+  details?: string;
+}
+
+export class ListAuditReq {
+  instancekey: string;
+  page?: number;
+  limit?: number;
+}
+
+export class ManageUserReq {
+  _id: string;
+  instancekey: string;
+  name?: string;
+  subjects?: string[];
+  // subjects are replaced only when set: an empty list over gRPC looks like no list
+  setSubjects?: boolean;
+  isVerified?: boolean;
+  password?: string;
 }
 
 export class UpdateUserRoleBody {
@@ -1688,6 +1742,9 @@ export class FindQuery {
   chatSupport: boolean;
   @ApiProperty({ required: false })
   count: boolean;
+  // deactivated people too: for the staff who manage accounts (an admin reactivating someone)
+  @ApiProperty({ required: false })
+  includeInactive: boolean;
 }
 
 export class FindRequest {

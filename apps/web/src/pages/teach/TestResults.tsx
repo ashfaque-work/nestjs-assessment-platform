@@ -3,9 +3,9 @@ import { useTeacherTest, useTestQuestions, useTestResults } from '../../api/teac
 import type { BankQuestion } from '../../api/types';
 import { Bubble, type BubbleState } from '../../components/Bubble';
 import { Page } from '../../components/Layout';
-import { buttonClass, ErrorNote, Spinner } from '../../components/ui';
+import { Button, buttonClass, ErrorNote, Spinner } from '../../components/ui';
 import { day, duration, letter, marks, percent, plural } from '../../lib/format';
-import { classResults, type Cell } from '../../lib/results';
+import { classResults, classResultsCsv, type Cell } from '../../lib/results';
 
 const cellStyle: Record<Cell, { state: BubbleState; label: string }> = {
   right: { state: 'correct', label: 'right' },
@@ -28,7 +28,7 @@ export function TestResults() {
 
   const qs = questions.data ?? [];
   const r = classResults(attempts.data ?? [], qs.map((q) => q._id));
-  const students = new Set(r.rows.map((row) => row.name)).size;
+  const students = new Set(r.rows.map((row) => row.student)).size;
 
   return (
     <Page>
@@ -52,6 +52,9 @@ export function TestResults() {
         <section aria-labelledby="class-sheet" className="mt-10">
           <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-form/40 pb-2">
             <h2 id="class-sheet" className="text-sm font-bold text-form">Class answer sheet</h2>
+            <Button variant="secondary" className="h-8 px-3 text-xs" onClick={() => downloadCsv(`${test.data?.title ?? 'results'}.csv`, classResultsCsv(r, qs.length))}>
+              Download CSV
+            </Button>
             <span className="flex items-center gap-3 text-xs text-graphite-soft">
               <span className="flex items-center gap-1.5"><Bubble size="sm" label="" state="correct" /> Right</span>
               <span className="flex items-center gap-1.5"><Bubble size="sm" label="" state="wrong" /> Wrong</span>
@@ -78,8 +81,10 @@ export function TestResults() {
                 {r.rows.map((row) => (
                   <tr key={row.id} className="border-t border-rule">
                     <th scope="row" className="py-2.5 pr-6 text-left font-semibold">
-                      {row.name}
+                      {/* the student's own answer sheet, as they see it */}
+                      <Link to={`/results/${row.id}`} className="hover:underline">{row.name}</Link>
                       {row.attemptNumber > 1 && <span className="ml-1.5 font-normal text-graphite-soft">attempt {row.attemptNumber}</span>}
+                      {row.late && <span className="ml-1.5 text-xs font-semibold text-review" title="Handed in after the time ran out">late</span>}
                     </th>
                     {row.cells.map((cell, i) => (
                       <td key={i} className="py-2.5 text-center">
@@ -137,4 +142,14 @@ function QuestionRow({ number, question, right, hardest }: { number: number; que
       </div>
     </li>
   );
+}
+
+function downloadCsv(filename: string, csv: string) {
+  // a byte order mark, so spreadsheet apps read the names as UTF-8
+  const url = URL.createObjectURL(new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename.replace(/[\\/:*?"<>|]+/g, ' ');
+  a.click();
+  URL.revokeObjectURL(url);
 }

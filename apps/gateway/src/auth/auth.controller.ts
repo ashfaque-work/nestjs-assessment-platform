@@ -1,6 +1,9 @@
-import { AddEventsReq, AddExperienceReq, AddLocationReq, AddSubjectsReq, AddUtmVisitorReq, BlockuserReq, ChangeNewPasswordBody, ChangeNewPasswordQuery, ChangePasswordBody, CreateUserDto, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, ExportUsersReq, FindOnlineUsersQuery, FindQuery, GetEventsQuery, GetStudentEventsQuery, InviteUsersReq, JoinOneOnOneWbSessionQuery, LoginAfterOauthReq, LoginReqDto, ManageSessionBody, ManageSessionReq, ObjectIdPipe, PartnerUserBody, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReqUser, SendForReviewDossierReq, SocialLoginBody, StartOneOnOneWbSessionQuery, TempSignupReq, TotalUserQuery, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataBody, UpdateAmbassadorReq, UpdateConnectionBody, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageBody, UpdateIdentityImageParam, UpdateMentorPreferencesReq, UpdateOptionsDataBody, UpdateRequest, UpdateRoleBody, UpdateSubjectsReq, UpdateTempUserBody, UpdateUserBody, UpdateUserCountryReq, UpdateUserStatusReq, UpdateUserRoleBody, UpdateUtmStatusReq, UserLiveBoardQuery, ValidateUserPictureRequest, VoiceServiceRequest } from '@app/common';
-import { Body, Controller, Delete, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from '@nestjs/common';
+import { AddEventsReq, AddExperienceReq, AddLocationReq, AddSubjectsReq, AddUtmVisitorReq, BlockuserReq, ChangeNewPasswordBody, ChangeNewPasswordQuery, ChangePasswordBody, CreateUserDto, DossierStatusUpdateReqDto, EditLocationReq, EducoinsReq, ExportUsersReq, FindOnlineUsersQuery, FindQuery, GetEventsQuery, GetStudentEventsQuery, InviteUsersReq, JoinOneOnOneWbSessionQuery, LoginAfterOauthReq, LoginReqDto, ManageSessionBody, ManageSessionReq, ObjectIdPipe, PartnerUserBody, RecoverPasswordReq, RedeemCoinsReq, RemoveAdditionalInfoReq, ReportUserReq, ReqUser, SendForReviewDossierReq, SocialLoginBody, StartOneOnOneWbSessionQuery, TempSignupReq, TotalUserQuery, UnblockUserReq, UnsubscribeReq, UpdateAdditionalDataBody, UpdateAmbassadorReq, UpdateConnectionBody, UpdateDossierCommentsReqDto, UpdateEventReq, UpdateExperienceReq, UpdateIdentityImageBody, UpdateIdentityImageParam, UpdateMentorPreferencesReq, UpdateOptionsDataBody, UpdateRequest, UpdateRoleBody, UpdateSubjectsReq, UpdateTempUserBody, UpdateUserBody, UpdateUserCountryReq, UpdateUserStatusReq, UpdateUserRoleBody, ManageUserBody, UpdateUtmStatusReq, UserLiveBoardQuery, ValidateUserPictureRequest, VoiceServiceRequest } from '@app/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from '@nestjs/common';
+import { canGrantRoles, SELF_SIGNUP_ROLES } from '@app/common/helpers/role-helper';
 import { AuthGatewayService } from './auth.service';
+import { resolveGrpc } from '@app/common/helpers/user-secrets';
+import { AuthCommonService } from '@app/common/auth/auth.service';
 import { ApiTags, ApiHeader, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { AuthenticationGuard, RequestAuthenticationGuard, RolesGuard, UserIdConversion, SelfOrStaffGuard, HideOthersContactInterceptor } from '@app/common/auth';
 import { Roles } from '@app/common/decorators';
@@ -9,7 +12,31 @@ import { Throttle } from '@nestjs/throttler';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthGatewayService) { }
+  constructor(private readonly authService: AuthGatewayService, private readonly authCommon: AuthCommonService) { }
+
+  // Accounts nobody may change (the shared demo accounts): PROTECTED_ACCOUNTS, emails separated by
+  // commas. Without it every account can be managed as usual.
+  private isProtected(user: any): boolean {
+    const emails = (process.env.PROTECTED_ACCOUNTS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+    const email = String(user?.email ?? user?.userId ?? '').toLowerCase();
+    return !!email && emails.includes(email);
+  }
+
+  // The person an account manager is about to change: must exist, must not be protected, and must
+  // not hold a role the manager could not give (a support user cannot change an admin)
+  private async targetFor(instancekey: string, id: string, actor: any) {
+    if (String(actor?._id) === String(id)) {
+      throw new ForbiddenException('You cannot change your own account here');
+    }
+    const target: any = await this.authService.getUser({ instancekey, _id: id });
+    if (this.isProtected(target)) {
+      throw new ForbiddenException('This is a shared demo account and cannot be changed');
+    }
+    if (!canGrantRoles(actor?.roles, target?.roles ?? [])) {
+      throw new ForbiddenException('You cannot change this person');
+    }
+    return target;
+  }
 
   @ApiQuery({ name: 'accesstoken', required: false, type: String })
   @ApiQuery({ name: 'remember', required: false, type: Boolean })
@@ -18,7 +45,8 @@ export class AuthController {
     @Query('accesstoken') accesstoken: string, @Query('remember') remember: boolean,
     @Headers('authtoken') authtoken: string, @Headers('instancekey') instancekey: string
   ) {
-    return this.authService.refreshToken({ accesstoken, remember, authtoken, instancekey });
+    // the query string gives "true"/"false" text, and "false" is truthy
+    return this.authService.refreshToken({ accesstoken, remember: String(remember) === 'true', authtoken, instancekey });
   }
 
   @Get('set-password')
@@ -346,6 +374,19 @@ export class AuthController {
   @Post('users')
   @UseInterceptors(UserIdConversion)
   async createUser(@Headers('instancekey') instancekey: string, @Body() request: CreateUserDto, @Ip() ip: string) {
+    // Signing up gives a learning role only; staff roles are given by staff
+    if (!(request.userRoles ?? []).every((role) => SELF_SIGNUP_ROLES.includes(role))) {
+      throw new ForbiddenException('You can sign up as a student or a teacher');
+    }
+    // the account's standing is set by staff, never by the person signing up
+    for (const field of ['isVerified', 'emailVerified', 'isActive', 'forcePasswordReset', 'tempPassword', 'createdBy', 'hashedPassword', 'salt', 'locations', 'activeLocation', 'user', 'userid']) {
+      delete (request as any)[field];
+    }
+    // SIGNUP_INSTITUTE_ID: the institute a new account joins (its location and subjects), so a
+    // student who signs up can see that institute's tests straight away
+    if (process.env.SIGNUP_INSTITUTE_ID && !request.instituteId) {
+      request = { ...request, joiningInstitute: true, instituteId: process.env.SIGNUP_INSTITUTE_ID } as CreateUserDto;
+    }
     request = {
       ...request,
       instancekey: instancekey
@@ -360,16 +401,25 @@ export class AuthController {
   @Roles(['admin', 'support', 'director'])
   @UseGuards(AuthenticationGuard, RolesGuard)
   async addUsers(@Body() request: CreateUserDto, @Ip() ip: string, @Req() user: ReqUser) {
-    return this.authService.createUser(request, ip, user);
+    if (!canGrantRoles((user as any).user?.roles, request.userRoles ?? [])) {
+      throw new ForbiddenException('You cannot give those roles');
+    }
+    const result = await resolveGrpc(this.authService.createUser(request, ip, user));
+    await this.authCommon.recordAudit(user, 'user.add', { name: request.name, email: request.email ?? request.userId }, `as ${(request.userRoles ?? []).join(', ')}`);
+    return result;
   }
 
   @Put(':id/password')
   @ApiHeader({ name: 'authtoken', required: true })
   @UseGuards(AuthenticationGuard)
   async changePassword(@Headers('instancekey') instancekey: string, @Headers('timezoneoffset') timezoneoffset: string, @Body() body: ChangePasswordBody, @Req() req: any) {
+    if (this.isProtected(req.user)) {
+      throw new ForbiddenException('This is a shared demo account; its password cannot be changed');
+    }
     return this.authService.changePassword({ instancekey, timezoneoffset, body, user: req.user, token: req.headers['authtoken'] });
   }
 
+  @Throttle({ default: { limit: Number(process.env.LOGIN_THROTTLE_LIMIT ?? 10), ttl: 60_000 } })
   @Put(':id/newPassword')
   async changeNewPassword(@Headers('instancekey') instancekey: string,
     @Headers('timezoneoffset') timezoneoffset: string,
@@ -377,6 +427,9 @@ export class AuthController {
     @Query() query: ChangeNewPasswordQuery,
     @Body() body: ChangeNewPasswordBody,
     @Req() req: any) {
+    if (this.isProtected(await this.authService.getUser({ instancekey, _id: id }).catch(() => null))) {
+      throw new ForbiddenException('This is a shared demo account; its password cannot be changed');
+    }
     return this.authService.changeNewPassword(
       {
         instancekey, id, query, body, timezoneoffset, ip: req.ip,
@@ -401,27 +454,36 @@ export class AuthController {
   @ApiHeader({ name: 'authtoken', required: true })
   @Roles(['admin', 'support', 'director', 'publisher'])
   @UseGuards(AuthenticationGuard, RolesGuard)
-  async updateUserDetails(@Headers('instancekey') instancekey: string, @Headers('timezoneoffset') timezoneoffset: string, @Param('id') id: string, @Body() body: UpdateUserBody, @Req() req: any) {
+  async updateUserDetails(@Headers('instancekey') instancekey: string, @Headers('timezoneoffset') timezoneoffset: string, @Param('id', ObjectIdPipe) id: string, @Body() body: UpdateUserBody, @Req() req: any) {
+    const target = await this.targetFor(instancekey, id, req.user);
+    // AuthenticationGuard put the caller's own roles on body.roles, and the update saves them to
+    // the person edited: keep that person's roles (they change through PUT /:id/role)
+    body = { ...body, roles: target.roles } as UpdateUserBody;
+    await this.authCommon.recordAudit(req, 'user.edit', target, 'details updated');
     return this.authService.updateUserDetails({ instancekey, timezoneoffset, body, _id: id, user: req.user, token: req.headers['authtoken'] });
   }
 
   @Put(':id/country')
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  // a user sets their own country; staff may set anyone's
+  @UseGuards(AuthenticationGuard, SelfOrStaffGuard('id'))
   async updateUserCountry(@Param('id') id: string, @Body() request: UpdateUserCountryReq) {
     return this.authService.updateUserCountry(id, request);
   }
 
   @Put('dossierStatusUpdate/:id')
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  // reviewing a dossier is a staff task
+  @Roles(['teacher', 'mentor', 'admin', 'director', 'operator', 'centerHead', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   async dossierStatusUpdate(@Param('id') id: string, @Body() request: DossierStatusUpdateReqDto) {
     return this.authService.dossierStatusUpdate(id, request);
   }
 
   @Put('updateDossierComments/:id')
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  @Roles(['teacher', 'mentor', 'admin', 'director', 'operator', 'centerHead', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
   async updateDossierComments(@Param('id') id: string, @Body() request: UpdateDossierCommentsReqDto) {
     return this.authService.updateDossierComments(id, request);
   }
@@ -430,22 +492,84 @@ export class AuthController {
   @ApiHeader({ name: 'authtoken' })
   @Roles(['admin', 'director', 'operator', 'centerHead', 'support'])
   @UseGuards(AuthenticationGuard, RolesGuard)
-  async updateUserStatus(@Param('id') id: string, @Body() request: UpdateUserStatusReq) {
-    return this.authService.updateUserStatus(id, request);
+  async updateUserStatus(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() request: UpdateUserStatusReq, @Req() req: any) {
+    const target = await this.targetFor(instancekey, id, req.user);
+    const result = await resolveGrpc(this.authService.updateUserStatus(id, request));
+    await this.authCommon.recordAudit(req, 'user.status', target, request.isActive ? 'activated' : 'deactivated');
+    return result;
   }
 
-  // Change a user's roles. The only path that sets another user's roles, so it is admin-only.
+  // The signed-in person renames themselves
+  @Put('me/profile')
+  @ApiHeader({ name: 'authtoken' })
+  @UseGuards(AuthenticationGuard)
+  async updateMyProfile(@Headers('instancekey') instancekey: string, @Body() body: ManageUserBody, @Req() req: any) {
+    if (this.isProtected(req.user)) {
+      throw new ForbiddenException('This is a shared demo account and cannot be changed');
+    }
+    if (body.name === undefined) {
+      throw new BadRequestException('Give a name');
+    }
+    return this.authService.manageUser({ _id: String(req.user._id), instancekey, name: body.name });
+  }
+
+  // An account manager's changes to one person: name, subjects, teacher verification, a new password
+  @Put('manageUser/:id')
+  @ApiHeader({ name: 'authtoken' })
+  @Roles(['admin', 'director', 'operator', 'centerHead', 'support'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
+  async manageUser(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() body: ManageUserBody, @Req() req: any) {
+    const target = await this.targetFor(instancekey, id, req.user);
+    const result = await resolveGrpc(this.authService.manageUser({
+      _id: id, instancekey, name: body.name, isVerified: body.isVerified, password: body.password,
+      subjects: body.subjects, setSubjects: Array.isArray(body.subjects),
+    }));
+    const changes = [
+      body.name !== undefined && body.name !== target.name ? `name: ${body.name}` : '',
+      Array.isArray(body.subjects) ? `subjects: ${body.subjects.length}` : '',
+      body.isVerified !== undefined ? `verified: ${body.isVerified ? 'yes' : 'no'}` : '',
+      body.password ? 'password reset' : '',
+    ].filter(Boolean).join('; ');
+    await this.authCommon.recordAudit(req, 'user.edit', target, changes || 'no change');
+    return result;
+  }
+
+  // Change another user's roles. Directors and operators may not give or take away admin; nobody
+  // changes their own roles, so no one can promote themselves.
   @Put(':id/role')
   @ApiHeader({ name: 'authtoken' })
   @Roles(['admin', 'director', 'operator'])
   @UseGuards(AuthenticationGuard, RolesGuard)
-  async updateUserRole(@Param('id') id: string, @Body() body: UpdateUserRoleBody) {
-    return this.authService.updateUserRole(id, body.newRoles);
+  async updateUserRole(@Headers('instancekey') instancekey: string, @Param('id', ObjectIdPipe) id: string, @Body() body: UpdateUserRoleBody, @Req() req: any) {
+    if (String(req.user._id) === id) {
+      throw new ForbiddenException('You cannot change your own roles');
+    }
+    const target: any = await this.authService.getUser({ instancekey, _id: id });
+    if (this.isProtected(target)) {
+      throw new ForbiddenException('This is a shared demo account and cannot be changed');
+    }
+    const current: string[] = target?.roles ?? [];
+    if (!canGrantRoles(req.user.roles, [...(body.newRoles ?? []), ...current])) {
+      throw new ForbiddenException('You cannot change this person to or from those roles');
+    }
+    const result = await resolveGrpc(this.authService.updateUserRole(id, body.newRoles));
+    await this.authCommon.recordAudit(req, 'user.roles', target, `${current.join(', ') || 'none'} → ${(body.newRoles ?? []).join(', ')}`);
+    return result;
+  }
+
+  // What account managers changed, newest first
+  @Get('audit')
+  @ApiHeader({ name: 'authtoken' })
+  @Roles(['admin', 'director'])
+  @UseGuards(AuthenticationGuard, RolesGuard)
+  async listAudit(@Headers('instancekey') instancekey: string, @Query('page') page: string, @Query('limit') limit: string) {
+    return this.authCommon.listAudit(instancekey, Number(page) || 1, Number(limit) || 50);
   }
 
   @Put('sendForReviewDossier/:id')
   @ApiHeader({ name: 'authtoken' })
-  @UseGuards(AuthenticationGuard)
+  // a user sends their own dossier for review
+  @UseGuards(AuthenticationGuard, SelfOrStaffGuard('id'))
   async sendForReviewDossier(@Param('id') id: string, @Body() request: SendForReviewDossierReq) {
     return this.authService.sendForReviewDossier(id, request);
   }
@@ -624,6 +748,8 @@ export class AuthController {
     return this.authService.recoverPassword(request);
   }
 
+  // unauthenticated: limited so reset tokens cannot be guessed at speed
+  @Throttle({ default: { limit: Number(process.env.LOGIN_THROTTLE_LIMIT ?? 10), ttl: 60_000 } })
   @Get('/confirmPasswordResetToken/:token')
   async confirmPasswordResetToken(@Headers('instancekey') instancekey: string, @Param('token') token: string) {
     return this.authService.confirmPasswordResetToken({ instancekey, token });
@@ -818,6 +944,10 @@ export class AuthController {
   @Roles(['admin', 'centerHead', 'teacher', 'director', 'support', 'operator', 'publisher'])
   @UseGuards(AuthenticationGuard, RolesGuard)
   async find(@Headers('instancekey') instancekey: string, @Query() query: FindQuery, @Req() req: any) {
+    // Deactivated accounts are listed only for the people who can reactivate them. The query
+    // string gives "true"/"false" text, not a boolean.
+    const managesAccounts = (req.user?.roles ?? []).some((r: string) => ['admin', 'director', 'operator', 'centerHead', 'support'].includes(r));
+    query = { ...query, includeInactive: managesAccounts && String(query.includeInactive) === 'true' };
     return this.authService.find({ instancekey, query, userdata: req.user });
   }
 

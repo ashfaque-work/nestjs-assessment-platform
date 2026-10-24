@@ -27,6 +27,9 @@ import { NotificationTemplateRepository } from '@app/common/database/repositorie
 import async from 'async'
 import { config } from '@app/common/config';
 
+// Settings that hold credentials or internal service config: never sent to the browser
+const PRIVATE_SETTINGS = ['facebookAuth', 'googleAuth', 'mail', 'mailer', 'plivo', 'payment', 'powerBI', 'mail_sms', 'recaptcha', 'whiteboard'];
+
 @Injectable()
 export class SettingService {
   constructor(private readonly settingRepository: SettingRepository,
@@ -63,8 +66,8 @@ export class SettingService {
   };
 
   private updateModel = function (body) {
-    var model = {
-      features: {
+    var model: any = {
+      features: body.features && {
         // feature tabs 
         chat: body.features.chat,
         hideCodeQuestionOutput: body.features.hideCodeQuestionOutput,
@@ -134,7 +137,7 @@ export class SettingService {
         newInstitute: body.features.newInstitute,
         joinInstitute: body.features.joinInstitute
       },
-      identityInfo: {
+      identityInfo: body.identityInfo && {
         identityVerification: body.identityInfo.identityVerification,
         collegeName: body.identityInfo.collegeName,
         coreBranch: body.identityInfo.coreBranch,
@@ -146,7 +149,9 @@ export class SettingService {
         state: body.identityInfo.state,
         city: body.identityInfo.city,
       },
-      roles: {
+      // AuthenticationGuard puts the caller's own roles (an array) on body.roles: that is not this
+      // section, and saving it would wipe the role switches
+      roles: body.roles && !Array.isArray(body.roles) ? {
         teacher: body.roles.teacher,
         student: body.roles.student,
         director: body.roles.director,
@@ -154,7 +159,7 @@ export class SettingService {
         operator: body.roles.operator,
         publisher: body.roles.publisher,
         mentor: body.roles.mentor
-      },
+      } : undefined,
       // sigup message
       signupMsg: body.signupMsg,
 
@@ -169,15 +174,25 @@ export class SettingService {
       IdentityMatchThreshold: body.IdentityMatchThreshold,
 
 
-      signupType: {
+      signupType: body.signupType && {
         google: body.signupType.google,
         facebook: body.signupType.facebook,
         local: body.signupType.local
       },
 
-      ambassadorDiscount: body.ambassadorDiscount
+      ambassadorDiscount: body.ambassadorDiscount,
+
+      // branding, as edited on the admin Settings page
+      productName: body.productName,
+      pageTitle: body.pageTitle,
+      supportEmail: body.supportEmail,
+      adminName: body.adminName,
+      copyRight: body.copyRight,
+      themeColor: body.themeColor,
+      isWhiteLabelled: body.isWhiteLabelled,
     };
-    return model
+    // only what was sent is changed
+    return _.omitBy(model, _.isUndefined)
   };
 
   async createSetting(request: SettingRequest) {
@@ -376,7 +391,7 @@ export class SettingService {
   async getWhiteLabel(request: GetWhiteLabelReq) {
     let result = await this.redist.getSetting(request, function (doc) {
       // Exclude these fields before sending settings to client
-      var toReturn = _.omit(doc, '_id', 'facebookAuth', 'googleAuth', 'mail', 'mailer', 'plivo', '__v', 'slug', 'payment', 'powerBI', 'mail_sms', 'recaptcha', 'whiteboard');
+      var toReturn = _.omit(doc, '_id', '__v', 'slug', ...PRIVATE_SETTINGS);
       if (toReturn.recaptcha) {
         delete toReturn.recaptcha.privateKey
       }
@@ -396,9 +411,16 @@ export class SettingService {
 
       let project: any = { _id: 0 };
       if (request.slugs) {
-        let slugs = request.slugs.split(',');
-        for (var i in slugs) {
-          project[slugs[i]] = 1;
+        // Anyone may call this, so the credentials never come back, asked for whole or by a
+        // nested path ("payment.ccA")
+        let slugs = request.slugs.split(',').map(s => s.trim()).filter(Boolean);
+        for (const slug of slugs) {
+          if (PRIVATE_SETTINGS.includes(slug.split('.')[0]) || slug.startsWith('$')) continue;
+          project[slug] = 1;
+        }
+        // nothing left to show: a projection of only { _id: 0 } would return every field
+        if (Object.keys(project).length === 1) {
+          return { response: {} };
         }
       } else {
         project = { currencyUsEx: 1, pageLogo: 1, pageLogoSocial: 1, pageTitle: 1, _id: 0 };

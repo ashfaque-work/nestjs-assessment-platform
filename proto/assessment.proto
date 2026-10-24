@@ -131,8 +131,8 @@ message PracticeSet {
   bool randomizeAnswerOptions = 28;
   bool sectionJump = 29;
   bool sectionTimeLimit = 30;
-  int32 minusMark = 31;
-  int32 plusMark = 32;
+  double minusMark = 31;
+  double plusMark = 32;
   string notes = 33;
   int32 attemptAllowed = 34;
   string status = 35;
@@ -187,6 +187,7 @@ message PracticeSet {
   string origin = 84;
   string slugfly = 85;
   string id = 86;
+  string opensOn = 87;
 } 
 
 message UserInfo {
@@ -413,6 +414,7 @@ message UpdateAssessmentBody {
   bool synced = 84;
   string owner = 85;
   string origin = 86;
+  string opensOn = 87;
 }
 
 message UpdateAssessmentRequest {
@@ -1685,8 +1687,8 @@ message FindOneSharedResponse {
   bool randomizeAnswerOptions = 28;
   bool sectionJump = 29;
   bool sectionTimeLimit = 30;
-  int32 minusMark = 31;
-  int32 plusMark = 32;
+  double minusMark = 31;
+  double plusMark = 32;
   string notes = 33;
   int32 attemptAllowed = 34;
   string status = 35;
@@ -1748,6 +1750,7 @@ message FindOneSharedResponse {
   float marketPlacePrice = 91;
   float discountValue = 92;
   string currency = 93;
+  string opensOn = 94;
 }
 
 message CountByExamIdQuery {
@@ -1857,6 +1860,7 @@ message UpdateQuestionOrderRequest {
   string id = 2;
   string question = 3;
   int32 order = 4;
+  User user = 5;
 }
 
 message UpdateQuestionOrderResponse {
@@ -3074,6 +3078,7 @@ message FindOneWithQuestionsResponse {
   repeated string randomTestDetails= 88;
   bool synced = 89;
   repeated string testseries = 90;
+  string opensOn = 91;
 }
 
 message ShareLinkBody {

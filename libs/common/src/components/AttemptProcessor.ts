@@ -1258,8 +1258,12 @@ export class AttemptProcessor {
                 }
             )
 
-            rawAttemptData.questionOrder = rawAttemptData.questionOrder.map(id => new Types.ObjectId(id));
-            if (rawAttemptData.questionOrder) {
+            rawAttemptData.questionOrder = (rawAttemptData.questionOrder || []).map(id => new Types.ObjectId(id));
+            // The client's list decides which questions are graded only when the test shows each
+            // student a subset of its questions; otherwise every question counts, so leaving hard
+            // questions out of the list cannot raise the score
+            const showsSubset = !!(practice.randomQuestions || practice.isAdaptive || practice.testType === 'random' || practice.questionsToDisplay > 0);
+            if (showsSubset && rawAttemptData.questionOrder.length) {
                 practice.questions = practice.questions.filter(q => {
                     return !!rawAttemptData.questionOrder.find(e => {
                         return e.toString() == q.question.toString()

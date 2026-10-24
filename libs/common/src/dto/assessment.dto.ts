@@ -546,6 +546,8 @@ export class UpdateAssessmentBody {
   statusChangedAt: Date;
   @ApiProperty({ default: null })
   expiresOn: Date;
+  @ApiProperty({ default: null, required: false })
+  opensOn: Date;
   @ApiProperty({ default: null })
   startDate: Date;
   @ApiProperty({ default: 0 })
@@ -1857,6 +1859,8 @@ export class UpdateQuestionOrderRequest {
   question: string;
   @ApiProperty()
   order: number;
+  // the caller, set by the gateway
+  user?: any;
 }
 
 export class UpdateQuestionOrderResponse {

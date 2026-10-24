@@ -1,16 +1,46 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import type { AdminUser, WhiteLabel } from './types';
 
-// The people on the platform. The list is small at demo scale, so we load a page and search on
-// the client; the query still passes a role filter through to the API.
-export function useAdminUsers(role?: string) {
+export interface UserQuery {
+  page?: number;
+  limit?: number;
+  role?: string;
+  search?: string;
+  activeOnly?: boolean;
+}
+
+// One page of people, filtered and searched by the API, with how many match in all.
+// Deactivated people are included unless asked otherwise, so an admin can reactivate them.
+async function fetchUsers({ page = 1, limit = 50, role, search, activeOnly }: UserQuery) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit), count: 'true' });
+  if (!activeOnly) q.set('includeInactive', 'true');
+  if (role) q.set('roles', role);
+  if (search) q.set('searchText', search);
+  const r = await api<{ users?: AdminUser[]; count?: number }>('GET', `/auth/users?${q}`);
+  return { users: r.users ?? [], count: r.count ?? 0 };
+}
+
+export function useAdminUsers(query: UserQuery) {
   return useQuery({
-    queryKey: ['admin', 'users', role ?? 'all'],
+    queryKey: ['admin', 'users', query],
+    queryFn: () => fetchUsers(query),
+    placeholderData: keepPreviousData,
+  });
+}
+
+// Head counts for the overview: everyone, the active, and each role
+export function useUserCounts(roles: string[]) {
+  return useQuery({
+    queryKey: ['admin', 'users', 'counts', roles],
     queryFn: async () => {
-      const q = new URLSearchParams({ page: '1', limit: '200' });
-      if (role) q.set('roles', role);
-      return (await api<{ users: AdminUser[] }>('GET', `/auth/users?${q}`)).users ?? [];
+      const count = async (q: UserQuery) => (await fetchUsers({ ...q, limit: 1 })).count;
+      const [total, active, ...perRole] = await Promise.all([
+        count({}),
+        count({ activeOnly: true }),
+        ...roles.map((role) => count({ role })),
+      ]);
+      return { total, active, byRole: roles.map((role, i) => [role, perRole[i]] as const).filter(([, n]) => n > 0) };
     },
   });
 }
@@ -51,7 +81,7 @@ export function useUpdateUserRole() {
 export function useAddUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string; email: string; password: string; role: string }) =>
+    mutationFn: (input: { name: string; email: string; password: string; role: string; subjects: string[]; verified: boolean }) =>
       api('POST', '/auth/addUser', {
         name: input.name,
         userId: input.email,
@@ -59,7 +89,36 @@ export function useAddUser() {
         password: input.password,
         roles: [input.role],
         userRoles: [input.role],
+        // a student needs subjects to see tests; a teacher needs them to write tests
+        subjects: input.subjects,
+        isVerified: input.verified,
       }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  });
+}
+
+// Every subject on the platform, to choose from when setting what a person studies or teaches
+export function useAllSubjects() {
+  return useQuery({
+    queryKey: ['admin', 'subjects'],
+    queryFn: async () => (await api<{ response?: { _id: string; name: string }[] }>('GET', '/subjects')).response ?? [],
+    staleTime: 5 * 60_000,
+  });
+}
+
+export interface ManageUserInput {
+  id: string;
+  name?: string;
+  subjects?: string[];
+  isVerified?: boolean;
+  password?: string;
+}
+
+// Change a person's name, subjects, teacher verification or password; only what is given changes
+export function useManageUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...changes }: ManageUserInput) => api('PUT', `/auth/manageUser/${id}`, changes),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
   });
 }

@@ -5,6 +5,7 @@ import type { SubmittedAnswer } from '../api/types';
 export interface Session {
   attemptId: string;
   testId: string;
+  userId?: string; // the student taking it: a shared device keeps several students' attempts
   startedAt: number; // epoch ms
   durationMs: number;
   order: string[]; // question ids, in the order shown
@@ -21,8 +22,8 @@ export type SessionAction =
   | { type: 'toggleMark'; questionId: string }
   | { type: 'goTo'; index: number; at: number };
 
-export function createSession(attemptId: string, testId: string, order: string[], durationMs: number, now: number): Session {
-  return { attemptId, testId, startedAt: now, durationMs, order, current: 0, enteredAt: now, answers: {}, marked: {}, spent: {} };
+export function createSession(attemptId: string, testId: string, order: string[], durationMs: number, now: number, userId?: string): Session {
+  return { attemptId, testId, userId, startedAt: now, durationMs, order, current: 0, enteredAt: now, answers: {}, marked: {}, spent: {} };
 }
 
 // Adds the time since the current question was opened to that question
@@ -88,23 +89,25 @@ export function saveSession(s: Session) {
   }
 }
 
-export function loadSession(attemptId: string): Session | null {
+// The saved attempt, unless it belongs to another student
+export function loadSession(attemptId: string, userId?: string): Session | null {
   try {
     const raw = localStorage.getItem(storageKey(attemptId));
-    return raw ? (JSON.parse(raw) as Session) : null;
+    const s = raw ? (JSON.parse(raw) as Session) : null;
+    return s && (!s.userId || !userId || s.userId === userId) ? s : null;
   } catch {
     return null;
   }
 }
 
-// An attempt of this test that was started on this device and still has time left
-export function findOpenSession(testId: string, now: number): Session | null {
+// An attempt of this test that this student started on this device and that still has time left
+export function findOpenSession(testId: string, now: number, userId: string | undefined): Session | null {
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (!key?.startsWith('attempt:')) continue;
       const s = JSON.parse(localStorage.getItem(key) ?? 'null') as Session | null;
-      if (s?.testId === testId && remainingMs(s, now) > 0) return s;
+      if (s?.testId === testId && !!userId && s.userId === userId && remainingMs(s, now) > 0) return s;
     }
   } catch {
     /* storage unavailable */

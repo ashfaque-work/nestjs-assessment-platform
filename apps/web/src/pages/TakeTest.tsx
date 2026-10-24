@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useFinishAttempt, useTest } from '../api/hooks';
+import { ApiError } from '../api/client';
+import { useAttempt, useFinishAttempt, useTest } from '../api/hooks';
+import { useAuth } from '../auth/auth';
 import type { Question, TestWithQuestions } from '../api/types';
 import { AnswerSheet } from '../components/AnswerSheet';
 import { Bubble } from '../components/Bubble';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Button, buttonClass, Dialog, ErrorNote, Spinner, Wordmark } from '../components/ui';
-import { clock, letter, marks, plural } from '../lib/format';
+import { clock, letter, marks, parseDate, plural } from '../lib/format';
 import {
   createSession,
   discardSession,
@@ -23,32 +25,40 @@ import {
 export function TakeTest() {
   const { testId = '', attemptId = '' } = useParams();
   const test = useTest(testId);
+  const attempt = useAttempt(attemptId);
 
-  if (test.isPending) return <Centered><Spinner label="Loading the test" /></Centered>;
-  if (test.isError) {
+  if (test.isPending || attempt.isPending) return <Centered><Spinner label="Loading the test" /></Centered>;
+  if (test.isError || attempt.isError) {
+    const error = test.error ?? attempt.error;
     return (
       <Centered>
-        <ErrorNote message={test.error.message} action={<Link to="/" className={buttonClass('secondary')}>Back to your tests</Link>} />
+        <ErrorNote message={error?.message ?? 'The test could not be loaded.'} action={<Link to="/" className={buttonClass('secondary')}>Back to your tests</Link>} />
       </Centered>
     );
   }
-  return <Attempt test={test.data} attemptId={attemptId} />;
+  // handed in already (another tab, another device): show the result instead
+  if (!attempt.data.ongoing) return <Navigate to={`/results/${attemptId}`} replace />;
+  // The clock starts when the attempt was started on the server, not when this page opened, so
+  // another device or cleared browser storage does not give more time
+  const startedAt = Math.min(Date.now(), parseDate(attempt.data.createdAt)?.getTime() ?? Date.now());
+  return <Attempt test={test.data} attemptId={attemptId} startedAt={startedAt} />;
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
   return <div className="mx-auto max-w-5xl px-4 sm:px-6">{children}</div>;
 }
 
-function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: string }) {
+function Attempt({ test, attemptId, startedAt }: { test: TestWithQuestions; attemptId: string; startedAt: number }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const finish = useFinishAttempt();
+  const { user } = useAuth();
 
   const questions = useMemo(() => new Map(test.questions.map((q) => [q._id, q])), [test.questions]);
   const [session, dispatch] = useReducer(
     sessionReducer,
     null,
-    (): Session => loadSession(attemptId) ?? createSession(attemptId, test._id, test.questions.map((q) => q._id), test.totalTime * 60_000, Date.now()),
+    (): Session => loadSession(attemptId, user?._id) ?? createSession(attemptId, test._id, test.questions.map((q) => q._id), test.totalTime * 60_000, startedAt, user?._id),
   );
   useEffect(() => saveSession(session), [session]);
 
@@ -73,9 +83,18 @@ function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: stri
         onSuccess: () => {
           discardSession(attemptId);
           queryClient.invalidateQueries({ queryKey: ['attempts'] });
+          // a copy loaded before the hand-in (from the result page) still says "not finished"
+          queryClient.removeQueries({ queryKey: ['attempt', attemptId] });
+          queryClient.removeQueries({ queryKey: ['review', attemptId] });
           navigate(`/results/${attemptId}`, { replace: true });
         },
-        onError: () => {
+        onError: (error) => {
+          // Handed in already (another tab, or a retry after a lost response): show the result
+          if (error instanceof ApiError && error.status === 400 && /already been submitted/i.test(error.message)) {
+            discardSession(attemptId);
+            navigate(`/results/${attemptId}`, { replace: true });
+            return;
+          }
           // let the student try again; the answers are still saved on this device
           submitted.current = false;
         },
@@ -83,9 +102,14 @@ function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: stri
     );
   }, [attemptId, finish, navigate, queryClient, session, test._id]);
 
-  // Out of time: hand in what is there
+  // Out of time: hand in what is there, once. If that fails the student submits again with the
+  // button; retrying here would send a request on every render.
+  const autoSubmitted = useRef(false);
   useEffect(() => {
-    if (left === 0) submit();
+    if (left === 0 && !autoSubmitted.current) {
+      autoSubmitted.current = true;
+      submit();
+    }
   }, [left, submit]);
 
   const index = session.current;
@@ -222,19 +246,24 @@ function Attempt({ test, attemptId }: { test: TestWithQuestions; attemptId: stri
   );
 }
 
-function QuestionView({ question, number, total, chosen, onChoose, onClear }: {
+export function QuestionView({ question, number, total, chosen, onChoose, onClear, headingLevel = 1 }: {
   question: Question;
   number: number;
   total: number;
   chosen: string[];
   onChoose: (optionId: string) => void;
   onClear: () => void;
+  // 1 when the question is the page's subject (taking a test); 2 when a page lists several
+  headingLevel?: 1 | 2;
 }) {
+  // unique per question: a preview shows several on one page
+  const headingId = useId();
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
   const multiple = question.questionType === 'multiple';
   const plus = question.plusMark ?? 1;
   const minus = Math.abs(question.minusMark ?? 0);
   return (
-    <section aria-labelledby="question-text">
+    <section aria-labelledby={headingId}>
       <p className="figures flex flex-wrap gap-x-4 text-sm text-graphite-soft">
         <span className="font-semibold text-graphite">Question {number} of {total}</span>
         <span>{minus ? `+${marks(plus)} / −${marks(minus)}` : `${plural(plus, 'mark')}`}</span>
@@ -244,12 +273,12 @@ function QuestionView({ question, number, total, chosen, onChoose, onClear }: {
       {question.questionHeader && (
         <p className="mt-4 max-w-prose whitespace-pre-line font-serif text-[17px] leading-[1.7] text-graphite-soft">{question.questionHeader}</p>
       )}
-      <h1 id="question-text" className="mt-4 max-w-prose whitespace-pre-line font-serif text-[22px] leading-[1.55]">
+      <Heading id={headingId} className="mt-4 max-w-prose whitespace-pre-line font-serif text-[22px] leading-[1.55]">
         {question.questionText}
-      </h1>
+      </Heading>
       {multiple && <p className="mt-2 text-sm text-graphite-soft">Choose every answer that applies.</p>}
 
-      <div role={multiple ? 'group' : 'radiogroup'} aria-labelledby="question-text" className="mt-7 max-w-prose space-y-2.5">
+      <div role={multiple ? 'group' : 'radiogroup'} aria-labelledby={headingId} className="mt-7 max-w-prose space-y-2.5">
         {question.answers.map((a, i) => {
           const selected = chosen.includes(a._id);
           return (

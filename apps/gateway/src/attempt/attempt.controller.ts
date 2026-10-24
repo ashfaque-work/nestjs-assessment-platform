@@ -1,4 +1,5 @@
-import { AuthenticationGuard, RolesGuard, SelfOrStaffGuard, OwnRecordInterceptor, HideOthersContactInterceptor } from "@app/common/auth";
+import { AuthenticationGuard, RolesGuard, SelfOrStaffGuard, OwnRecordInterceptor, HideOthersContactInterceptor, isStaffUser, ownerOf } from "@app/common/auth";
+import { resolveGrpc } from "@app/common/helpers/user-secrets";
 import { Roles } from "@app/common/decorators";
 import {
     ClassroomListSubjectStudentDoRequest, CountAllByTeacherRequest, CountAllRequest, CountMeRequest, CreateRequest,
@@ -19,7 +20,7 @@ import {
     SummarySubjectSpeedMeRequest, SummarySubjectSpeedStudentRequest, SummaryTopicCorrectMeRequest, SummaryTopicCorrectStudentRequest,
     SummaryTopicSpeedMeRequest, UpdateAbandonStatusRequest, UpdateSuspiciousRequest
 } from "@app/common/dto/attempt.dto";
-import { Body, Controller, ForbiddenException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, NotFoundException, Get, Headers, Ip, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { ApiHeader, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { AttemptService } from "./attempt.service";
 
@@ -27,6 +28,16 @@ import { AttemptService } from "./attempt.service";
 @ApiTags('Attempt')
 @Controller('attempt')
 export class AttemptController {
+    // A student may only reach their own attempt; for anyone else's it does not exist. Staff reach any.
+    private async assertOwnAttempt(instancekey: string, attemptId: string, user: any) {
+        if (isStaffUser(user)) return;
+        const found = await resolveGrpc(this.attemptService.findOneByMe({ instancekey, attemptId }));
+        const owner = ownerOf(found);
+        if (!owner || owner !== String(user?._id)) {
+            throw new NotFoundException('Attempt not found');
+        }
+    }
+
     constructor(private attemptService: AttemptService) { }
 
     @Get('/me')
@@ -55,7 +66,8 @@ export class AttemptController {
     @Get('/me/findQuestionFeedback/:id')
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
-    findQuestionFeedback(@Headers('instancekey') instancekey: string, @Param('id') attemptId: string) {
+    async findQuestionFeedback(@Headers('instancekey') instancekey: string, @Param('id') attemptId: string, @Req() req) {
+        await this.assertOwnAttempt(instancekey, attemptId, req.user);
         return this.attemptService.findQuestionFeedback({ instancekey, attemptId })
     }
 
@@ -111,8 +123,8 @@ export class AttemptController {
     @ApiHeader({ name: 'authtoken' })
     @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
     @UseGuards(AuthenticationGuard, RolesGuard)
-    findAllByPractice(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string) {
-        return this.attemptService.findAllByPractice({ instancekey, practicesetId })
+    findAllByPractice(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string, @Req() req) {
+        return this.attemptService.findAllByPractice({ instancekey, practicesetId, userId: String(req.user._id), userRoles: req.user.roles })
     }
 
     // Every student's attempts at a test, with names and emails: for the people who run it
@@ -120,8 +132,8 @@ export class AttemptController {
     @ApiHeader({ name: 'authtoken' })
     @Roles(['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'])
     @UseGuards(AuthenticationGuard, RolesGuard)
-    findAllByPracticeSet(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string) {
-        return this.attemptService.findAllByPractice({ instancekey, practicesetId })
+    findAllByPracticeSet(@Headers('instancekey') instancekey: string, @Param('practicesetId') practicesetId: string, @Req() req) {
+        return this.attemptService.findAllByPractice({ instancekey, practicesetId, userId: String(req.user._id), userRoles: req.user.roles })
     }
 
     @Get('/getResultPractice/:id')
@@ -811,7 +823,8 @@ export class AttemptController {
     @Get("/getUserResponse/:attempt")
     @ApiHeader({ name: 'authtoken', required: true, })
     @UseGuards(AuthenticationGuard)
-    getUserResponse(@Param('attempt') attempt: string, @Headers('instancekey') instancekey: string) {
+    async getUserResponse(@Param('attempt') attempt: string, @Headers('instancekey') instancekey: string, @Req() req) {
+        await this.assertOwnAttempt(instancekey, attempt, req.user);
         return this.attemptService.getUserResponse({ instancekey, attempt })
     }
 
@@ -834,8 +847,9 @@ export class AttemptController {
     @Post("/finish")
     @ApiHeader({ name: 'authtoken' })
     @UseGuards(AuthenticationGuard)
-    finish(@Headers('instancekey') instancekey: string, @Body() body: FinishRequest) {
-        return this.attemptService.finish({ instancekey, ...body })
+    finish(@Headers('instancekey') instancekey: string, @Body() body: FinishRequest, @Req() req) {
+        // only the student who started the attempt may hand it in
+        return this.attemptService.finish({ instancekey, ...body, userId: String(req.user._id) })
     }
 
     @Post("/finishPsychoTest")
@@ -912,11 +926,12 @@ export class AttemptController {
     @UseGuards(AuthenticationGuard)
     updateAbandonStatus(@Headers("instancekey") instancekey: string, @Body() body: UpdateAbandonStatusRequest, @Param('id') attemptId: string, @Req() req) {
         // liveboard sets markedSuspicious, the proctor's flag on an attempt: not for students
-        const staff = ['teacher', 'mentor', 'publisher', 'admin', 'operator', 'centerHead', 'director', 'support'];
-        if (body.liveboard && !(req.user?.roles || []).some((role) => staff.includes(role))) {
+        const isStaff = isStaffUser(req.user);
+        if (body.liveboard && !isStaff) {
             throw new ForbiddenException();
         }
-        return this.attemptService.updateAbandonStatus({ instancekey, ...body, attemptId })
+        // a student may only change their own attempt
+        return this.attemptService.updateAbandonStatus({ instancekey, ...body, attemptId, userId: String(req.user._id), isStaff })
     }
 
     @Put("/updateSuspicious/:id")

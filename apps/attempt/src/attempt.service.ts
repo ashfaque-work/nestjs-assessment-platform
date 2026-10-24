@@ -35,7 +35,8 @@ import {
   SaveScreenRecordingRequest,
   SaveQrUploadRequest
 } from '@app/common/dto/attempt.dto';
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { canReadTest } from '@app/common/helpers/role-helper';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { Types } from 'mongoose';
 import async from 'async'
 import { QuestionBus } from '@app/common/bus/question.bus';
@@ -397,6 +398,9 @@ let Branch_Mapping_For_Personality = [
 ];
 
 let definedLevel = ["Low", "Medium", "High"];
+
+// Allowance for a slow connection before a hand-in counts as late
+const LATE_GRACE_MS = 2 * 60_000;
 
 @Injectable()
 export class AttemptService {
@@ -3979,6 +3983,15 @@ export class AttemptService {
 
   async findAllByPractice(request: FindAllByPracticeRequest) {
     try {
+      // every student's answers, names and emails: only for people who may read this test
+      this.practiceSetRepository.setInstanceKey(request.instancekey);
+      const test = await this.practiceSetRepository.findOne({ _id: new Types.ObjectId(request.practicesetId) }, { user: 1, instructors: 1 }, { lean: true });
+      if (!test) {
+        throw new NotFoundException('Practice not found');
+      }
+      if (!canReadTest({ _id: request.userId, roles: request.userRoles }, test)) {
+        throw new ForbiddenException('You can only see the results of your own tests');
+      }
       let attempts = await this.attemptRepository.find({
         practicesetId: new Types.ObjectId(request.practicesetId)
       }, null,
@@ -4003,20 +4016,18 @@ export class AttemptService {
 
         oResult.totalQuestion =
           oResult.totalMissed + oResult.totalErrors + oResult.totalCorrects;
+        // an unfinished attempt has no answers yet: 0%, not NaN
         oResult.perCentCorrect = (
-          (oResult.totalCorrects * 100) /
-          oResult.QA.length
+          oResult.QA?.length ? (oResult.totalCorrects * 100) / oResult.QA.length : 0
         ).toFixed(2);
         oResult.totalTimeEslapse = 0;
 
-        for (const qa of oResult.QA) {
+        for (const qa of oResult.QA ?? []) {
           oResult.totalTimeEslapse += qa.timeEslapse;
         }
 
         oResult.averageTime = (
-          oResult.totalTimeEslapse /
-          1000 /
-          oResult.QA.length
+          oResult.QA?.length ? oResult.totalTimeEslapse / 1000 / oResult.QA.length : 0
         ).toFixed(0);
 
         return oResult;
@@ -6782,6 +6793,29 @@ export class AttemptService {
         { _id: new Types.ObjectId(request.testId) }
       )
       if (!test) throw "Test Not Found";
+      // Only a published, unexpired test can be taken; its author may still try out a draft
+      const isAuthor = String(test.user) === String(request.userId);
+      if (!isAuthor) {
+        if (test.status !== 'published') {
+          throw new ForbiddenException('This test is not open');
+        }
+        if (test.expiresOn && new Date(test.expiresOn) < new Date()) {
+          throw new ForbiddenException('This test has expired');
+        }
+        if (test.opensOn && new Date(test.opensOn) > new Date()) {
+          throw new ForbiddenException(`This test opens on ${new Date(test.opensOn).toISOString()}`);
+        }
+        // a test may allow only so many hand-ins per student (0: no limit)
+        if (test.attemptAllowed > 0) {
+          this.attemptRepository.setInstanceKey(request.instancekey);
+          const taken = await this.attemptRepository.countDocuments({
+            user: new Types.ObjectId(request.userId), practicesetId: test._id, ongoing: false, isAbandoned: false,
+          });
+          if (taken >= test.attemptAllowed) {
+            throw new ForbiddenException(`You have used all ${test.attemptAllowed} attempts at this test`);
+          }
+        }
+      }
       this.attemptRepository.setInstanceKey(request.instancekey)
       let newAttempt: any = new Attempt()
       newAttempt.practicesetId = test._id;
@@ -6795,7 +6829,8 @@ export class AttemptService {
         classRooms: test.classRooms,
         accessMode: test.accessMode,
       }
-      newAttempt.location = new Types.ObjectId(request.activeLocation)
+      // no active location: leave it unset rather than inventing a random id
+      newAttempt.location = request.activeLocation ? new Types.ObjectId(request.activeLocation) : undefined
 
       if (test.level != undefined) {
         newAttempt.practiceSetInfo.level = test.level
@@ -6810,6 +6845,12 @@ export class AttemptService {
         })
 
         newAttempt.practiceSetInfo.classRooms = attClasses
+
+        // An invitation-only test is for its invitees and the students of its classrooms
+        const invited = (test.inviteeEmails || []).includes(request.userEmail);
+        if (!isAuthor && test.accessMode == "invitation" && !attClasses.length && !invited) {
+          throw new ForbiddenException('You are not invited to this test');
+        }
       }
 
       if (request.referenceType && request.referenceId) {
@@ -7395,16 +7436,22 @@ export class AttemptService {
         return { attempt }
       } else {
         this.attemptRepository.setInstanceKey(request.instancekey);
+        // Students change only their own attempts
+        const filter: any = { _id: new Types.ObjectId(request.attemptId) };
+        if (!request.isStaff) {
+          filter.user = new Types.ObjectId(request.userId);
+        }
         let attempt = await this.attemptRepository.findOneAndUpdate(
-          {
-            _id: new Types.ObjectId(request.attemptId)
-          },
+          filter,
           {
             $set: {
               isAbandoned: false
             }
           }
         )
+        if (!attempt) {
+          throw new NotFoundException('Attempt not found');
+        }
         this.attemptDetailRepository.setInstanceKey(request.instancekey)
         let detail = await this.attemptDetailRepository.updateOne(
           {
@@ -7788,40 +7835,67 @@ export class AttemptService {
 
   async finish(request: FinishRequest) {
     try {
+      if (!request.attemptId) {
+        throw new BadRequestException('attemptId is required');
+      }
       this.attemptRepository.setInstanceKey(request.instancekey);
-      let attempt = await this.attemptRepository.findOne(
-        {
-          _id: new Types.ObjectId(request.attemptId),
-          ongoing: false
-        }
+      const attempt: any = await this.attemptRepository.findOne(
+        { _id: new Types.ObjectId(request.attemptId) },
+        { user: 1, practicesetId: 1, ongoing: 1, totalQuestions: 1, createdAt: 1 },
+        { lean: true }
       )
-
-      attempt = await this.attemptRepository.populate(attempt,
-        {
-          path: "attemptdetails",
-          select: "-_id QA",
-        }
-      );
-
-      if (attempt && !request.attemptId) {
-        attempt = this.removeAttemptDetails(attempt);
-        return { attempt }
+      if (!attempt) {
+        throw new NotFoundException('Attempt not found');
+      }
+      // Only the student who started the attempt may hand it in
+      if (!request.userId || String(attempt.user) !== String(request.userId)) {
+        throw new NotFoundException('Attempt not found');
+      }
+      // A graded attempt stays graded: handing it in again (after seeing the answer key on the
+      // review) would overwrite its score
+      if (!attempt.ongoing && attempt.totalQuestions > 0) {
+        throw new BadRequestException('This attempt has already been submitted');
       }
 
       let body = {
-        answersOfUser: request.answersOfUser,
-        practiceId: request.practiceId,
+        // gRPC drops an empty list: no answers at all is still a hand-in
+        answersOfUser: request.answersOfUser ?? [],
+        // the attempt's own test, never one named by the client
+        practiceId: String(attempt.practicesetId),
         isAbandoned: request.isAbandoned,
         questionOrder: request.questionOrder
       }
       let newAttempt = await this.attemptProcessor.process(
         request.instancekey, request.attemptId, body
       )
+      // A hand-in (not an abandon) counts as finished at once, so it shows in the student's
+      // results even if a follow-up call from the client never arrives
+      if (String(request.isAbandoned) !== 'true') {
+        await this.updateAbandonStatus({ instancekey: request.instancekey, attemptId: request.attemptId, userId: request.userId } as UpdateAbandonStatusRequest)
+      }
+      await this.applyTimeLimit(request.instancekey, attempt);
       return { attempt: newAttempt }
 
     } catch (err) {
       throw toGrpcError(err);
     }
+  }
+
+  // The clock runs in the browser, so the server checks the time itself. A late hand-in is still
+  // graded (no answers are lost) but is flagged for the teacher, and the time on record never
+  // exceeds the test's limit, whatever the client reported.
+  private async applyTimeLimit(instancekey: string, attempt: any) {
+    this.practiceSetRepository.setInstanceKey(instancekey);
+    const test: any = await this.practiceSetRepository.findOne({ _id: attempt.practicesetId }, { totalTime: 1 }, { lean: true });
+    const limitMs = (test?.totalTime ?? 0) * 60_000;
+    if (!limitMs) return;
+    const startedAt = attempt.createdAt ? new Date(attempt.createdAt).getTime() : NaN;
+    const late = Number.isFinite(startedAt) && Date.now() - startedAt > limitMs + LATE_GRACE_MS;
+    this.attemptRepository.setInstanceKey(instancekey);
+    const saved: any = await this.attemptRepository.findOne({ _id: attempt._id }, { totalTime: 1 }, { lean: true });
+    const $set: any = { submittedLate: late };
+    if ((saved?.totalTime ?? 0) > limitMs) $set.totalTime = limitMs;
+    await this.attemptRepository.updateOne({ _id: attempt._id }, { $set });
   }
 
   async getCareerAttempts(request: GetCareerAttemptsRequest) {

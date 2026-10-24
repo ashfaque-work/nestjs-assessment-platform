@@ -149,6 +149,9 @@ import {
   UpdateUserStatusReq,
   UpdateUserStatusRes,
   UpdateUserRoleReq,
+  ManageUserReq,
+  RecordAuditReq,
+  ListAuditReq,
   UpdateUtmStatusReq,
   UpdateUtmStatusRes,
   UserLiveBoardRequest,
@@ -212,6 +215,9 @@ export interface AuthGrpcInterface {
   DossierStatusUpdate(request: DossierStatusUpdateReqDto): Promise<DossierStatusUpdateResDto>
   UpdateDossierComments(request: UpdateDossierCommentsReqDto): Promise<UpdateDossierCommentsResDto>
   UpdateUserRole(request: UpdateUserRoleReq): Promise<UpdateUserStatusRes>;
+  ManageUser(request: ManageUserReq): Promise<UpdateUserStatusRes>;
+  RecordAudit(request: RecordAuditReq): Promise<any>;
+  ListAudit(request: ListAuditReq): Promise<any>;
   UpdateUserStatus(request: UpdateUserStatusReq): Promise<UpdateUserStatusRes>
   SendForReviewDossier(request: SendForReviewDossierReq): Promise<SendForReviewDossierRes>
   Blockuser(request: BlockuserReq): Promise<BlockuserRes>
@@ -452,6 +458,18 @@ export class AuthGrpcService {
 
   async UpdateUserRole(request: UpdateUserRoleReq): Promise<UpdateUserStatusRes> {
     return await this.authGrpcService.UpdateUserRole(request);
+  }
+
+  async ManageUser(request: ManageUserReq): Promise<UpdateUserStatusRes> {
+    return await this.authGrpcService.ManageUser(request);
+  }
+
+  async RecordAudit(request: RecordAuditReq): Promise<any> {
+    return await this.authGrpcService.RecordAudit(request);
+  }
+
+  async ListAudit(request: ListAuditReq): Promise<any> {
+    return await this.authGrpcService.ListAudit(request);
   }
 
   async SendForReviewDossier(request: SendForReviewDossierReq): Promise<SendForReviewDossierRes> {

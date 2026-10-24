@@ -275,6 +275,10 @@ export class User extends AbstractDocument {
   @Prop()
   passwordResetToken?: string;
 
+  // wrong tokens tried on the current reset link
+  @Prop({ type: Number, default: 0 })
+  passwordResetAttempts?: number;
+
   @Prop()
   followers?: string[];
 

@@ -42,7 +42,7 @@ export function Header({ children }: { children?: ReactNode }) {
           <ThemeToggle />
           {user && (
             <>
-              <span className="hidden px-2 text-sm font-medium text-graphite-soft sm:inline">{user.name}</span>
+              <NavLink to="/profile" title="Your profile" className="hidden rounded-lg px-2 py-1.5 text-sm font-medium text-graphite-soft hover:text-graphite sm:inline">{user.name}</NavLink>
               <Button variant="quiet" onClick={signOut}>Sign out</Button>
             </>
           )}

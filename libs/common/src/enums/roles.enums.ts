@@ -7,5 +7,7 @@ export enum Role {
     Teacher = 'teacher',
     Mentor = 'mentor',
     Agent = 'agent',
-    Manager = 'manager'
+    Manager = 'manager',
+    Operator = 'operator',
+    CenterHead = 'centerHead'
 }

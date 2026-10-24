@@ -1,16 +1,19 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../auth/auth';
 import { useStartAttempt, useTest } from '../api/hooks';
 import { Page } from '../components/Layout';
 import { Button, buttonClass, ErrorNote, Spinner } from '../components/ui';
 import { clock, marks, plural } from '../lib/format';
 import { discardSession, findOpenSession, remainingMs } from '../lib/session';
+import { availability, when } from '../lib/availability';
 
 export function TestIntro() {
   const { testId = '' } = useParams();
   const test = useTest(testId);
   const start = useStartAttempt();
   const navigate = useNavigate();
-  const open = findOpenSession(testId, Date.now());
+  const { user } = useAuth();
+  const open = findOpenSession(testId, Date.now(), user?._id);
 
   const begin = () =>
     start.mutate(testId, {
@@ -26,6 +29,7 @@ export function TestIntro() {
 
   const t = test.data;
   const count = t.questions.length;
+  const schedule = availability(t, Date.now());
   const plus = t.plusMark ?? 1;
   const minus = Math.abs(t.minusMark ?? 0);
 
@@ -49,6 +53,8 @@ export function TestIntro() {
           answers and mark any question to come back to. When the time runs out your answers are submitted as they are.
         </p>
         {minus > 0 && <p>A wrong answer costs {plural(minus, 'mark')}; a question you leave blank costs nothing.</p>}
+        {(t.attemptAllowed ?? 0) > 0 && <p>You can hand this test in {plural(t.attemptAllowed ?? 0, 'time')} in all.</p>}
+        {schedule.state === 'open' && schedule.closesOn && <p>It closes {when(schedule.closesOn)}.</p>}
         {t.testMode === 'proctored' && (
           <p>This is a proctored test. Proctoring watches the student through the camera; this demo does not use the camera.</p>
         )}
@@ -62,6 +68,10 @@ export function TestIntro() {
             </Link>
             <Button variant="secondary" onClick={begin} disabled={start.isPending}>Start over</Button>
           </>
+        ) : schedule.state === 'not-yet' ? (
+          <p className="font-semibold">It opens {when(schedule.opensOn)}.</p>
+        ) : schedule.state === 'closed' ? (
+          <p className="font-semibold">It closed {when(schedule.closedOn)}.</p>
         ) : (
           <Button onClick={begin} disabled={start.isPending || count === 0}>
             {start.isPending ? 'Starting…' : 'Begin the test'}

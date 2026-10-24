@@ -16,6 +16,7 @@ export function draftFrom(question: BankQuestion | undefined, units: NamedRef[])
       unit: units.length === 1 ? units[0] : null,
       topic: null,
       options: [0, 1, 2, 3].map(() => ({ answerText: '', isCorrectAnswer: false })),
+      multiple: false,
       answerExplain: '',
     };
   }
@@ -23,7 +24,8 @@ export function draftFrom(question: BankQuestion | undefined, units: NamedRef[])
     questionText: question.questionText ?? '',
     unit: question.unit ?? null,
     topic: question.topic ?? null,
-    options: question.answers.map((a) => ({ answerText: a.answerText ?? '', isCorrectAnswer: !!a.isCorrectAnswer })),
+    options: question.answers.map((a) => ({ _id: a._id, answerText: a.answerText ?? '', isCorrectAnswer: !!a.isCorrectAnswer })),
+    multiple: question.questionType === 'multiple',
     answerExplain: question.answerExplain ?? '',
   };
 }
@@ -45,7 +47,14 @@ export function QuestionForm({ number, units, initial, saving, error, onSave, on
   const set = (changes: Partial<QuestionDraft>) => setDraft((d) => ({ ...d, ...changes }));
   const setOption = (i: number, changes: Partial<QuestionDraft['options'][number]>) =>
     set({ options: draft.options.map((o, j) => (j === i ? { ...o, ...changes } : o)) });
-  const markCorrect = (i: number) => set({ options: draft.options.map((o, j) => ({ ...o, isCorrectAnswer: j === i })) });
+  // one correct answer: choosing one clears the others; several: each option toggles on its own
+  const markCorrect = (i: number) =>
+    set({ options: draft.options.map((o, j) => (draft.multiple ? (j === i ? { ...o, isCorrectAnswer: !o.isCorrectAnswer } : o) : { ...o, isCorrectAnswer: j === i })) });
+  const setMultiple = (multiple: boolean) => {
+    // back to one answer: keep only the first one marked
+    const first = draft.options.findIndex((o) => o.isCorrectAnswer);
+    set({ multiple, options: multiple ? draft.options : draft.options.map((o, j) => ({ ...o, isCorrectAnswer: j === first })) });
+  };
 
   const save = () => {
     setTried(true);
@@ -82,7 +91,13 @@ export function QuestionForm({ number, units, initial, saving, error, onSave, on
 
         <fieldset>
           <legend className="text-sm font-semibold">Answer options</legend>
-          <p className="mt-1 text-xs text-graphite-soft">Fill the bubble of the correct answer.</p>
+          <p className="mt-1 text-xs text-graphite-soft">
+            {draft.multiple ? 'Fill the bubble of every correct answer. A student must choose them all.' : 'Fill the bubble of the correct answer.'}
+          </p>
+          <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+            <input type="checkbox" checked={draft.multiple} onChange={(e) => setMultiple(e.target.checked)} className="accent-[var(--form)]" />
+            More than one correct answer
+          </label>
           <ol className="mt-3 space-y-2">
             {draft.options.map((o, i) => (
               <li key={i} className="flex items-center gap-3">

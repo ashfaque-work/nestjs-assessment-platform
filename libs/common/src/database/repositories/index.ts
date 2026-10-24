@@ -61,3 +61,4 @@ export * from './question-bank'
 
 // Ecommerce
 export * from './ecommerce'
+export * from './auditLog.repository'

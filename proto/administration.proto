@@ -981,6 +981,13 @@ message GetUpdateRequest {
 	SignupType signupType = 10;
 	int32 ambassadorDiscount = 11;
 	repeated NotificationTemplates notificationTemplates = 12;
+	string productName = 13;
+	string pageTitle = 14;
+	string supportEmail = 15;
+	string adminName = 16;
+	string copyRight = 17;
+	string themeColor = 18;
+	optional bool isWhiteLabelled = 19;
 }
 
 message GetUpdateResponse {
