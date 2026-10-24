@@ -1,5 +1,5 @@
 # Use Ubuntu as the development image
-FROM node:22-bullseye AS development
+FROM node:22.23.4-bookworm AS development
 
 # Update package list and install necessary packages
 RUN apt-get update && \
@@ -26,7 +26,7 @@ CMD ["npm", "run", "start:dev", "video-streaming"]
 
 
 # Use Ubuntu as the production image
-FROM node:22-bullseye AS production
+FROM node:22.23.4-bookworm AS production
 
 # Update package list and install necessary packages
 RUN apt-get update && \
