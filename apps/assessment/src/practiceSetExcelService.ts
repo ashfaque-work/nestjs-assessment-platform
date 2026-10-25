@@ -769,7 +769,8 @@ export class PracticeSetExcelService {
             XLSX.writeFile(workbook, newFile, wopts);
             await fsExtra.chmod(newFile, '0777');
 
-            const practiceData = await this.parseExcelSheet(file, 0);
+            // parseExcelSheet reads a workbook; passing the path made every file import fail
+            const practiceData = await this.parseExcelSheet(workbook, 0);
             const hasErrors = { sheet1: {}, sheet2: { grade: false, subject: false } };
             const errors = [];
             let recordSuccess = 0;
@@ -780,7 +781,7 @@ export class PracticeSetExcelService {
             this.validatePracticeSet(practiceSet, errors, settings, options, req, recordErrors);
 
             if (errors.length === 0 && sheetTwo) {
-                const questionData = await this.parseExcelSheet(file, 1);
+                const questionData = await this.parseExcelSheet(workbook, 1);
                 practiceSet.questions = await this.validateQuestions(questionData, practiceSet, req, options, hasErrors, errors, recordSuccess, recordErrors);
                 practiceSet.totalQuestion = practiceSet.questions.length;
             }
