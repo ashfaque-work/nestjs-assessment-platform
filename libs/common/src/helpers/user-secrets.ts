@@ -5,13 +5,13 @@ const USER_SECRET_FIELDS = [
   'emailVerifyToken', 'emailVerifyExpired',
 ];
 
-import { isObservable, lastValueFrom } from 'rxjs';
+import { isObservable, lastValueFrom, Observable } from 'rxjs';
 
 // gRPC client calls may return a value, an Observable, or a Promise of an Observable;
 // resolve any of these to the actual response.
 export async function resolveGrpc<T = any>(result: any): Promise<T> {
   const value = await result;
-  return isObservable(value) ? lastValueFrom(value) : value;
+  return isObservable(value) ? lastValueFrom(value as Observable<T>) : value;
 }
 
 // Returns a copy of the user without password hashes and one-time tokens.

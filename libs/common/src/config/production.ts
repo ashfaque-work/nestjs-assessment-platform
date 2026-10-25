@@ -5,7 +5,7 @@ export const dbs_production = buildDbInstances();
 
 export const productionEnv = {
   ...buildAppConfig(dbs_production),
-  pushNotifications: { ...buildPushNotifications(), isAlwaysUseFCM: true },
+  pushNotifications: buildPushNotifications(),
 };
 
 export const productionPushNotifications = buildPushNotifications();

@@ -110,7 +110,7 @@ import * as util from '@app/common/Utils';
 import { PracticeSetExcelService } from './practiceSetExcelService';
 import * as Excel from 'exceljs';
 import * as fsExtra from 'fs-extra';
-import * as zipper from 'zip-local';
+import { zipDirectory } from '@app/common/helpers/zip-directory';
 import slugify from 'slugify';
 import { S3Service } from '@app/common/components/aws/s3.service';
 import { AttemptProcessor } from '@app/common/components/AttemptProcessor';
@@ -9707,23 +9707,13 @@ export class AssessmentService {
 
       await wb.xlsx.writeFile(path.join(config.root, finalDir, `${slugify(data.titleLower, { lower: true })}.xlsx`));
 
-      await new Promise<void>((resolve, reject) => {
-        zipper.zip(finalDir, (error, zipped) => {
-          if (!error) {
-            zipped.compress();
-            zipped.save(path.join(config.root, uploadPath, exportZipFile), (error) => {
-              if (error) {
-                Logger.error(error);
-                return reject(new BadRequestException());
-              }
-              Logger.debug("saved successfully !");
-              resolve();
-            });
-          } else {
-            return reject(new BadRequestException());
-          }
-        });
-      });
+      try {
+        await zipDirectory(finalDir, path.join(config.root, uploadPath, exportZipFile));
+        Logger.debug("saved successfully !");
+      } catch (error) {
+        Logger.error(error);
+        throw new BadRequestException();
+      }
 
       return { sourceFile: exportZipFile };
     } else {

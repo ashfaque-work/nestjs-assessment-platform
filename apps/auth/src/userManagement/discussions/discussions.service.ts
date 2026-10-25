@@ -5,7 +5,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from "@nes
 import { response } from "express";
 import { ObjectId } from "mongodb";
 import { GrpcInternalException, GrpcInvalidArgumentException } from "nestjs-grpc-exceptions";
-import * as stripjs from 'strip-js';
+import { sanitizeRichText } from '@app/common/helpers/rich-text';
 import * as config from '@app/common/config';
 import * as _ from 'lodash';
 import * as util from '@app/common/Utils'
@@ -1017,7 +1017,7 @@ export class DiscussionsService {
                 throw new BadRequestException('Cannot create empty discussion.')
             }
 
-            newDis.description = stripjs(request.body.description)
+            newDis.description = sanitizeRichText(request.body.description)
 
             const postData: any = {
                 user: new Types.ObjectId(request.user._id),
@@ -1140,7 +1140,7 @@ export class DiscussionsService {
                     post.attachments = request.body.attachments
                 }
 
-                post.description = request.body.description ? stripjs(request.body.description.trim()) : ''
+                post.description = request.body.description ? sanitizeRichText(request.body.description.trim()) : ''
 
                 if ((!post.description || !post.description.trim()) && (!post.attachments || !post.attachments.length)) {
                     throw new Error('Cannot create empty content');
@@ -1376,7 +1376,7 @@ export class DiscussionsService {
     async createDiscussionRespond(request: createDiscussionRespondReq) {
         try {
             let discussQues = {
-                description: stripjs(request.body.comment),
+                description: sanitizeRichText(request.body.comment),
                 feedType: request.body.feedType,
                 classRooms: request.body.classRooms,
                 location: new ObjectId(request.user.activeLocation)

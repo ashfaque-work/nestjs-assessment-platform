@@ -31,7 +31,7 @@ import { ObjectId } from 'mongodb';
 import * as fsExtra from 'fs-extra';
 import { Workbook } from 'exceljs';
 import * as fs from 'fs';
-import * as zipper from 'zip-local';
+import { zipDirectory } from '@app/common/helpers/zip-directory';
 import XMLWriter from 'xml-writer';
 
 
@@ -426,18 +426,8 @@ export class AdminService {
         await wb.xlsx.writeFile(path.join(exportDir, `${data.name}.xlsx`));
         Logger.debug('done');
 
-        zipper.zip(exportDir, (error, zipped) => {
-            if (error) throw error;
-
-            const downloadPath = path.join(exportDir, `${data._id}.zip`);
-            const sourceFile = `download/wordTemplate/${data._id}/${data._id}.zip`;
-
-            zipped.compress();
-            zipped.save(downloadPath, (err) => {
-                if (err) throw err;
-                Logger.debug('saved successfully!');
-            });
-        });
+        await zipDirectory(exportDir, path.join(exportDir, `${data._id}.zip`));
+        Logger.debug('saved successfully!');
     }
 
     private async writeToXml(data: any, exportDir: string): Promise<void> {

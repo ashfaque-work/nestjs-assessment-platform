@@ -6,6 +6,10 @@ import * as path from 'path';
 const env = (name: string, fallback = ''): string => process.env[name] ?? fallback;
 const bool = (name: string, fallback: boolean): boolean =>
   process.env[name] === undefined ? fallback : process.env[name] === 'true';
+const json = (name: string): Record<string, any> | undefined => {
+  const raw = process.env[name];
+  return raw ? JSON.parse(raw) : undefined;
+};
 
 export interface DbInstance {
   name: string;
@@ -45,33 +49,11 @@ export function buildDbInstances(): DbInstance[] {
 
 export function buildPushNotifications() {
   return {
-    gcm: {
-      id: env('GCM_SERVER_KEY'),
-      msgcnt: 1,
-      phonegap: true,
-      dataDefaults: {
-        delayWhileIdle: false,
-        timeToLive: 4 * 7 * 24 * 3600, // 4 weeks
-        retries: 4,
-      },
-      options: {},
-    },
-    apn: {
-      gateway: env('APN_GATEWAY', 'gateway.push.apple.com'),
-      badge: 1,
-      defaultData: {
-        expiry: 4 * 7 * 24 * 3600, // 4 weeks
-        sound: 'ping.aiff',
-      },
-      options: {
-        production: bool('APN_PRODUCTION', false),
-      },
-    },
-    adm: {
-      client_id: null,
-      client_secret: null,
-      expiresAfter: 4 * 7 * 24 * 3600, // 4 weeks
-      options: {},
+    // Android goes through Firebase Cloud Messaging; Google switched off the legacy GCM
+    // server-key API in 2024. FCM_SERVICE_ACCOUNT holds the Firebase service-account JSON.
+    fcm: {
+      appName: 'assessment-platform',
+      serviceAccountKey: json('FCM_SERVICE_ACCOUNT'),
     },
   };
 }

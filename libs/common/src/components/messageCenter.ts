@@ -1,6 +1,6 @@
 import { Inject, Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import * as path from 'path';
-import { Swig, loaders } from 'swig';
+import { createTemplateEngine } from './template-engine';
 import { NotificationRepository, NotificationTemplateRepository, SettingRepository, UsersRepository } from "../database";
 import { isEmail } from "../helpers";
 import { RedisCaching } from "../services";
@@ -8,41 +8,7 @@ import { GrpcInternalException } from "nestjs-grpc-exceptions";
 
 const viewsPath = '../views/emails/'
 
-/**
- * swig's own filesystem loader resolves `{% include "/etc/passwd" %}` or a `../`
- * chain to wherever it points (GHSA-2rq5-699j-x7p6), and template bodies here
- * arrive through the API. This one refuses anything outside `basepath`.
- */
-export function confinedTemplateLoader(basepath: string) {
-    const root = path.resolve(basepath);
-    const fsLoader = loaders.fs(root);
-
-    const inside = (file: string) => {
-        const relative = path.relative(root, file);
-        return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
-    };
-
-    return {
-        resolve: fsLoader.resolve,
-        load(identifier: string, cb?: (err: Error | null, src?: string) => void) {
-            const file = fsLoader.resolve(identifier);
-            if (!inside(file)) {
-                const err = new Error(`Template may not read outside the email views: ${identifier}`);
-                if (cb) {
-                    return cb(err);
-                }
-                throw err;
-            }
-            return fsLoader.load(file, cb);
-        },
-    };
-}
-
-const swig = new Swig({
-    varControls: ['<%=', '%>'],
-    cache: false,
-    loader: confinedTemplateLoader(path.join(__dirname, viewsPath)),
-})
+const templates = createTemplateEngine(path.join(__dirname, viewsPath));
 
 @Injectable()
 export class MessageCenter {
@@ -66,7 +32,7 @@ export class MessageCenter {
     }
 
     async render(template: any, options: any, callback?: any) {
-        swig.renderFile(path.join(__dirname, viewsPath, template), options || {}, function (err, output) {
+        templates.render(template, options || {}, function (err, output) {
             if (err) {
                 callback(err);
             } else {
@@ -122,12 +88,10 @@ export class MessageCenter {
             options.websiteName = notiSettings.website;
             options.productName = notiSettings.productName;
 
-            let output = swig.render(notiSettings.header + notiTemplate.body + notiSettings.footer, {
-                locals: options
-            })
+            let output = templates.renderString(notiSettings.header + notiTemplate.body + notiSettings.footer, options)
 
             if (notiTemplate.sms) {
-                data.sms = swig.render(notiTemplate.sms, { locals: options })
+                data.sms = templates.renderString(notiTemplate.sms, options)
             }
 
             this.notificationRepository.setInstanceKey(req.instancekey)
@@ -178,12 +142,10 @@ export class MessageCenter {
             options.websiteName = notiSettings.website;
             options.productName = notiSettings.productName;
 
-            let output = swig.render(notiSettings.header + notiTemplate.body + notiSettings.footer, {
-                locals: options
-            })
+            let output = templates.renderString(notiSettings.header + notiTemplate.body + notiSettings.footer, options)
 
             if (notiTemplate.sms) {
-                data.sms = swig.render(notiTemplate.sms, { locals: options })
+                data.sms = templates.renderString(notiTemplate.sms, options)
             }
 
             let notification = await this.notificationRepository.create(data);
@@ -253,10 +215,10 @@ export class MessageCenter {
                     subject: notiTemplate.subject,
                 };
 
-                data.message = swig.render(fullTemplate, { locals: options });
+                data.message = templates.renderString(fullTemplate, options);
 
                 if (userTemplate.sms) {
-                    data.sms = swig.render(userTemplate.sms, { locals: options });
+                    data.sms = templates.renderString(userTemplate.sms, options);
                 }
 
                 const newNoti = {
@@ -298,10 +260,10 @@ export class MessageCenter {
                 subject: request.subject
             };
 
-            data.message = swig.render(fullTemplate, { locals: options });
+            data.message = templates.renderString(fullTemplate, options);
 
             if (request.sms) {
-                data.sms = swig.render(request.sms, { locals: options });
+                data.sms = templates.renderString(request.sms, options);
             }
 
             const newNoti = {
