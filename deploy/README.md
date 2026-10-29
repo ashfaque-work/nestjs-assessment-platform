@@ -50,6 +50,32 @@ docker compose -f docker-compose.local.yml -f deploy/docker-compose.server.yml p
 docker compose -f docker-compose.local.yml -f deploy/docker-compose.server.yml logs -f gateway
 ```
 
+## Login returns 503 while the website still loads
+
+The frontend and Swagger are served independently of the auth microservice. A successful
+`GET /login` does not establish that sign-in works. The live demo workflow now checks an
+invalid login through the real API and requires a JSON 401 before starting browser tests:
+
+```bash
+node scripts/wait-for-demo.mjs
+```
+
+For a persistent 503, inspect the VM before changing demo accounts or resetting data:
+
+```bash
+cd ~/nestjs-assessment-platform
+docker compose -f docker-compose.local.yml -f deploy/docker-compose.server.yml ps -a
+docker compose -f docker-compose.local.yml -f deploy/docker-compose.server.yml logs --tail=100 auth gateway mongo redis
+df -h
+tail -50 ~/health.log
+```
+
+Resolve the error shown in those logs (including MongoDB/Redis availability, disk capacity,
+or auth startup/configuration errors), then start the affected service. Re-run the probe
+and the full browser checks after recovery. Do not restore databases as a general 503 fix.
+The probe uses a nonexistent account and never logs in or changes user data; rate limiting
+is retried rather than accepted as proof of auth readiness.
+
 ## Demo account repair
 
 The shared sample student must be active and have level 1 in each enrolled subject. Older baseline archives can restore an inactive account with no levels, causing test pages to reject the student even though sign-in works. `reset-demo.sh` now repairs that sample account immediately after each database restore. Other accounts are not changed; existing higher levels are preserved, and the repair refuses databases other than `stagingdb` and `newstagingdb`.
